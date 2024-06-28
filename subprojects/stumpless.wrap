@@ -1,0 +1,4 @@
+[wrap-git]
+url = https://github.com/goatshriek/stumpless.git
+revision = 5a71a0c52e278677d7ed22664a649fd065f630d1
+depth = 1

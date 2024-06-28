@@ -1,0 +1,28 @@
+name: Unit Tests with Valgrind
+run-name: ${{ github.actor }} is testing with valgrind the app for ${{ github.ref }}
+on:
+  pull_request:
+    branches: '**'
+env:
+  BUILD_DIR: build
+jobs:
+  valgrind-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for build to succeed
+        uses: lewagon/wait-on-check-action@v1.3.1
+        with:
+          ref: ${{ github.ref }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 20
+          running-workflow-name: 'Build'
+      - name: Copy Project
+        uses: actions/checkout@v3
+      - name: Install valgrind
+        run: sudo apt-get install valgrind -y
+      - name: Install meson
+        run: ./scripts/install_meson.sh
+      - name: Setup build dir
+        run: ./scripts/setup_build.sh
+      - name: Run tests
+        run: ./scripts/run_valgrind_tests.sh

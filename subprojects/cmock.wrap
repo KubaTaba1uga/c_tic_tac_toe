@@ -1,0 +1,4 @@
+[wrap-git]
+url = https://github.com/ThrowTheSwitch/Cmock.git
+revision = c548629a478ef07f89db8b86c1dd4041a1cf4053
+depth = 1
