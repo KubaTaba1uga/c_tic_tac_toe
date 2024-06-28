@@ -1,1 +1,1 @@
-const char *PROJECT_NAME = "c_project_template";
+const char *PROJECT_NAME = "c_tic_tac_toe";

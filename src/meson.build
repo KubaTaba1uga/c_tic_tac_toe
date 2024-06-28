@@ -1,7 +1,7 @@
 sources = files(
-   'main.c', 'config.h',
-   'gardener.c', 'gardener.h',
+   'main.c',
+   'config.h',
 )
 
 subdir('utils')
-subdir('interfaces')
+
