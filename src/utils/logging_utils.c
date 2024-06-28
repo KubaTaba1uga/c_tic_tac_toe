@@ -2,7 +2,10 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <asm-generic/errno-base.h>
+#include <errno.h>
 #include <stddef.h>
+#include <string.h>
 
 // Logging library
 #include <stdlib.h>
@@ -26,18 +29,28 @@
 struct stumpless_target *loggers[] = {NULL};
 size_t loggers_no = sizeof(loggers) / sizeof(struct stumpless_target *);
 
-inline void log_msg(char *msg, char *msg_id, enum stumpless_severity severity);
-inline void create_log_entry(char *msg, char *msg_id,
-                             // Stumpless data
-                             struct stumpless_entry **entry,
-                             enum stumpless_severity severity);
-inline void emmit_log_entry(struct stumpless_entry *entry);
+static void log_msg(char *msg, char *msg_id, enum stumpless_severity severity);
+static int create_log_entry(char *msg, char *msg_id,
+                            // Stumpless data
+                            struct stumpless_entry **entry,
+                            enum stumpless_severity severity);
+static int emmit_log_entry(struct stumpless_entry *entry);
+static void print_error(int errnum);
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-void init_loggers(void) {
+int init_loggers(void) {
+  errno = 0;
+
   loggers[0] = stumpless_open_stdout_target("console logger");
+
+  if (loggers[0] == NULL) {
+    print_error(errno);
+    return errno;
+  }
+
+  return 0;
 }
 
 void destroy_loggers(void) {
@@ -63,43 +76,62 @@ void log_info(char *msg_id, char *fmt, ...) {
  ******************************************************************************/
 void log_msg(char *msg, char *msg_id, enum stumpless_severity severity) {
   struct stumpless_entry *entry = NULL;
+  int err;
 
-  create_log_entry(msg, msg_id, &entry, severity);
+  err = create_log_entry(msg, msg_id, &entry, severity);
 
-  if (!entry) {
-    // TO-DO return error
+  if (err) {
+    print_error(err);
+    goto OUT;
   }
 
-  emmit_log_entry(entry);
+  err = emmit_log_entry(entry);
 
-  if (!entry) {
-    // TO-DO return error if emmiting has failed
+  if (err) {
+    print_error(err);
+    goto FREE;
   }
 
+FREE:
   stumpless_destroy_entry_and_contents(entry);
+
+OUT:
+  return;
 }
 
-void create_log_entry(char *msg, char *msg_id,
-                      // Stumpless data
-                      struct stumpless_entry **entry,
-                      enum stumpless_severity severity) {
+int create_log_entry(char *msg, char *msg_id,
+                     // Stumpless data
+                     struct stumpless_entry **entry,
+                     enum stumpless_severity severity) {
+  errno = 0;
+
   *entry = stumpless_new_entry(STUMPLESS_FACILITY_USER, severity, PROJECT_NAME,
                                msg_id, msg);
   if (!*entry) {
-    // TO-DO return error
+    return errno;
   }
+
+  return 0;
 }
 
-void emmit_log_entry(struct stumpless_entry *entry) {
-  int result;
+int emmit_log_entry(struct stumpless_entry *entry) {
+  int err;
   size_t i;
+
+  errno = 0;
 
   for (i = 0; i < loggers_no; i++) {
 
-    result = stumpless_add_entry(loggers[i], entry);
+    err = stumpless_add_entry(loggers[i], entry);
 
-    if (result < 0) {
-      // TO-DO return error
+    if (err < 0) {
+      return errno;
     }
   }
+
+  return 0;
+}
+
+void print_error(int errnum) {
+  fprintf(stderr, "!!! Logging Error: %s !!!\n", strerror(errnum));
 }
