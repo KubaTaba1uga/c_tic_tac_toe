@@ -1,10 +1,16 @@
-#ifndef _logging_utils_h
-#define _logging_utils_h
+#ifndef _LOGGING_UTILS_H
+#define _LOGGING_UTILS_H
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-void log_info(char *msg_id, char *fmt, ...);
-int init_loggers(void);
-void destroy_loggers(void);
-#endif
+struct logging_utils_ops {
+  int (*init_loggers)(void);
+  void (*destroy_loggers)(void);
+  void (*log_info)(char *msg_id, char *fmt, ...);
+  void *private;
+};
+
+extern struct logging_utils_ops logging_utils_ops;
+
+#endif // _LOGGING_UTILS_H
