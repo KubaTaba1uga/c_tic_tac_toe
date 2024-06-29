@@ -12,6 +12,7 @@
 
 // App's data
 #include "config.h"
+#include "init/init.h"
 #include "utils/logging_utils.h"
 
 /*******************************************************************************
@@ -162,3 +163,5 @@ int emmit_log_entry(struct stumpless_entry *entry) {
 void print_error(int errnum) {
   fprintf(stderr, "!!! Logging Error: %s !!!\n", strerror(errnum));
 }
+
+REGISTER_INIT_FUNCTION(init_loggers);

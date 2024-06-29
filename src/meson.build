@@ -4,4 +4,5 @@ sources = files(
 )
 
 subdir('utils')
+subdir('init')
 

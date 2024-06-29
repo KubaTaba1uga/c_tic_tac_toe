@@ -1,4 +1,3 @@
-// TO-DO modularize logging utils
 // TO-DO modularize std lib utils
 /*******************************************************************************
  *    INCLUDED FILES
@@ -8,7 +7,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "init/init.h"
 #include "utils/logging_utils.h"
+
 /*******************************************************************************
  *    DATA STRUCTURES
  ******************************************************************************/
@@ -35,7 +36,7 @@ int main(void)
   /*   } */
   /* } */
 
-  logging_utils_ops.init_loggers();
+  initialize_system();
 
   logging_utils_ops.log_info("main", "Game initialized");
 

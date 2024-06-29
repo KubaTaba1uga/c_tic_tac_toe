@@ -26,9 +26,15 @@ logging_proj = cmake.subproject('stumpless', options: opt_var)
 logging_dep = logging_proj.dependency('stumpless')
 
 # ******************************************************************************
+# *    Lists
+# ******************************************************************************
+c_lists_proj = subproject('c_lists', default_options: ['enable_tests=false'])
+array_list_dep = c_lists_proj.get_variable('arl_lib_dep')
+
+# ******************************************************************************
 # *    App
 # ******************************************************************************
-app_deps = [logging_dep]
+app_deps = [logging_dep, array_list_dep]
 subdir('src')
 
 main = executable('main', sources, dependencies: app_deps)
