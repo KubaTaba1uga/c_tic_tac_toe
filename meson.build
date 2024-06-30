@@ -31,7 +31,7 @@ logging_dep = logging_proj.dependency('stumpless')
 app_deps = [logging_dep]
 subdir('src')
 
-main = executable('main', sources, dependencies: app_deps)
+main = executable('main', sources, dependencies: app_deps, include_directories: [join_paths('.', 'src')])
 
 # ******************************************************************************
 # *    Tests
