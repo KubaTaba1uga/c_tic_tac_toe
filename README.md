@@ -1,7 +1,7 @@
-[![Build](https://github.com/KubaTaba1uga/c_project_template/actions/workflows/build.yaml/badge.svg)](https://github.com/KubaTaba1uga/c_project_template/actions/workflows/build.yaml)
-[![Linter](https://github.com/KubaTaba1uga/c_project_template/actions/workflows/linter.yaml/badge.svg)](https://github.com/KubaTaba1uga/c_project_template/actions/workflows/linter.yaml)
-[![Unit Tests](https://github.com/KubaTaba1uga/c_project_template/actions/workflows/unit-tests.yaml/badge.svg)](https://github.com/KubaTaba1uga/c_project_template/actions/workflows/unit-tests.yaml) 
-[![Unit Tests with Valgrind](https://github.com/KubaTaba1uga/c_project_template/actions/workflows/unit-tests-with-valgrind.yaml/badge.svg)](https://github.com/KubaTaba1uga/c_project_template/actions/workflows/unit-tests-with-valgrind.yaml)
+[![Build](https://github.com/KubaTaba1uga/c_tic_tac_toe/actions/workflows/build.yaml/badge.svg)](https://github.com/KubaTaba1uga/c_tic_tac_toe/actions/workflows/build.yaml)
+[![Linter](https://github.com/KubaTaba1uga/c_tic_tac_toe/actions/workflows/linter.yaml/badge.svg)](https://github.com/KubaTaba1uga/c_tic_tac_toe/actions/workflows/linter.yaml)
+[![Unit Tests](https://github.com/KubaTaba1uga/c_tic_tac_toe/actions/workflows/unit-tests.yaml/badge.svg)](https://github.com/KubaTaba1uga/c_tic_tac_toe/actions/workflows/unit-tests.yaml) 
+[![Unit Tests with Valgrind](https://github.com/KubaTaba1uga/c_tic_tac_toe/actions/workflows/unit-tests-with-valgrind.yaml/badge.svg)](https://github.com/KubaTaba1uga/c_tic_tac_toe/actions/workflows/unit-tests-with-valgrind.yaml)
 
 # C Project Template
 
@@ -21,17 +21,17 @@ Template for new c projects. Includes build system, testing, mocking, logging, r
 
 Clone project
 ```
-git clone https://github.com/KubaTaba1uga/c_project_template.git
+git clone https://github.com/KubaTaba1uga/c_tic_tac_toe.git
 ```
 
 Delete template git files
 ```
-rm -rf c_project_template/.git
+rm -rf c_tic_tac_toe/.git
 ```
 
 Initiate new git files
 ```
-cd c_project_template
+cd c_tic_tac_toe
 git init
 ```
 
