@@ -1,4 +1,5 @@
 name: Linter
+run-name: ${{ github.actor }} is linting for ${{ github.ref }}
 on: [push]
 jobs:
   linter:

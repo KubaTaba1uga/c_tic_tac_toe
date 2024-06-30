@@ -1,10 +1,7 @@
----
 name: Merge Gatekeeper
-# fail if any Github's Action has failed
-# this way settings>branches>status check can be used
-
+run-name: ${{ github.actor }} is protecting merge for ${{ github.ref }}
 on:
-  push:
+  pull_request:
     branches:
       - main
       - master
