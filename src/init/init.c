@@ -1,24 +1,53 @@
-#include "init.h"
+#include <stddef.h>
+#include <string.h>
 
-#define MAX_INIT_FUNCTIONS 100
+#include "init/init.h"
+#include "utils/logging_utils.h"
+
+#define MAX_INIT_REGISTRATIONS 100
+#define INIT_MODULE_ID "init subsystem"
 
 struct init_subsystem_t {
-  init_function functions[MAX_INIT_FUNCTIONS];
+  struct init_registration_data registrations[MAX_INIT_REGISTRATIONS];
   size_t count;
 };
 
 struct init_subsystem_t init_subsystem = {.count = 0};
 
-void register_init_function(init_function func) {
-  if (init_subsystem.count < MAX_INIT_FUNCTIONS) {
-    init_subsystem.functions[init_subsystem.count++] = func;
+void init_register_subsystem(
+    struct init_registration_data init_registration_data) {
+  if (init_subsystem.count < MAX_INIT_REGISTRATIONS) {
+    init_subsystem.registrations[init_subsystem.count++] =
+        init_registration_data;
   } else {
-    // Handle error: too many initialization functions
+    logging_utils_ops.log_err("Unable to register %s in init, "
+                              "no enough space in `registrations` array.",
+                              INIT_MODULE_ID, init_registration_data.id);
   }
 }
 
-void initialize_system() {
-  for (size_t i = 0; i < init_subsystem.count; ++i) {
-    init_subsystem.functions[i]();
+int initialize_system() {
+  int err = 0;
+  size_t i;
+  for (i = 0; i < init_subsystem.count; ++i) {
+    err = init_subsystem.registrations[i].init_func();
+    if (err) {
+      logging_utils_ops.log_err("Failed to initialize %s: %s", INIT_MODULE_ID,
+                                init_subsystem.registrations[i].id,
+                                strerror(err));
+      return err;
+    }
+
+    logging_utils_ops.log_info("Initialized %s", INIT_MODULE_ID,
+                               init_subsystem.registrations[i].id);
+  }
+
+  return 0;
+}
+
+void destroy_system() {
+  size_t i;
+  for (i = 0; i < init_subsystem.count; ++i) {
+    init_subsystem.registrations[i].destroy_func();
   }
 }

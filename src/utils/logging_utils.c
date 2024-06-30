@@ -28,16 +28,19 @@
  *    PRIVATE DECLARATIONS
  ******************************************************************************/
 static struct stumpless_target *loggers[] = {NULL};
+static const char *module_id = "logging";
 static size_t loggers_no = sizeof(loggers) / sizeof(struct stumpless_target *);
 static int init_loggers(void);
 static void destroy_loggers(void);
 static void log_info(char *msg_id, char *fmt, ...);
+static void log_err(char *msg_id, char *fmt, ...);
 static void log_msg(char *msg, char *msg_id, enum stumpless_severity severity);
 static int create_log_entry(char *msg, char *msg_id,
                             struct stumpless_entry **entry,
                             enum stumpless_severity severity);
 static int emmit_log_entry(struct stumpless_entry *entry);
-static void print_error(int errnum);
+static void print_errno(int errnum);
+static void print_error(char *error);
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
@@ -48,13 +51,15 @@ struct logging_utils_private_ops {
                           struct stumpless_entry **entry,
                           enum stumpless_severity severity);
   int (*emmit_log_entry)(struct stumpless_entry *entry);
-  void (*print_error)(int errnum);
+  void (*print_errno)(int errnum);
+  void (*print_error)(char *error);
 };
 
 static struct logging_utils_private_ops logging_utils_priv_ops = {
     .log_msg = log_msg,
     .create_log_entry = create_log_entry,
     .emmit_log_entry = emmit_log_entry,
+    .print_errno = print_errno,
     .print_error = print_error,
 };
 
@@ -62,6 +67,7 @@ struct logging_utils_ops logging_utils_ops = {
     .init_loggers = init_loggers,
     .destroy_loggers = destroy_loggers,
     .log_info = log_info,
+    .log_err = log_err,
     .private = &logging_utils_priv_ops};
 
 /*******************************************************************************
@@ -73,7 +79,7 @@ int init_loggers(void) {
   loggers[0] = stumpless_open_stdout_target("console logger");
 
   if (loggers[0] == NULL) {
-    logging_utils_priv_ops.print_error(errno);
+    logging_utils_priv_ops.print_errno(errno);
     return errno;
   }
 
@@ -99,6 +105,15 @@ void log_info(char *msg_id, char *fmt, ...) {
                                  STUMPLESS_SEVERITY_INFO);
 }
 
+void log_err(char *msg_id, char *fmt, ...) {
+  char local_log_entry[255];
+
+  GET_VA_CHAR_ARGS(local_log_entry, sizeof(local_log_entry));
+
+  logging_utils_priv_ops.log_msg(local_log_entry, msg_id,
+                                 STUMPLESS_SEVERITY_ERR);
+}
+
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
@@ -109,14 +124,16 @@ void log_msg(char *msg, char *msg_id, enum stumpless_severity severity) {
   err = logging_utils_priv_ops.create_log_entry(msg, msg_id, &entry, severity);
 
   if (err) {
-    logging_utils_priv_ops.print_error(err);
+    logging_utils_priv_ops.print_errno(err);
+    logging_utils_priv_ops.print_error(msg);
     goto OUT;
   }
 
   err = logging_utils_priv_ops.emmit_log_entry(entry);
 
   if (err) {
-    logging_utils_priv_ops.print_error(err);
+    logging_utils_priv_ops.print_errno(err);
+    logging_utils_priv_ops.print_error(msg);
     goto FREE;
   }
 
@@ -160,8 +177,11 @@ int emmit_log_entry(struct stumpless_entry *entry) {
   return 0;
 }
 
-void print_error(int errnum) {
-  fprintf(stderr, "!!! Logging Error: %s !!!\n", strerror(errnum));
+void print_errno(int errnum) { print_error(strerror(errnum)); }
+
+void print_error(char *error) {
+  fprintf(stderr, "!!! Logging Error: %s !!!\n", error);
 }
 
-REGISTER_INIT_FUNCTION(init_loggers);
+INIT_REGISTER_SUBSYSTEM(logging_utils_ops.init_loggers,
+                        logging_utils_ops.destroy_loggers, module_id);

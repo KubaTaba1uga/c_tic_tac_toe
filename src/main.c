@@ -13,8 +13,6 @@
 /*******************************************************************************
  *    DATA STRUCTURES
  ******************************************************************************/
-/* int (*init_operations[1])(void) = {}; */
-/* void (*close_operations[1])(void) = { */
 
 /*******************************************************************************
  *    PUBLIC API
@@ -25,27 +23,16 @@ int main__(void)
 int main(void)
 #endif
 {
-  /* int err; */
+  int err;
 
-  /* // init */
-  /* for (size_t i = 0; i < sizeof(init_operations) / sizeof(void *); i++) { */
-  /*   err = init_operations[i](); */
-
-  /*   if (err) { */
-  /*     return 1; */
-  /*   } */
-  /* } */
-
-  initialize_system();
+  err = initialize_system();
+  if (err) {
+    return 1;
+  }
 
   logging_utils_ops.log_info("main", "Game initialized");
 
-  logging_utils_ops.destroy_loggers();
-
-  /* // cleanup */
-  /* for (size_t i = 0; i < sizeof(close_operations) / sizeof(void *); i++) { */
-  /*   close_operations[i](); */
-  /* } */
+  destroy_system();
 
   return 0;
 }

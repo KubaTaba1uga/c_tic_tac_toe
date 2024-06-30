@@ -1,27 +1,35 @@
-// init_subsystem.h
+/**
+ * @file init_subsystem.h
+ * @brief Initialization subsystem for setting up all necessary data.
+ *
+ * The init subsystem is responsible for initializing all data used
+ *  for the entire lifetime of the program.
+ */
 #ifndef INIT_SUBSYSTEM_H
 #define INIT_SUBSYSTEM_H
 
 #include <stddef.h>
 
-typedef int (*init_function)(void);
+typedef int (*init_function_t)(void);
+typedef void (*destroy_function_t)(void);
 
-void register_init_function(init_function func);
-void initialize_system();
+struct init_registration_data {
+  init_function_t init_func;
+  destroy_function_t destroy_func;
+  const char *id;
+};
 
-// Macro to register an initialization function so it gets called during the
-// program's initialization phase, before main() starts executing
-#define REGISTER_INIT_FUNCTION(func)                                           \
-  /* Declare a static function with a unique name by appending '_register' to  \
-   * the given function name */                                                \
-  /* The 'constructor' attribute ensures this function is called before main() \
-   */                                                                          \
-  static void func##_register() __attribute__((constructor));                  \
-  /* Define the body of the unique function */                                 \
-  static void func##_register() {                                              \
-    /* Call the register_init_function to add the given function to the list   \
-     * of initialization functions */                                          \
-    register_init_function(func);                                              \
+void init_register_subsystem(
+    struct init_registration_data init_registration_data);
+int initialize_system();
+void destroy_system();
+
+#define INIT_REGISTER_SUBSYSTEM(_init_func, _destroy_func, _id)                \
+  static void _init_register() __attribute__((constructor));                   \
+  static void _init_register() {                                               \
+    struct init_registration_data init_registration_data = {                   \
+        .init_func = _init_func, .destroy_func = _destroy_func, .id = _id};    \
+    init_register_subsystem(init_registration_data);                           \
   }
 
 #endif // INIT_SUBSYSTEM_H
