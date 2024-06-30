@@ -6,15 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      # Update the package list and install usrmerge
-      # Update the package list and install necessary packages
-      - name: Set up environment
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y usrmerge apt-utils
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libc6
-          sudo apt-get install -y clang-format-15
       - name: Run clang-format style check for C/C++ programs.
-        uses: jidicula/clang-format-action@v4.2.0
+        uses: jidicula/clang-format-action@v4.13.0
         with:
           clang-format-version: "15"
