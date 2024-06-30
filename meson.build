@@ -28,7 +28,7 @@ logging_dep = logging_proj.dependency('stumpless')
 # ******************************************************************************
 # *    App
 # ******************************************************************************
-app_deps = [logging_dep, array_list_dep]
+app_deps = [logging_dep]
 subdir('src')
 
 main = executable('main', sources, dependencies: app_deps)
