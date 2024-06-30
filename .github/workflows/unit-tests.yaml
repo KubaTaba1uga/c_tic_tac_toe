@@ -1,21 +1,21 @@
 name: Unit Tests
 run-name: ${{ github.actor }} is testing the app for ${{ github.ref }}
 on:
-  pull_request:
-    branches: '**'
+  push:
+    branches: "**"
 env:
   BUILD_DIR: build
 jobs:
   test:
     runs-on: ubuntu-latest
-    steps:    
+    steps:
       - name: Wait for build to succeed
         uses: lewagon/wait-on-check-action@v1.3.1
         with:
           ref: ${{ github.ref }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 20
-          running-workflow-name: 'Build'
+          running-workflow-name: "Build"
       - name: Copy Project
         uses: actions/checkout@v3
       - name: Install meson

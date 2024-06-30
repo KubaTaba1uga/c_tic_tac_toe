@@ -1,8 +1,8 @@
 name: Unit Tests with Valgrind
 run-name: ${{ github.actor }} is testing with valgrind the app for ${{ github.ref }}
 on:
-  pull_request:
-    branches: '**'
+  push:
+    branches: "**"
 env:
   BUILD_DIR: build
 jobs:
@@ -15,7 +15,7 @@ jobs:
           ref: ${{ github.ref }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 20
-          running-workflow-name: 'Build'
+          running-workflow-name: "Build"
       - name: Copy Project
         uses: actions/checkout@v3
       - name: Install valgrind

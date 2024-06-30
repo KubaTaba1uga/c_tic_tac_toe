@@ -4,7 +4,7 @@ name: Merge Gatekeeper
 # this way settings>branches>status check can be used
 
 on:
-  pull_request:
+  push:
     branches:
       - main
       - master

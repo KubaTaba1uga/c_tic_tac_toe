@@ -1,8 +1,8 @@
 name: Build
 run-name: ${{ github.actor }} is building the app for ${{ github.ref }}
 on:
-  pull_request:
-    branches: '**'
+  push:
+    branches: "**"
 env:
   BUILD_DIR: build
 jobs:
