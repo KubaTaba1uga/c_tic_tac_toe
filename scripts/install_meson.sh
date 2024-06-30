@@ -30,9 +30,6 @@ case "$OS" in
 	
 	;;
     *"Ubuntu 22"*)
-	# Update the package list and install usrmerge
-        sudo apt-get update
-        sudo apt-get install -y usrmerge	
 	# Install meson
         sudo apt install python3-pip ninja-build -y
         sudo pip3 install meson

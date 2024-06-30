@@ -6,6 +6,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      # Update the package list and install usrmerge
+      - name: Install usrmerge
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y usrmerge
       - name: Run clang-format style check for C/C++ programs.
         uses: jidicula/clang-format-action@v4.2.0
         with:
