@@ -32,4 +32,13 @@ void destroy_system();
     init_register_subsystem(init_registration_data);                           \
   }
 
+#define INIT_REGISTER_SUBSYSTEM_PRIORITY(_init_func, _destroy_func, _id,       \
+                                         _priority)                            \
+  static void _init_register() __attribute__((constructor(_priority + 101)));  \
+  static void _init_register() {                                               \
+    struct init_registration_data init_registration_data = {                   \
+        .init_func = _init_func, .destroy_func = _destroy_func, .id = _id};    \
+    init_register_subsystem(init_registration_data);                           \
+  }
+
 #endif // INIT_SUBSYSTEM_H

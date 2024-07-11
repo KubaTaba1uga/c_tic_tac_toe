@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "init/init.h"
@@ -16,31 +17,44 @@ struct init_subsystem_t init_subsystem = {.count = 0};
 
 void init_register_subsystem(
     struct init_registration_data init_registration_data) {
+  printf("\ninit_register_subsystem %s\n", init_registration_data.id);
   if (init_subsystem.count < MAX_INIT_REGISTRATIONS) {
     init_subsystem.registrations[init_subsystem.count++] =
         init_registration_data;
   } else {
-    logging_utils_ops.log_err("Unable to register %s in init, "
+    logging_utils_ops.log_err(INIT_MODULE_ID,
+                              "Unable to register %s in init, "
                               "no enough space in `registrations` array.",
-                              INIT_MODULE_ID, init_registration_data.id);
+                              init_registration_data.id);
   }
 }
 
 int initialize_system() {
   int err = 0;
   size_t i;
+
+  printf("\ninitialize_system\n");
   for (i = 0; i < init_subsystem.count; ++i) {
+
+    printf("\ninitialize_system %s\n", init_subsystem.registrations[i].id);
+
     err = init_subsystem.registrations[i].init_func();
     if (err) {
-      logging_utils_ops.log_err("Failed to initialize %s: %s", INIT_MODULE_ID,
+      logging_utils_ops.log_err(INIT_MODULE_ID, "Failed to initialize %s: %s",
                                 init_subsystem.registrations[i].id,
                                 strerror(err));
       return err;
     }
+    logging_utils_ops.log_info("main", "Game initialized");
+    // Something is wrong with filling vargs, look on this function and on
+    // function below. The only difference between them is vargs.
 
-    logging_utils_ops.log_info("Initialized %s", INIT_MODULE_ID,
+    logging_utils_ops.log_info(INIT_MODULE_ID, "Initialized %s",
                                init_subsystem.registrations[i].id);
   }
+
+  logging_utils_ops.log_info(INIT_MODULE_ID, "Initialization done",
+                             init_subsystem.registrations[i].id);
 
   return 0;
 }
