@@ -18,18 +18,11 @@
 /*******************************************************************************
  *    MACROS
  ******************************************************************************/
-/* #define GET_VA_CHAR_ARGS(buffer, buffer_size) \ */
-/*   va_list vl; \ */
-/*   va_start(vl, fmt); \ */
-/*   vsnprintf(buffer, buffer_size, fmt, vl); \ */
-/*   va_end(vl); */
 #define GET_VA_CHAR_ARGS(buffer, buffer_size, fmt)                             \
-  do {                                                                         \
-    va_list vl;                                                                \
-    va_start(vl, fmt);                                                         \
-    vsnprintf(buffer, buffer_size, fmt, vl);                                   \
-    va_end(vl);                                                                \
-  } while (0)
+  va_list vl;                                                                  \
+  va_start(vl, fmt);                                                           \
+  vsnprintf(buffer, buffer_size, fmt, vl);                                     \
+  va_end(vl);
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS
@@ -39,10 +32,11 @@ static const char *module_id = "logging";
 static size_t loggers_no = sizeof(loggers) / sizeof(struct stumpless_target *);
 static int init_loggers(void);
 static void destroy_loggers(void);
-static void log_info(char *msg_id, char *fmt, ...);
-static void log_err(char *msg_id, char *fmt, ...);
-static void log_msg(char *msg, char *msg_id, enum stumpless_severity severity);
-static int create_log_entry(char *msg, char *msg_id,
+static void log_info(const char *msg_id, char *fmt, ...);
+static void log_err(const char *msg_id, char *fmt, ...);
+static void log_msg(char *msg, const char *msg_id,
+                    enum stumpless_severity severity);
+static int create_log_entry(char *msg, const char *msg_id,
                             struct stumpless_entry **entry,
                             enum stumpless_severity severity);
 static int emmit_log_entry(struct stumpless_entry *entry);
@@ -53,8 +47,9 @@ static void print_error(char *error);
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 struct logging_utils_private_ops {
-  void (*log_msg)(char *msg, char *msg_id, enum stumpless_severity severity);
-  int (*create_log_entry)(char *msg, char *msg_id,
+  void (*log_msg)(char *msg, const char *msg_id,
+                  enum stumpless_severity severity);
+  int (*create_log_entry)(char *msg, const char *msg_id,
                           struct stumpless_entry **entry,
                           enum stumpless_severity severity);
   int (*emmit_log_entry)(struct stumpless_entry *entry);
@@ -104,17 +99,16 @@ void destroy_loggers(void) {
   stumpless_free_all();
 }
 
-void log_info(char *msg_id, char *fmt, ...) {
+void log_info(const char *msg_id, char *fmt, ...) {
   char local_log_entry[255];
 
-  GET_VA_CHAR_ARGS(local_log_entry, sizeof(local_log_entry) / sizeof(char),
-                   fmt);
+  GET_VA_CHAR_ARGS(local_log_entry, 254, fmt);
 
   logging_utils_priv_ops.log_msg(local_log_entry, msg_id,
                                  STUMPLESS_SEVERITY_INFO);
 }
 
-void log_err(char *msg_id, char *fmt, ...) {
+void log_err(const char *msg_id, char *fmt, ...) {
   char local_log_entry[255];
 
   GET_VA_CHAR_ARGS(local_log_entry, sizeof(local_log_entry) / sizeof(char),
@@ -127,12 +121,10 @@ void log_err(char *msg_id, char *fmt, ...) {
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
-void log_msg(char *msg, char *msg_id, enum stumpless_severity severity) {
+void log_msg(char *msg, const char *msg_id, enum stumpless_severity severity) {
   struct stumpless_entry *entry = NULL;
   int err;
 
-  printf("msg: %s\n", msg);
-  printf("1\n");
   err = logging_utils_priv_ops.create_log_entry(msg, msg_id, &entry, severity);
 
   if (err) {
@@ -140,7 +132,6 @@ void log_msg(char *msg, char *msg_id, enum stumpless_severity severity) {
     goto OUT;
   }
 
-  printf("2\n");
   err = logging_utils_priv_ops.emmit_log_entry(entry);
 
   if (err) {
@@ -148,7 +139,6 @@ void log_msg(char *msg, char *msg_id, enum stumpless_severity severity) {
     goto FREE;
   }
 
-  printf("3\n");
 FREE:
   stumpless_destroy_entry_and_contents(entry);
 
@@ -156,11 +146,9 @@ OUT:
   return;
 }
 
-int create_log_entry(char *msg, char *msg_id,
-                     // Stumpless data
+int create_log_entry(char *msg, const char *msg_id,
                      struct stumpless_entry **entry,
                      enum stumpless_severity severity) {
-  /* const struct stumpless_error *err; */
 
   *entry = stumpless_new_entry_str(STUMPLESS_FACILITY_USER, severity,
                                    PROJECT_NAME, msg_id, msg);

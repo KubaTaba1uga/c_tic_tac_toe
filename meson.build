@@ -21,7 +21,8 @@ opt_var = cmake.subproject_options()
 #  compile errors. Overriding c11 to gnu11 fixes the errors.
 opt_var.set_override_option('c_std', 'gnu11')
 opt_var.set_override_option('werror', 'false')
-
+opt_var.set_override_option('werror', 'false')
+# opt_var.set_override_option('debug', 'true')
 logging_proj = cmake.subproject('stumpless', options: opt_var)
 logging_dep = logging_proj.dependency('stumpless')
 

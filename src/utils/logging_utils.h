@@ -7,8 +7,8 @@
 struct logging_utils_ops {
   int (*init_loggers)(void);
   void (*destroy_loggers)(void);
-  void (*log_info)(char *msg_id, char *fmt, ...);
-  void (*log_err)(char *msg_id, char *fmt, ...);
+  void (*log_info)(const char *msg_id, char *fmt, ...);
+  void (*log_err)(const char *msg_id, char *fmt, ...);
   void *private;
 };
 
