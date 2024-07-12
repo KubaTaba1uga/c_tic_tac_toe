@@ -22,3 +22,4 @@ cmock_gen_mock = generator(
 subdir('test_gardener.d')
 subdir('test_cmock.d')
 subdir('test_main.d')
+subdir('test_logging_utils.d')
