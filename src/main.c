@@ -25,14 +25,14 @@ int main(void)
 {
   int err;
 
-  err = initialize_system();
+  err = init_ops.initialize_system();
   if (err) {
     return 1;
   }
 
   logging_utils_ops.log_info("main", "Game initialized");
 
-  destroy_system();
+  init_ops.destroy_system();
 
   return 0;
 }

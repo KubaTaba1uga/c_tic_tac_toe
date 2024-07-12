@@ -10,6 +10,9 @@
 
 #include <stddef.h>
 
+/*******************************************************************************
+ *    PRIVATE API
+ ******************************************************************************/
 typedef int (*init_function_t)(void);
 typedef void (*destroy_function_t)(void);
 
@@ -19,17 +22,23 @@ struct init_registration_data {
   const char *id;
 };
 
-void init_register_subsystem(
-    struct init_registration_data init_registration_data);
-int initialize_system();
-void destroy_system();
+/*******************************************************************************
+ *    PUBLIC API
+ ******************************************************************************/
+struct init_ops {
+  void (*register_module)(struct init_registration_data init_registration_data);
+  int (*initialize_system)(void);
+  void (*destroy_system)(void);
+};
+
+extern struct init_ops init_ops;
 
 #define INIT_REGISTER_SUBSYSTEM(_init_func, _destroy_func, _id)                \
   static void _init_register() __attribute__((constructor));                   \
   static void _init_register() {                                               \
     struct init_registration_data init_registration_data = {                   \
         .init_func = _init_func, .destroy_func = _destroy_func, .id = _id};    \
-    init_register_subsystem(init_registration_data);                           \
+    init_ops.register_module(init_registration_data);                          \
   }
 
 #define INIT_REGISTER_SUBSYSTEM_PRIORITY(_init_func, _destroy_func, _id,       \
@@ -38,7 +47,7 @@ void destroy_system();
   static void _init_register() {                                               \
     struct init_registration_data init_registration_data = {                   \
         .init_func = _init_func, .destroy_func = _destroy_func, .id = _id};    \
-    init_register_subsystem(init_registration_data);                           \
+    init_ops.register_module(init_registration_data);                          \
   }
 
 #endif // INIT_SUBSYSTEM_H

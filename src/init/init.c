@@ -21,6 +21,18 @@ struct init_subsystem_t {
 };
 struct init_subsystem_t init_subsystem = {.count = 0};
 
+static void
+init_register_subsystem(struct init_registration_data init_registration_data);
+static int initialize_system(void);
+static void destroy_system(void);
+
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
+struct init_ops init_ops = {.register_module = init_register_subsystem,
+                            .initialize_system = initialize_system,
+                            .destroy_system = destroy_system};
+
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
@@ -37,7 +49,7 @@ void init_register_subsystem(
   }
 }
 
-int initialize_system() {
+int initialize_system(void) {
   int err = 0;
 
   size_t i;
@@ -56,15 +68,16 @@ int initialize_system() {
                                init_subsystem.registrations[i].id);
   }
 
-  logging_utils_ops.log_info(module_id, "Initialization done",
-                             init_subsystem.registrations[i].id);
-
   return 0;
 }
 
 void destroy_system() {
   size_t i;
+
   for (i = 0; i < init_subsystem.count; ++i) {
+    logging_utils_ops.log_info(module_id, "Destroying %s",
+                               init_subsystem.registrations[i].id);
+
     init_subsystem.registrations[i].destroy_func();
   }
 }
