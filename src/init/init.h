@@ -1,12 +1,13 @@
-/**
- * @file init_subsystem.h
+#ifndef INIT_SUBSYSTEM_H
+#define INIT_SUBSYSTEM_H
+/*******************************************************************************
+ * @file init.h
  * @brief Initialization subsystem for setting up all necessary data.
  *
  * The init subsystem is responsible for initializing all data used
  *  for the entire lifetime of the program.
- */
-#ifndef INIT_SUBSYSTEM_H
-#define INIT_SUBSYSTEM_H
+ *
+ ******************************************************************************/
 
 #include <stddef.h>
 

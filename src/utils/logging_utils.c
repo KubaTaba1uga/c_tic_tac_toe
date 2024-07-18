@@ -1,4 +1,15 @@
 /*******************************************************************************
+ * @file logging_utils.c
+ * @brief This file contains the implementation of a logging utility subsystem
+ *        for managing log entries, logging initialization, and destruction.
+ *
+ * The logging subsystem utilizes the Stumpless library for logging to various
+ * targets and provides functions to log informational and error messages with
+ * different severity levels. It also manages the creation and emission of log
+ * entries.
+ ******************************************************************************/
+
+/*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
 // C standard library

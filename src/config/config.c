@@ -1,4 +1,16 @@
 /*******************************************************************************
+ * @file config.c
+ * @brief This file contains the implementation of a configuration subsystem
+ *        that manages the registration and retrieval of configuration
+variables.
+ *
+ * The configuration subsystem allows for the registration of configuration
+ * variables, storing them internally, and retrieving their values either from
+ * environment variables or default values.
+ *
+ ******************************************************************************/
+
+/*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
 // C standard library
@@ -63,7 +75,7 @@ char *config_get_variable(char *var_name) {
       value = getenv(var_name);
 
       if (value == NULL)
-        value = config_subsystem.registrations[i].default_value;
+        value = (char *)config_subsystem.registrations[i].default_value;
 
       return value;
     }

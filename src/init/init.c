@@ -1,4 +1,16 @@
 /*******************************************************************************
+ * @file init.c
+ * @brief This file contains the implementation of an initialization subsystem
+ *        for managing the registration, initialization, and destruction of
+ *        various subsystems within an application.
+ *
+ * The initialization subsystem allows for the registration of subsystems,
+ * initializing them, and subsequently destroying them. It manages the order
+ * and ensures proper error handling and logging.
+ *
+ ******************************************************************************/
+
+/*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
 // C standard library
