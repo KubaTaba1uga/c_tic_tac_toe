@@ -13,7 +13,7 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-const char *PROJECT_NAME = "c_tic_tac_toe";
+#define PROJECT_NAME "c_tic_tac_toe"
 
 struct config_registration_data {
   const char *var_name;
