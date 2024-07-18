@@ -23,7 +23,7 @@ struct init_registration_data {
 };
 
 /*******************************************************************************
- *    PUBLIC API
+ *    MODULARITY BOILERCODE
  ******************************************************************************/
 struct init_ops {
   void (*register_module)(struct init_registration_data init_registration_data);
@@ -33,6 +33,9 @@ struct init_ops {
 
 extern struct init_ops init_ops;
 
+/*******************************************************************************
+ *    PUBLIC API
+ ******************************************************************************/
 #define INIT_REGISTER_SUBSYSTEM(_init_func, _destroy_func, _id)                \
   static void _init_register() __attribute__((constructor));                   \
   static void _init_register() {                                               \
