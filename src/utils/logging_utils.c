@@ -38,8 +38,8 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS
  ******************************************************************************/
+#define LOGGING_MODULE_ID "logging_subsystem"
 static struct stumpless_target *loggers[] = {NULL};
-static const char *module_id = "logging";
 static size_t loggers_no = sizeof(loggers) / sizeof(struct stumpless_target *);
 static int init_loggers(void);
 static void destroy_loggers(void);
@@ -53,6 +53,12 @@ static int create_log_entry(char *msg, const char *msg_id,
 static int emmit_log_entry(struct stumpless_entry *entry);
 static void print_errno(void);
 static void print_error(char *error);
+
+static struct init_registration_data init_logging_reg = {
+    .id = LOGGING_MODULE_ID,
+    .init_func = init_loggers,
+    .destroy_func = destroy_loggers,
+};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
@@ -192,6 +198,4 @@ void print_error(char *msg) {
 
 void print_errno(void) { stumpless_perror("logging"); }
 
-INIT_REGISTER_SUBSYSTEM_PRIORITY(logging_utils_ops.init_loggers,
-                                 logging_utils_ops.destroy_loggers, module_id,
-                                 0);
+INIT_REGISTER_SUBSYSTEM(init_logging_reg, INIT_MODULE_ORDER_LOGGING);

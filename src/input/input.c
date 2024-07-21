@@ -8,6 +8,7 @@
 #include <string.h>
 
 // App's internal libs
+#include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
 
@@ -15,57 +16,102 @@
  *    PRIVATE DECLARATIONS
  ******************************************************************************/
 #define MAX_INPUT_REGISTRATIONS 10
-static const char module_id[] = "input_subsystem";
+#define INPUT_MODULE_ID "input_subsystem"
+
 struct input_subsystem_t {
   struct input_registration_data registrations[MAX_INPUT_REGISTRATIONS];
   size_t count;
 };
 struct input_subsystem_t input_subsystem = {.count = 0};
 
+static int input_init(void);
+static void input_destroy(void);
 static void
 input_register_module(struct input_registration_data init_registration_data);
-static int input_register_callback(const char *id,
+static int input_register_callback(enum input_modules id,
                                    input_callback_func_t callback);
+static int input_start_non_blocking(void);
+
+/*******************************************************************************
+ *    INIT BOILERCODE
+ ******************************************************************************/
+static struct init_registration_data init_input_reg = {.id = INPUT_MODULE_ID,
+                                                       .init_func = input_init,
+                                                       .destroy_func =
+                                                           input_destroy,
+                                                       .child_count = 0};
+struct init_registration_data *init_input_reg_p = &init_input_reg;
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-struct input_ops input_ops = {
-    .register_module = input_register_module,
-    .register_callback = input_register_callback,
-};
+struct input_ops input_ops = {.register_module = input_register_module,
+                              .register_callback = input_register_callback,
+                              .start = input_start_non_blocking};
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-
 void input_register_module(
     struct input_registration_data input_registration_data) {
+
+  input_registration_data.callback = NULL;
+
   if (input_subsystem.count < MAX_INPUT_REGISTRATIONS) {
     input_subsystem.registrations[input_subsystem.count++] =
         input_registration_data;
   } else {
-    logging_utils_ops.log_err(module_id,
+    logging_utils_ops.log_err(INPUT_MODULE_ID,
                               "Unable to register %s in input, "
                               "no enough space in `registrations` array.",
                               input_registration_data.id);
   }
 }
 
-int input_register_callback(const char *id, input_callback_func_t callback) {
+int input_register_callback(enum input_modules id,
+                            input_callback_func_t callback) {
   size_t i;
 
   for (i = 0; i < input_subsystem.count; ++i) {
-    if (strcmp(id, input_subsystem.registrations[i].id) == 0) {
+    if (id == input_subsystem.registrations[i].id) {
       input_subsystem.registrations[i].callback = callback;
       return 0;
     }
   }
 
-  logging_utils_ops.log_err(module_id,
+  logging_utils_ops.log_err(INPUT_MODULE_ID,
                             "Unable to register callback for %s, "
                             "no input module with this id",
                             input_subsystem.registrations[i].id);
 
   return EINVAL;
 }
+
+int input_start_non_blocking(void) {
+  size_t i;
+  int err;
+
+  for (i = 0; i < input_subsystem.count; ++i) {
+    if (input_subsystem.registrations[i].callback != NULL) {
+
+      err = input_subsystem.registrations[i].start();
+
+      if (err != 0) {
+        logging_utils_ops.log_err(
+            INPUT_MODULE_ID, "Unable to start module %s: %s",
+            input_subsystem.registrations[i].id, strerror(err));
+        return err;
+      }
+    }
+  }
+
+  return 0;
+}
+
+/*******************************************************************************
+ *    PRIVATE API
+ ******************************************************************************/
+int input_init(void) { return 0; }
+void input_destroy(void) {}
+
+INIT_REGISTER_SUBSYSTEM(init_input_reg, INIT_MODULE_ORDER_INPUT);

@@ -35,6 +35,8 @@ struct init_subsystem_t init_subsystem = {.count = 0};
 
 static void
 init_register_subsystem(struct init_registration_data init_registration_data);
+static void init_register_child_subsystem(struct init_registration_data *parent,
+                                          struct init_registration_data *child);
 static int initialize_system(void);
 static void destroy_system(void);
 
@@ -42,6 +44,8 @@ static void destroy_system(void);
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 struct init_ops init_ops = {.register_module = init_register_subsystem,
+                            .register_child_module =
+                                init_register_child_subsystem,
                             .initialize_system = initialize_system,
                             .destroy_system = destroy_system};
 
@@ -61,12 +65,24 @@ void init_register_subsystem(
   }
 }
 
+void init_register_child_subsystem(struct init_registration_data *parent,
+                                   struct init_registration_data *child) {
+  if (parent->child_count < INIT_MAX_CHILDREN) {
+    parent->children[parent->child_count++] = child;
+  } else {
+    logging_utils_ops.log_err(module_id, "Max children reached for %s\n",
+                              parent->id);
+  }
+}
+
 int initialize_system(void) {
   int err = 0;
 
   size_t i;
 
   for (i = 0; i < init_subsystem.count; ++i) {
+    if (init_subsystem.registrations[i].init_func == NULL)
+      continue;
 
     err = init_subsystem.registrations[i].init_func();
     if (err) {
@@ -84,9 +100,12 @@ int initialize_system(void) {
 }
 
 void destroy_system() {
-  size_t i;
+  int i;
 
-  for (i = 0; i < init_subsystem.count; ++i) {
+  for (i = init_subsystem.count; i >= 0; i--) {
+    if (init_subsystem.registrations[i].destroy_func == NULL)
+      continue;
+
     logging_utils_ops.log_info(module_id, "Destroying %s",
                                init_subsystem.registrations[i].id);
 

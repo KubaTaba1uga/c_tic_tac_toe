@@ -14,6 +14,8 @@
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
+#define INIT_MAX_CHILDREN 20
+
 typedef int (*init_function_t)(void);
 typedef void (*destroy_function_t)(void);
 
@@ -21,6 +23,8 @@ struct init_registration_data {
   init_function_t init_func;
   destroy_function_t destroy_func;
   const char *id;
+  struct init_registration_data *children[INIT_MAX_CHILDREN];
+  int child_count;
 };
 
 /*******************************************************************************
@@ -28,6 +32,8 @@ struct init_registration_data {
  ******************************************************************************/
 struct init_ops {
   void (*register_module)(struct init_registration_data init_registration_data);
+  void (*register_child_module)(struct init_registration_data *child,
+                                struct init_registration_data *parent);
   int (*initialize_system)(void);
   void (*destroy_system)(void);
 };
@@ -37,21 +43,22 @@ extern struct init_ops init_ops;
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-#define INIT_REGISTER_SUBSYSTEM(_init_func, _destroy_func, _id)                \
-  static void _init_register() __attribute__((constructor));                   \
+// This enum manages initialization ordering
+enum init_module_order_number {
+  INIT_MODULE_ORDER_LOGGING,
+  INIT_MODULE_ORDER_INPUT,
+};
+
+#define INIT_REGISTER_SUBSYSTEM(_init_registration_data, _priority)            \
+  static void _init_register() __attribute__((constructor(101 + _priority)));  \
   static void _init_register() {                                               \
-    struct init_registration_data init_registration_data = {                   \
-        .init_func = _init_func, .destroy_func = _destroy_func, .id = _id};    \
-    init_ops.register_module(init_registration_data);                          \
+    init_ops.register_module(_init_registration_data);                         \
   }
 
-#define INIT_REGISTER_SUBSYSTEM_PRIORITY(_init_func, _destroy_func, _id,       \
-                                         _priority)                            \
-  static void _init_register() __attribute__((constructor(_priority + 101)));  \
+#define INIT_REGISTER_SUBSYSTEM_CHILD(_child, _parent)                         \
+  static void _init_register() __attribute__((constructor));                   \
   static void _init_register() {                                               \
-    struct init_registration_data init_registration_data = {                   \
-        .init_func = _init_func, .destroy_func = _destroy_func, .id = _id};    \
-    init_ops.register_module(init_registration_data);                          \
+    init_ops.register_child_module(_child, _parent);                           \
   }
 
 #endif // INIT_SUBSYSTEM_H

@@ -3,6 +3,7 @@ sources = files(
 )
 
 subdir('init')
+subdir('input')
 subdir('config')
 subdir('utils')
 
