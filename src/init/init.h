@@ -31,7 +31,8 @@ struct init_registration_data {
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 struct init_ops {
-  void (*register_module)(struct init_registration_data init_registration_data);
+  void (*register_module)(
+      struct init_registration_data *init_registration_data);
   void (*register_child_module)(struct init_registration_data *child,
                                 struct init_registration_data *parent);
   int (*initialize_system)(void);

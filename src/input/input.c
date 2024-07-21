@@ -111,7 +111,13 @@ int input_start_non_blocking(void) {
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
-int input_init(void) { return 0; }
+int input_init(void) {
+  /* size_t i; */
+  /* for (i = 0; i < init_input_reg.child_count; ++i) { */
+
+  /* } */
+  return 0;
+}
 void input_destroy(void) {}
 
-INIT_REGISTER_SUBSYSTEM(init_input_reg, INIT_MODULE_ORDER_INPUT);
+INIT_REGISTER_SUBSYSTEM(init_input_reg_p, INIT_MODULE_ORDER_INPUT);
