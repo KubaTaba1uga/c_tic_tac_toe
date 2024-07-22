@@ -25,7 +25,7 @@ variables.
 #include "utils/logging_utils.h"
 
 /*******************************************************************************
- *    PRIVATE DECLARATIONS
+ *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
 #define MAX_CONFIG_REGISTRATIONS 100
 
@@ -43,13 +43,13 @@ static int config_register_variable(
 static char *config_get_variable(char *var_name);
 
 /*******************************************************************************
- *    MODULARITY BOILERCODE
+ *    PUBLIC API
  ******************************************************************************/
 struct config_ops config_ops = {.register_var = config_register_variable,
                                 .get_var = config_get_variable};
 
 /*******************************************************************************
- *    PUBLIC API
+ *    PRIVATE API
  ******************************************************************************/
 int config_register_variable(
     struct config_registration_data config_registration_data) {

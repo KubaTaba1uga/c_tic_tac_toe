@@ -9,12 +9,25 @@
  *
  ******************************************************************************/
 
+/*******************************************************************************
+ *    IMPORTS
+ ******************************************************************************/
 #include <stddef.h>
 
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
+
+/*******************************************************************************
+ *    PUBLIC API
+ ******************************************************************************/
 #define INIT_MAX_CHILDREN 20
+
+// This enum manages initialization ordering
+enum init_module_order_number {
+  INIT_MODULE_ORDER_LOGGING,
+  INIT_MODULE_ORDER_INPUT,
+};
 
 typedef int (*init_function_t)(void);
 typedef void (*destroy_function_t)(void);
@@ -27,9 +40,6 @@ struct init_registration_data {
   int child_count;
 };
 
-/*******************************************************************************
- *    MODULARITY BOILERCODE
- ******************************************************************************/
 struct init_ops {
   void (*register_module)(
       struct init_registration_data *init_registration_data);
@@ -37,17 +47,6 @@ struct init_ops {
                                 struct init_registration_data *parent);
   int (*initialize_system)(void);
   void (*destroy_system)(void);
-};
-
-extern struct init_ops init_ops;
-
-/*******************************************************************************
- *    PUBLIC API
- ******************************************************************************/
-// This enum manages initialization ordering
-enum init_module_order_number {
-  INIT_MODULE_ORDER_LOGGING,
-  INIT_MODULE_ORDER_INPUT,
 };
 
 #define INIT_REGISTER_SUBSYSTEM(_init_registration_data, _priority)            \
@@ -61,5 +60,10 @@ enum init_module_order_number {
   static void _init_register() {                                               \
     init_ops.register_child_module(_child, _parent);                           \
   }
+
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
+extern struct init_ops init_ops;
 
 #endif // INIT_SUBSYSTEM_H

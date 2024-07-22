@@ -13,7 +13,7 @@
 #include "utils/logging_utils.h"
 
 /*******************************************************************************
- *    PRIVATE DECLARATIONS
+ *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
 #define MAX_INPUT_REGISTRATIONS 10
 #define INPUT_MODULE_ID "input_subsystem"
@@ -22,6 +22,7 @@ struct input_subsystem_t {
   struct input_registration_data registrations[MAX_INPUT_REGISTRATIONS];
   size_t count;
 };
+
 struct input_subsystem_t input_subsystem = {.count = 0};
 
 static int input_init(void);
@@ -43,14 +44,14 @@ static struct init_registration_data init_input_reg = {.id = INPUT_MODULE_ID,
 struct init_registration_data *init_input_reg_p = &init_input_reg;
 
 /*******************************************************************************
- *    MODULARITY BOILERCODE
+ *    PUBLIC API
  ******************************************************************************/
 struct input_ops input_ops = {.register_module = input_register_module,
                               .register_callback = input_register_callback,
                               .start = input_start_non_blocking};
 
 /*******************************************************************************
- *    PUBLIC API
+ *    PRIVATE API
  ******************************************************************************/
 void input_register_module(
     struct input_registration_data input_registration_data) {
@@ -108,9 +109,6 @@ int input_start_non_blocking(void) {
   return 0;
 }
 
-/*******************************************************************************
- *    PRIVATE API
- ******************************************************************************/
 int input_init(void) {
   /* size_t i; */
   /* for (i = 0; i < init_input_reg.child_count; ++i) { */
@@ -118,6 +116,7 @@ int input_init(void) {
   /* } */
   return 0;
 }
+
 void input_destroy(void) {}
 
 INIT_REGISTER_SUBSYSTEM(init_input_reg_p, INIT_MODULE_ORDER_INPUT);

@@ -1,12 +1,9 @@
 /*******************************************************************************
  * @file logging_utils.c
- * @brief This file contains the implementation of a logging utility subsystem
- *        for managing log entries, logging initialization, and destruction.
+ * @brief TO-DO
  *
- * The logging subsystem utilizes the Stumpless library for logging to various
- * targets and provides functions to log informational and error messages with
- * different severity levels. It also manages the creation and emission of log
- * entries.
+ * TO-DO
+ *
  ******************************************************************************/
 
 /*******************************************************************************
@@ -27,7 +24,7 @@
 #include "utils/logging_utils.h"
 
 /*******************************************************************************
- *    MACROS
+ *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
 #define GET_VA_CHAR_ARGS(buffer, buffer_size, fmt)                             \
   va_list vl;                                                                  \
@@ -35,12 +32,12 @@
   vsnprintf(buffer, buffer_size, fmt, vl);                                     \
   va_end(vl);
 
-/*******************************************************************************
- *    PRIVATE DECLARATIONS
- ******************************************************************************/
 #define LOGGING_MODULE_ID "logging_subsystem"
+
 static struct stumpless_target *loggers[] = {NULL};
+
 static size_t loggers_no = sizeof(loggers) / sizeof(struct stumpless_target *);
+
 static int init_loggers(void);
 static void destroy_loggers(void);
 static void log_info(const char *msg_id, char *fmt, ...);
@@ -54,15 +51,6 @@ static int emmit_log_entry(struct stumpless_entry *entry);
 static void print_errno(void);
 static void print_error(char *error);
 
-static struct init_registration_data init_logging_reg = {
-    .id = LOGGING_MODULE_ID,
-    .init_func = init_loggers,
-    .destroy_func = destroy_loggers,
-};
-
-/*******************************************************************************
- *    MODULARITY BOILERCODE
- ******************************************************************************/
 struct logging_utils_private_ops {
   void (*log_msg)(char *msg, const char *msg_id,
                   enum stumpless_severity severity);
@@ -82,6 +70,18 @@ static struct logging_utils_private_ops logging_utils_priv_ops = {
     .print_error = print_error,
 };
 
+/*******************************************************************************
+ *    INIT BOILERCODE
+ ******************************************************************************/
+static struct init_registration_data init_logging_reg = {
+    .id = LOGGING_MODULE_ID,
+    .init_func = init_loggers,
+    .destroy_func = destroy_loggers,
+};
+
+/*******************************************************************************
+ *    PUBLIC API
+ ******************************************************************************/
 struct logging_utils_ops logging_utils_ops = {
     .init_loggers = init_loggers,
     .destroy_loggers = destroy_loggers,
@@ -90,7 +90,7 @@ struct logging_utils_ops logging_utils_ops = {
     .private = &logging_utils_priv_ops};
 
 /*******************************************************************************
- *    PUBLIC API
+ *    PRIVATE API
  ******************************************************************************/
 int init_loggers(void) {
   errno = 0;
@@ -166,7 +166,6 @@ OUT:
 int create_log_entry(char *msg, const char *msg_id,
                      struct stumpless_entry **entry,
                      enum stumpless_severity severity) {
-
   *entry = stumpless_new_entry_str(STUMPLESS_FACILITY_USER, severity,
                                    PROJECT_NAME, msg_id, msg);
   if (*entry == NULL) {
@@ -192,8 +191,8 @@ int emmit_log_entry(struct stumpless_entry *entry) {
 }
 
 void print_error(char *msg) {
-  logging_utils_priv_ops.print_errno();
   fprintf(stderr, "!!! Logging Error: %s !!!\n", msg);
+  logging_utils_priv_ops.print_errno();
 }
 
 void print_errno(void) { stumpless_perror("logging"); }

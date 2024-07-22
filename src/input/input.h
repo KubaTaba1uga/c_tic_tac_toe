@@ -1,7 +1,21 @@
-#ifndef INPUT_SUBSYSTEM_H
-#define INPUT_SUBSYSTEM_H
+#ifndef INPUT_H
+#define INPUT_H
+/*******************************************************************************
+ * @file input.h
+ * @brief TO-DO
+ *
+ * TO-DO
+ *
+ ******************************************************************************/
 
+/*******************************************************************************
+ *    IMPORTS
+ ******************************************************************************/
 #include <stddef.h>
+
+/*******************************************************************************
+ *    PRIVATE API
+ ******************************************************************************/
 
 /*******************************************************************************
  *    PUBLIC API
@@ -23,9 +37,6 @@ struct input_registration_data {
   enum input_modules id;
 };
 
-/*******************************************************************************
- *    MODULARITY BOILERCODE
- ******************************************************************************/
 struct input_ops {
   void (*register_module)(
       struct input_registration_data input_registration_data);
@@ -34,16 +45,20 @@ struct input_ops {
   void *private_data[INPUT_MAX];
 };
 
-extern struct input_ops input_ops;
+/*******************************************************************************
+ *    INIT BOILERCODE
+ ******************************************************************************/
 extern struct init_registration_data *init_input_reg_p;
 
 /*******************************************************************************
- *    PRIVATE API
+ *    MODULARITY BOILERCODE
  ******************************************************************************/
+extern struct input_ops input_ops;
+
+#endif // INPUT_H
+
 /* #define INPUT_REGISTER_MODULE(_id, _start) \ */
 /*   static struct input_registration_data _input_registration_data = { \ */
 /*       .id = _id, .start = _start}; \ */
 /*   input_ops.private_data[_input_] =                        \ */
 /*       (void *)&_input_registration_data; */
-
-#endif // INPUT_SUBSYSTEM_H

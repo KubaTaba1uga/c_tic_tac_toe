@@ -23,14 +23,16 @@
 #include "utils/logging_utils.h"
 
 /*******************************************************************************
- *    PRIVATE DECLARATIONS
+ *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
 #define MAX_INIT_REGISTRATIONS 100
-static const char module_id[] = "init_subsystem";
+
 struct init_subsystem_t {
   struct init_registration_data *registrations[MAX_INIT_REGISTRATIONS];
   size_t count;
 };
+
+static const char module_id[] = "init_subsystem";
 struct init_subsystem_t init_subsystem = {.count = 0};
 
 static void
@@ -38,22 +40,22 @@ init_register_subsystem(struct init_registration_data *init_registration_data);
 static void
 init_register_child_subsystem(struct init_registration_data *child,
                               struct init_registration_data *parent);
-static int initialize_system(void);
-static void destroy_system(void);
+static int init_initialize_system(void);
+static void init_destroy_system(void);
 static int init_initialize_subsystem(struct init_registration_data *subsystem);
 static void init_destroy_subsystem(struct init_registration_data *subsystem);
 
 /*******************************************************************************
- *    MODULARITY BOILERCODE
+ *    PUBLIC API
  ******************************************************************************/
 struct init_ops init_ops = {.register_module = init_register_subsystem,
                             .register_child_module =
                                 init_register_child_subsystem,
-                            .initialize_system = initialize_system,
-                            .destroy_system = destroy_system};
+                            .initialize_system = init_initialize_system,
+                            .destroy_system = init_destroy_system};
 
 /*******************************************************************************
- *    PUBLIC API
+ *    PRIVATE API
  ******************************************************************************/
 void init_register_subsystem(
     struct init_registration_data *init_registration_data) {
@@ -78,7 +80,7 @@ void init_register_child_subsystem(struct init_registration_data *child,
   }
 }
 
-int initialize_system(void) {
+int init_initialize_system(void) {
   int err = 0;
 
   size_t i;
@@ -96,7 +98,7 @@ int initialize_system(void) {
   return 0;
 }
 
-void destroy_system() {
+void init_destroy_system() {
   int i;
 
   for (i = init_subsystem.count - 1; i >= 0; --i) {
@@ -107,9 +109,6 @@ void destroy_system() {
   }
 }
 
-/*******************************************************************************
- *    PRIVATE API
- ******************************************************************************/
 int init_initialize_subsystem(struct init_registration_data *subsystem) {
   size_t i;
   int err;

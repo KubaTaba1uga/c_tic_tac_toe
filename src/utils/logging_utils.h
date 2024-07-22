@@ -1,14 +1,20 @@
-/**
+#ifndef LOGGING_UTILS_H
+#define LOGGING_UTILS_H
+/*******************************************************************************
  * @file logging_utils.h
- * @brief Logging utilities for managing loggers and logging messages.
+ * @brief TO-DO
  *
- * This header defines the interface for initializing, destroying, and logging
- * information or error messages using a set of logging utilities. The structure
- * `logging_utils_ops` contains function pointers for the operations related to
- * logging management.
- */
-#ifndef _LOGGING_UTILS_H
-#define _LOGGING_UTILS_H
+ * TO-DO
+ *
+ ******************************************************************************/
+
+/*******************************************************************************
+ *    IMPORTS
+ ******************************************************************************/
+
+/*******************************************************************************
+ *    PRIVATE API
+ ******************************************************************************/
 
 /*******************************************************************************
  *    PUBLIC API
@@ -21,6 +27,9 @@ struct logging_utils_ops {
   void *private;
 };
 
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
 extern struct logging_utils_ops logging_utils_ops;
 
-#endif // _LOGGING_UTILS_H
+#endif // LOGGING_UTILS_H
