@@ -6,7 +6,7 @@ init = join_paths(src, 'init')
 
 test_config_name = 'test_config.c'
 
-test_config_src = files([test_config_name, config / 'config.c', utils / 'logging_utils.c', init / 'init.c'])
+test_config_src = files([test_config_name, config / 'config.c', utils / 'logging_utils.c', utils / 'std_lib_utils.c', init / 'init.c'])
 
 test_config_exe = executable('test_config',
   sources: [

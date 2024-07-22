@@ -23,6 +23,7 @@ variables.
 // App's internal libs
 #include "config.h"
 #include "utils/logging_utils.h"
+#include "utils/std_lib_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
@@ -71,7 +72,8 @@ char *config_get_variable(char *var_name) {
   size_t i;
 
   for (i = 0; i < config_subsystem.count; i++) {
-    if (strcmp(var_name, config_subsystem.registrations[i].var_name) == 0) {
+    if (std_lib_utils_ops.are_str_eq(
+            var_name, (char *)config_subsystem.registrations[i].var_name)) {
       value = getenv(var_name);
 
       if (value == NULL)

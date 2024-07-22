@@ -11,6 +11,7 @@
 #include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
+#include "utils/std_lib_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
@@ -72,7 +73,8 @@ int input_register_callback(char *id, input_callback_func_t callback) {
   size_t i;
 
   for (i = 0; i < input_subsystem.count; ++i) {
-    if (strcmp(id, input_subsystem.registrations[i]->id) == 0) {
+    if (std_lib_utils_ops.are_str_eq(
+            id, (char *)input_subsystem.registrations[i]->id)) {
       input_subsystem.registrations[i]->callback = callback;
       return 0;
     }
