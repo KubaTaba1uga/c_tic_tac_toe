@@ -52,7 +52,7 @@ struct keyboard1_ops keyboard1_ops = {};
  *    PRIVATE API
  ******************************************************************************/
 int keyboard1_module_init(void) {
-  input_ops.register_module(input_keyboard1_reg);
+  input_ops.register_module(&input_keyboard1_reg);
 
   return 0;
 }
