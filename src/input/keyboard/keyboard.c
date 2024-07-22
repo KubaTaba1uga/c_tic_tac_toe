@@ -134,6 +134,7 @@ void *keyboard_process_stdin(void *_) {
 
     if (fds[0].revents & POLLIN) {
       keyboard_read_stdin();
+      keyboard_execute_callbacks();
     }
   }
 
@@ -184,7 +185,8 @@ void keyboard_execute_callbacks(void) {
 }
 
 /**
- * @brief Register a callback for keyboard events
+
+* @brief Register a callback for keyboard events
  *
  * This function registers a callback that will be called when there is
  * input on stdin.

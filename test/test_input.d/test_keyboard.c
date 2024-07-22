@@ -12,9 +12,12 @@
 
 int stdin_backup;
 int mockup_callback_counter;
-struct timespec ts = {.tv_sec = 0, .tv_nsec = 50000000}; // 50 milliseconds
+int pipefd[2];
+
+struct timespec ts = {.tv_sec = 0, .tv_nsec = 500};
 
 static int mock_callback(void) {
+  logging_utils_ops.log_info("mock_callback", "executed");
   mockup_callback_counter++;
   return 0;
 }
@@ -22,16 +25,34 @@ static int mock_callback(void) {
 void setUp() {
   logging_utils_ops.init_loggers();
   mockup_callback_counter = 0;
+
+  // Backup the current stdin
+  stdin_backup = dup(STDIN_FILENO);
+
+  // Create a pipe and redirect stdin to it
+  pipe(pipefd);
+  dup2(pipefd[0], STDIN_FILENO);
+  /* close(pipefd[0]); */
 }
 
-void tearDown() { logging_utils_ops.destroy_loggers(); }
+void tearDown() { // Restore the original stdin
+  dup2(stdin_backup, STDIN_FILENO);
+  close(stdin_backup);
+
+  logging_utils_ops.destroy_loggers();
+}
 
 void test_process_stdin() {
+
   keyboard_ops.initialize();
-  logging_utils_ops.log_info("test_process_stdin", "Registering mock callback");
   keyboard_ops.register_callback(mock_callback);
 
+  // Write something to the pipe to simulate stdin input
+  write(pipefd[1], "test", strlen("test"));
+  close(pipefd[1]);
+
+  thrd_sleep(&ts, NULL);
+
   // Check if the callback was executed
-  logging_utils_ops.log_info("test_process_stdin", "Checking callback counter");
   TEST_ASSERT_EQUAL_INT(1, mockup_callback_counter);
 }
