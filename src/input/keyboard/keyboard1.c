@@ -81,16 +81,17 @@ int keyboard1_start(void) {
 }
 
 int keyboard1_callback(size_t n, char buffer[n]) {
-  enum input_events input_event;
+  enum input_events input_event = INPUT_EVENT_NONE;
   size_t i;
   int err;
+
   if (input_keyboard1_reg.callback == NULL) {
     logging_utils_ops.log_err(module_id, "No callback set up for keyboard1");
     return EINVAL;
   }
 
   for (i = 0; i < n; i++) {
-    switch (buffer[n]) {
+    switch (buffer[i]) {
     case 'w':
       input_event = INPUT_EVENT_UP;
       break;
@@ -115,8 +116,7 @@ int keyboard1_callback(size_t n, char buffer[n]) {
       input_event = INPUT_EVENT_EXIT;
       break;
 
-    default:
-      return EINVAL;
+    default:;
     }
   }
 

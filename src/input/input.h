@@ -23,14 +23,14 @@
 #define INPUT_KEYBOARD1_ID "keyboard1"
 
 enum input_events {
-  INPUT_EVENTS_START,
+  INPUT_EVENT_NONE = 0,
   INPUT_EVENT_UP,
   INPUT_EVENT_DOWN,
   INPUT_EVENT_LEFT,
   INPUT_EVENT_RIGHT,
   INPUT_EVENT_SELECT,
   INPUT_EVENT_EXIT,
-  INPUT_EVENTS_MAX,
+  INPUT_EVENT_MAX,
 };
 
 typedef int (*input_callback_func_t)(enum input_events input_event);
