@@ -49,6 +49,7 @@ static bool is_keyboard_initialized = false;
 static struct keyboard_subsystem keyboard_subsystem;
 
 static int keyboard_initialize(void);
+static void keyboard_destroy(void);
 static void *keyboard_process_stdin(void *);
 static void keyboard_read_stdin(void);
 static int keyboard_register_callback(callback_t callback);
@@ -70,6 +71,7 @@ static struct keyboard_private_ops keyboard_private_ops = {
  ******************************************************************************/
 // Structure for keyboard operations
 struct keyboard_ops keyboard_ops = {.initialize = keyboard_initialize,
+                                    .destroy = keyboard_destroy,
                                     .register_callback =
                                         keyboard_register_callback,
                                     .private = &keyboard_private_ops};
@@ -98,6 +100,7 @@ int keyboard_initialize(void) {
   memset(&keyboard_subsystem, 0, sizeof(struct keyboard_subsystem));
 
   // Create the thread for processing stdin input
+  is_keyboard_initialized = true; // Set the initialized flag
   err = pthread_create(&keyboard_subsystem.thread, NULL,
                        &keyboard_process_stdin, NULL);
   if (err) {
@@ -107,12 +110,12 @@ int keyboard_initialize(void) {
     return err;
   }
 
-  is_keyboard_initialized = true; // Set the initialized flag
-
   logging_utils_ops.log_info(INPUT_KEYBOARD_ID, "Initialized keyboard");
 
   return 0;
 }
+
+void keyboard_destroy(void) { is_keyboard_initialized = false; }
 
 void *keyboard_process_stdin(void *_) {
   struct pollfd fds[1];
@@ -122,7 +125,7 @@ void *keyboard_process_stdin(void *_) {
   fds[0].fd = STDIN_FILENO;
   fds[0].events = POLLIN;
 
-  while (true) {
+  while (is_keyboard_initialized) {
     // Wait for input on stdin
     err = poll(fds, 1, -1);
 
@@ -137,8 +140,6 @@ void *keyboard_process_stdin(void *_) {
       keyboard_execute_callbacks();
     }
   }
-
-  is_keyboard_initialized = false;
 
   pthread_exit(NULL); // Exit the thread
 }

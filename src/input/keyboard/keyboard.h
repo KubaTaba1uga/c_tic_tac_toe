@@ -22,6 +22,7 @@
  ******************************************************************************/
 struct keyboard_ops {
   int (*initialize)(void);
+  void (*destroy)(void);
   int (*register_callback)(input_callback_func_t);
   void *private;
 };
