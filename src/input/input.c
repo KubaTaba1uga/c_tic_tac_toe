@@ -29,8 +29,7 @@ static int input_init(void);
 static void input_destroy(void);
 static void
 input_register_module(struct input_registration_data init_registration_data);
-static int input_register_callback(enum input_modules id,
-                                   input_callback_func_t callback);
+static int input_register_callback(char *id, input_callback_func_t callback);
 static int input_start_non_blocking(void);
 
 /*******************************************************************************
@@ -69,12 +68,11 @@ void input_register_module(
   }
 }
 
-int input_register_callback(enum input_modules id,
-                            input_callback_func_t callback) {
+int input_register_callback(char *id, input_callback_func_t callback) {
   size_t i;
 
   for (i = 0; i < input_subsystem.count; ++i) {
-    if (id == input_subsystem.registrations[i].id) {
+    if (strcmp(id, input_subsystem.registrations[i].id) == 0) {
       input_subsystem.registrations[i].callback = callback;
       return 0;
     }

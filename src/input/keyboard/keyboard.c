@@ -38,7 +38,8 @@ typedef int (*callback_t)(void);
 
 // Structure representing the keyboard subsystem
 struct keyboard_subsystem {
-  callback_t callbacks[KEYBOARD_CALLBACK_MAX];  // Array of callback functions
+  keyboard_callback_func_t
+      callbacks[KEYBOARD_CALLBACK_MAX];         // Array of callback functions
   size_t callback_count;                        // Count of registered callbacks
   char stdin_buffer[KEYBOARD_STDIN_BUFFER_MAX]; // Buffer to store stdin input
   size_t stdin_buffer_count; // Count of bytes in stdin buffer
@@ -52,7 +53,7 @@ static int keyboard_initialize(void);
 static void keyboard_destroy(void);
 static void *keyboard_process_stdin(void *);
 static void keyboard_read_stdin(void);
-static int keyboard_register_callback(callback_t callback);
+static int keyboard_register_callback(keyboard_callback_func_t callback);
 static void keyboard_execute_callbacks(void);
 
 struct keyboard_private_ops {
@@ -180,7 +181,8 @@ void keyboard_execute_callbacks(void) {
   size_t i;
   for (i = 0; i < keyboard_subsystem.callback_count; ++i) {
     if (keyboard_subsystem.callbacks[i]) {
-      keyboard_subsystem.callbacks[i]();
+      keyboard_subsystem.callbacks[i](keyboard_subsystem.stdin_buffer_count,
+                                      keyboard_subsystem.stdin_buffer);
     }
   }
 }
@@ -195,7 +197,7 @@ void keyboard_execute_callbacks(void) {
  * @param callback The callback function to register
  * @return 0 on success, error code on failure
  */
-int keyboard_register_callback(callback_t callback) {
+int keyboard_register_callback(keyboard_callback_func_t callback) {
   if (!callback) {
     return EINVAL;
   }

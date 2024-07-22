@@ -22,27 +22,31 @@
  ******************************************************************************/
 #define INPUT_KEYBOARD1_ID "keyboard1"
 
-enum input_modules {
-  INPUT_KEYBOARD1 = 0,
-  INPUT_KEYBOARD2,
-  INPUT_MAX,
+enum input_events {
+  INPUT_EVENTS_START,
+  INPUT_EVENT_UP,
+  INPUT_EVENT_DOWN,
+  INPUT_EVENT_LEFT,
+  INPUT_EVENT_RIGHT,
+  INPUT_EVENT_SELECT,
+  INPUT_EVENT_EXIT,
+  INPUT_EVENTS_MAX,
 };
 
-typedef int (*input_callback_func_t)(void);
+typedef int (*input_callback_func_t)(enum input_events input_event);
 typedef int (*input_start_func_t)(void);
 
 struct input_registration_data {
   input_start_func_t start;
   input_callback_func_t callback;
-  enum input_modules id;
+  const char *id;
 };
 
 struct input_ops {
   void (*register_module)(
       struct input_registration_data input_registration_data);
-  int (*register_callback)(enum input_modules, input_callback_func_t callback);
+  int (*register_callback)(char *id, input_callback_func_t callback);
   int (*start)(void);
-  void *private_data[INPUT_MAX];
 };
 
 /*******************************************************************************
@@ -56,9 +60,3 @@ extern struct init_registration_data *init_input_reg_p;
 extern struct input_ops input_ops;
 
 #endif // INPUT_H
-
-/* #define INPUT_REGISTER_MODULE(_id, _start) \ */
-/*   static struct input_registration_data _input_registration_data = { \ */
-/*       .id = _id, .start = _start}; \ */
-/*   input_ops.private_data[_input_] =                        \ */
-/*       (void *)&_input_registration_data; */

@@ -20,7 +20,7 @@ struct timespec ts = {.tv_sec = 0, .tv_nsec = 5000};
 static void restore_orig_stdin();
 static void mock_stdin();
 
-static int mock_callback(void) {
+static int mock_callback(size_t n, char buffer[n]) {
   logging_utils_ops.log_info("mock_callback", "executed");
   mockup_callback_counter++;
   return 0;

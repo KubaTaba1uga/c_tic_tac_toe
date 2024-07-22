@@ -11,7 +11,8 @@
 /*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
-#include "input/input.h"
+#include <stddef.h>
+typedef int (*keyboard_callback_func_t)(size_t n, char buffer[n]);
 
 /*******************************************************************************
  *    PRIVATE API
@@ -23,7 +24,7 @@
 struct keyboard_ops {
   int (*initialize)(void);
   void (*destroy)(void);
-  int (*register_callback)(input_callback_func_t);
+  int (*register_callback)(keyboard_callback_func_t);
   void *private;
 };
 

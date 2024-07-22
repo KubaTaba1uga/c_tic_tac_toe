@@ -10,30 +10,38 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
 // App's internal libs
+#include "config/config.h"
 #include "init/init.h"
 #include "input/input.h"
-#include "keyboard1.h"
+#include "input/keyboard/keyboard.h"
+#include "input/keyboard/keyboard1.h"
 #include "utils/logging_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-/* static const char *module_id = INPUT_KEYBOARD1_ID; */
+static const char *module_id = INPUT_KEYBOARD1_ID;
 
 static int keyboard1_module_init(void);
 static void keyboard1_module_destroy(void);
+static int keyboard1_start(void);
+static int keyboard1_callback(size_t n, char buffer[n]);
 
 static struct init_registration_data init_keyboard1_reg = {
     .id = INPUT_KEYBOARD1_ID,
     .init_func = keyboard1_module_init,
     .destroy_func = keyboard1_module_destroy,
 };
+
+static struct input_registration_data input_keyboard1_reg = {
+    .start = keyboard1_start, .id = INPUT_KEYBOARD1_ID};
 
 /*******************************************************************************
  *    PUBLIC API
@@ -43,10 +51,82 @@ struct keyboard1_ops keyboard1_ops = {};
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
-int keyboard1_module_init(void) { return 0; }
+int keyboard1_module_init(void) {
+  input_ops.register_module(input_keyboard1_reg);
+
+  return 0;
+}
 
 void keyboard1_module_destroy(void) {}
 
-int keyboard1_start(void) { return 0; }
+int keyboard1_start(void) {
+  int err;
+
+  err = keyboard_ops.initialize();
+  if (err) {
+    logging_utils_ops.log_err(module_id,
+                              "Unable to initialize keyboard1 module");
+    return err;
+  }
+
+  err = keyboard_ops.register_callback(keyboard1_callback);
+  if (err) {
+    logging_utils_ops.log_err(
+        module_id, "Unable to register callback for keyboard1 module");
+
+    return err;
+  }
+
+  return 0;
+}
+
+int keyboard1_callback(size_t n, char buffer[n]) {
+  enum input_events input_event;
+  size_t i;
+  int err;
+  if (input_keyboard1_reg.callback == NULL) {
+    logging_utils_ops.log_err(module_id, "No callback set up for keyboard1");
+    return EINVAL;
+  }
+
+  for (i = 0; i < n; i++) {
+    switch (buffer[n]) {
+    case 'w':
+      input_event = INPUT_EVENT_UP;
+      break;
+
+    case 'a':
+      input_event = INPUT_EVENT_LEFT;
+      break;
+
+    case 's':
+      input_event = INPUT_EVENT_DOWN;
+      break;
+
+    case 'd':
+      input_event = INPUT_EVENT_RIGHT;
+      break;
+
+    case '\n':
+      input_event = INPUT_EVENT_SELECT;
+      break;
+
+    case 'q':
+      input_event = INPUT_EVENT_EXIT;
+      break;
+
+    default:
+      return EINVAL;
+    }
+  }
+
+  err = input_keyboard1_reg.callback(input_event);
+  if (err != 0) {
+    logging_utils_ops.log_err(module_id, "Callback failed: %s", strerror(err));
+    return err;
+  }
+
+  return 0;
+}
 
 INIT_REGISTER_SUBSYSTEM_CHILD(&init_keyboard1_reg, init_input_reg_p);
