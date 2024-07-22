@@ -1,8 +1,8 @@
-# Template for new C projects
+# Tic tac toe game written in C
 # ******************************************************************************
 # *    Project
 # ******************************************************************************
-project('c_project_template', 'c',
+project('c_tic_tac_toe', 'c',
          version: '0.0.1',
 	 meson_version: '>=1.0.1',
 	 default_options: [
@@ -38,4 +38,3 @@ main = executable('main', sources, dependencies: app_deps, include_directories: 
 # *    Tests
 # ******************************************************************************
 subdir('test')
-
