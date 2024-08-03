@@ -6,12 +6,12 @@
 #include "config/config.h"
 
 #define NULL_DEF()                                                             \
-  struct config_registration_data null_def = {                                 \
+  struct ConfigRegistrationData null_def = {                                   \
       .var_name = "non_existing_var_123", .default_value = NULL}
 
 #define VAL_DEF()                                                              \
-  struct config_registration_data val_def = {.var_name = "existing_var_321",   \
-                                             .default_value = "super value"}
+  struct ConfigRegistrationData val_def = {.var_name = "existing_var_321",     \
+                                           .default_value = "super value"}
 
 void setUp() {
   config_subsystem.count = 0;

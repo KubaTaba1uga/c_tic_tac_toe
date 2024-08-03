@@ -37,7 +37,7 @@
 typedef int (*callback_t)(void);
 
 // Structure representing the keyboard subsystem
-struct keyboard_subsystem {
+struct KeyboardSubsystem {
   keyboard_callback_func_t
       callbacks[KEYBOARD_CALLBACK_MAX];         // Array of callback functions
   size_t callback_count;                        // Count of registered callbacks
@@ -47,7 +47,7 @@ struct keyboard_subsystem {
 };
 
 static bool is_keyboard_initialized = false;
-static struct keyboard_subsystem keyboard_subsystem;
+static struct KeyboardSubsystem keyboard_subsystem;
 
 static int keyboard_initialize(void);
 static void keyboard_destroy(void);
@@ -56,13 +56,13 @@ static void keyboard_read_stdin(void);
 static int keyboard_register_callback(keyboard_callback_func_t callback);
 static void keyboard_execute_callbacks(void);
 
-struct keyboard_private_ops {
+struct KeyboardPrivateOps {
   void *(*process_stdin)(void *);
   void (*read_stdin)(void);
   void (*execute_callbacks)(void);
 };
 
-static struct keyboard_private_ops keyboard_private_ops = {
+static struct KeyboardPrivateOps keyboard_private_ops = {
     .process_stdin = keyboard_process_stdin,
     .read_stdin = keyboard_read_stdin,
     .execute_callbacks = keyboard_execute_callbacks};
@@ -71,11 +71,11 @@ static struct keyboard_private_ops keyboard_private_ops = {
  *    PUBLIC API
  ******************************************************************************/
 // Structure for keyboard operations
-struct keyboard_ops keyboard_ops = {.initialize = keyboard_initialize,
-                                    .destroy = keyboard_destroy,
-                                    .register_callback =
-                                        keyboard_register_callback,
-                                    .private = &keyboard_private_ops};
+struct KeyboardOps keyboard_ops = {.initialize = keyboard_initialize,
+                                   .destroy = keyboard_destroy,
+                                   .register_callback =
+                                       keyboard_register_callback,
+                                   .private = &keyboard_private_ops};
 
 /*******************************************************************************
  *    PRIVATE API
@@ -98,7 +98,7 @@ int keyboard_initialize(void) {
   int err;
 
   // Clear the keyboard subsystem structure
-  memset(&keyboard_subsystem, 0, sizeof(struct keyboard_subsystem));
+  memset(&keyboard_subsystem, 0, sizeof(struct KeyboardSubsystem));
 
   // Create the thread for processing stdin input
   is_keyboard_initialized = true; // Set the initialized flag

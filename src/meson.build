@@ -6,5 +6,5 @@ subdir('init')
 subdir('input')
 subdir('config')
 subdir('utils')
-
+subdir('game')
 

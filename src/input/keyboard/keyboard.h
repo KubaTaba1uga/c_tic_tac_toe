@@ -21,7 +21,7 @@ typedef int (*keyboard_callback_func_t)(size_t n, char buffer[n]);
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct keyboard_ops {
+struct KeyboardOps {
   int (*initialize)(void);
   void (*destroy)(void);
   int (*register_callback)(keyboard_callback_func_t);
@@ -31,6 +31,6 @@ struct keyboard_ops {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct keyboard_ops keyboard_ops;
+extern struct KeyboardOps keyboard_ops;
 
 #endif // KEYBOARD_H

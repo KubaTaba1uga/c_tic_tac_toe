@@ -26,8 +26,8 @@ static bool are_strings_equal(char *str_a, char *str_b);
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct std_lib_utils_ops std_lib_utils_ops = {.get_now = get_current_time,
-                                              .are_str_eq = are_strings_equal};
+struct StdLibUtilsOps std_lib_utils_ops = {.get_now = get_current_time,
+                                           .are_str_eq = are_strings_equal};
 
 /*******************************************************************************
  *    PRIVATE API

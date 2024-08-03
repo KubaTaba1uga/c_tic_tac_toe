@@ -23,19 +23,19 @@
  ******************************************************************************/
 #define PROJECT_NAME "c_tic_tac_toe"
 
-struct config_registration_data {
+struct ConfigRegistrationData {
   const char *var_name;
   const char *default_value;
 };
 
-struct config_ops {
-  int (*register_var)(struct config_registration_data config_registration_data);
+struct ConfigOps {
+  int (*register_var)(struct ConfigRegistrationData config_registration_data);
   char *(*get_var)(char *);
 };
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct config_ops config_ops;
+extern struct ConfigOps config_ops;
 
 #endif // CONFIG_H

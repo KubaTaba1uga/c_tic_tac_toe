@@ -27,38 +27,37 @@
  ******************************************************************************/
 #define MAX_INIT_REGISTRATIONS 100
 
-struct init_subsystem_t {
-  struct init_registration_data *registrations[MAX_INIT_REGISTRATIONS];
+struct InitSubsystem {
+  struct InitRegistrationData *registrations[MAX_INIT_REGISTRATIONS];
   size_t count;
 };
 
 static const char module_id[] = "init_subsystem";
-struct init_subsystem_t init_subsystem = {.count = 0};
+struct InitSubsystem init_subsystem = {.count = 0};
 
 static void
-init_register_subsystem(struct init_registration_data *init_registration_data);
-static void
-init_register_child_subsystem(struct init_registration_data *child,
-                              struct init_registration_data *parent);
+init_register_subsystem(struct InitRegistrationData *init_registration_data);
+static void init_register_child_subsystem(struct InitRegistrationData *child,
+                                          struct InitRegistrationData *parent);
 static int init_initialize_system(void);
 static void init_destroy_system(void);
-static int init_initialize_subsystem(struct init_registration_data *subsystem);
-static void init_destroy_subsystem(struct init_registration_data *subsystem);
+static int init_initialize_subsystem(struct InitRegistrationData *subsystem);
+static void init_destroy_subsystem(struct InitRegistrationData *subsystem);
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct init_ops init_ops = {.register_module = init_register_subsystem,
-                            .register_child_module =
-                                init_register_child_subsystem,
-                            .initialize_system = init_initialize_system,
-                            .destroy_system = init_destroy_system};
+struct InitOps init_ops = {.register_module = init_register_subsystem,
+                           .register_child_module =
+                               init_register_child_subsystem,
+                           .initialize_system = init_initialize_system,
+                           .destroy_system = init_destroy_system};
 
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
 void init_register_subsystem(
-    struct init_registration_data *init_registration_data) {
+    struct InitRegistrationData *init_registration_data) {
   if (init_subsystem.count < MAX_INIT_REGISTRATIONS) {
     init_subsystem.registrations[init_subsystem.count++] =
         init_registration_data;
@@ -70,8 +69,8 @@ void init_register_subsystem(
   }
 }
 
-void init_register_child_subsystem(struct init_registration_data *child,
-                                   struct init_registration_data *parent) {
+void init_register_child_subsystem(struct InitRegistrationData *child,
+                                   struct InitRegistrationData *parent) {
   if (parent->child_count < INIT_MAX_CHILDREN) {
     parent->children[parent->child_count++] = child;
   } else {
@@ -109,7 +108,7 @@ void init_destroy_system() {
   }
 }
 
-int init_initialize_subsystem(struct init_registration_data *subsystem) {
+int init_initialize_subsystem(struct InitRegistrationData *subsystem) {
   size_t i;
   int err;
 
@@ -133,7 +132,7 @@ int init_initialize_subsystem(struct init_registration_data *subsystem) {
   return 0;
 }
 
-void init_destroy_subsystem(struct init_registration_data *subsystem) {
+void init_destroy_subsystem(struct InitRegistrationData *subsystem) {
   size_t i;
 
   if (subsystem->child_count != 0) {

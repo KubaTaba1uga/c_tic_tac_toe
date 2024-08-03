@@ -34,19 +34,19 @@ static void keyboard1_module_destroy(void);
 static int keyboard1_start(void);
 static int keyboard1_callback(size_t n, char buffer[n]);
 
-static struct init_registration_data init_keyboard1_reg = {
+static struct InitRegistrationData init_keyboard1_reg = {
     .id = INPUT_KEYBOARD1_ID,
     .init_func = keyboard1_module_init,
     .destroy_func = keyboard1_module_destroy,
 };
 
-static struct input_registration_data input_keyboard1_reg = {
+static struct InputRegistrationData input_keyboard1_reg = {
     .start = keyboard1_start, .id = INPUT_KEYBOARD1_ID};
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct keyboard1_ops keyboard1_ops = {};
+struct Keyboard1Ops keyboard1_ops = {};
 
 /*******************************************************************************
  *    PRIVATE API

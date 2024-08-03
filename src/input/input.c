@@ -19,42 +19,42 @@
 #define MAX_INPUT_REGISTRATIONS 10
 #define INPUT_MODULE_ID "input_subsystem"
 
-struct input_subsystem_t {
-  struct input_registration_data *registrations[MAX_INPUT_REGISTRATIONS];
+struct InputSubsystem {
+  struct InputRegistrationData *registrations[MAX_INPUT_REGISTRATIONS];
   size_t count;
 };
 
-struct input_subsystem_t input_subsystem = {.count = 0};
+struct InputSubsystem input_subsystem = {.count = 0};
 
 static int input_init(void);
 static void input_destroy(void);
 static void
-input_register_module(struct input_registration_data *init_registration_data);
+input_register_module(struct InputRegistrationData *init_registration_data);
 static int input_register_callback(char *id, input_callback_func_t callback);
 static int input_start_non_blocking(void);
 
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct init_registration_data init_input_reg = {.id = INPUT_MODULE_ID,
-                                                       .init_func = input_init,
-                                                       .destroy_func =
-                                                           input_destroy,
-                                                       .child_count = 0};
-struct init_registration_data *init_input_reg_p = &init_input_reg;
+static struct InitRegistrationData init_input_reg = {.id = INPUT_MODULE_ID,
+                                                     .init_func = input_init,
+                                                     .destroy_func =
+                                                         input_destroy,
+                                                     .child_count = 0};
+struct InitRegistrationData *init_input_reg_p = &init_input_reg;
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct input_ops input_ops = {.register_module = input_register_module,
-                              .register_callback = input_register_callback,
-                              .start = input_start_non_blocking};
+struct InputOps input_ops = {.register_module = input_register_module,
+                             .register_callback = input_register_callback,
+                             .start = input_start_non_blocking};
 
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
 void input_register_module(
-    struct input_registration_data *input_registration_data) {
+    struct InputRegistrationData *input_registration_data) {
 
   input_registration_data->callback = NULL;
 
@@ -93,16 +93,16 @@ int input_start_non_blocking(void) {
   int err;
 
   for (i = 0; i < input_subsystem.count; ++i) {
-    if (input_subsystem.registrations[i]->callback != NULL) {
+    if (input_subsystem.registrations[i]->callback == NULL)
+      continue;
 
-      err = input_subsystem.registrations[i]->start();
+    err = input_subsystem.registrations[i]->start();
 
-      if (err != 0) {
-        logging_utils_ops.log_err(
-            INPUT_MODULE_ID, "Unable to start module %s: %s",
-            input_subsystem.registrations[i]->id, strerror(err));
-        return err;
-      }
+    if (err != 0) {
+      logging_utils_ops.log_err(
+          INPUT_MODULE_ID, "Unable to start module %s: %s",
+          input_subsystem.registrations[i]->id, strerror(err));
+      return err;
     }
   }
 

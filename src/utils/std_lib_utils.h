@@ -20,7 +20,7 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct std_lib_utils_ops {
+struct StdLibUtilsOps {
   unsigned long (*get_now)(void);
   bool (*are_str_eq)(char *str_a, char *str_b);
 };
@@ -28,6 +28,6 @@ struct std_lib_utils_ops {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct std_lib_utils_ops std_lib_utils_ops;
+extern struct StdLibUtilsOps std_lib_utils_ops;
 
 #endif // STD_LIB_UTILS_H

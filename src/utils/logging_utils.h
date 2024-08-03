@@ -19,7 +19,7 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct logging_utils_ops {
+struct LoggingUtilsOps {
   int (*init_loggers)(void);
   void (*destroy_loggers)(void);
   void (*log_info)(const char *msg_id, char *fmt, ...);
@@ -30,6 +30,6 @@ struct logging_utils_ops {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct logging_utils_ops logging_utils_ops;
+extern struct LoggingUtilsOps logging_utils_ops;
 
 #endif // LOGGING_UTILS_H

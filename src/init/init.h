@@ -24,7 +24,7 @@
 #define INIT_MAX_CHILDREN 20
 
 // This enum manages initialization ordering
-enum init_module_order_number {
+enum InitModuleOrderNumber {
   INIT_MODULE_ORDER_LOGGING,
   INIT_MODULE_ORDER_INPUT,
 };
@@ -32,19 +32,18 @@ enum init_module_order_number {
 typedef int (*init_function_t)(void);
 typedef void (*destroy_function_t)(void);
 
-struct init_registration_data {
+struct InitRegistrationData {
   init_function_t init_func;
   destroy_function_t destroy_func;
   const char *id;
-  struct init_registration_data *children[INIT_MAX_CHILDREN];
+  struct InitRegistrationData *children[INIT_MAX_CHILDREN];
   int child_count;
 };
 
-struct init_ops {
-  void (*register_module)(
-      struct init_registration_data *init_registration_data);
-  void (*register_child_module)(struct init_registration_data *child,
-                                struct init_registration_data *parent);
+struct InitOps {
+  void (*register_module)(struct InitRegistrationData *init_registration_data);
+  void (*register_child_module)(struct InitRegistrationData *child,
+                                struct InitRegistrationData *parent);
   int (*initialize_system)(void);
   void (*destroy_system)(void);
 };
@@ -64,6 +63,6 @@ struct init_ops {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct init_ops init_ops;
+extern struct InitOps init_ops;
 
 #endif // INIT_SUBSYSTEM_H

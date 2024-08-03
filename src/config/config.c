@@ -30,30 +30,30 @@ variables.
  ******************************************************************************/
 #define MAX_CONFIG_REGISTRATIONS 100
 
-struct config_subsystem_t {
-  struct config_registration_data registrations[MAX_CONFIG_REGISTRATIONS];
+struct ConfigSubsystem {
+  struct ConfigRegistrationData registrations[MAX_CONFIG_REGISTRATIONS];
   size_t count;
 };
 
 static const char module_id[] = "config_subsystem";
 
-static struct config_subsystem_t config_subsystem = {.count = 0};
+static struct ConfigSubsystem config_subsystem = {.count = 0};
 
 static int config_register_variable(
-    struct config_registration_data config_registration_data);
+    struct ConfigRegistrationData config_registration_data);
 static char *config_get_variable(char *var_name);
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct config_ops config_ops = {.register_var = config_register_variable,
-                                .get_var = config_get_variable};
+struct ConfigOps config_ops = {.register_var = config_register_variable,
+                               .get_var = config_get_variable};
 
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
 int config_register_variable(
-    struct config_registration_data config_registration_data) {
+    struct ConfigRegistrationData config_registration_data) {
   if (config_subsystem.count < MAX_CONFIG_REGISTRATIONS) {
     config_subsystem.registrations[config_subsystem.count++] =
         config_registration_data;

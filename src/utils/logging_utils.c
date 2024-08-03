@@ -51,7 +51,7 @@ static int emmit_log_entry(struct stumpless_entry *entry);
 static void print_errno(void);
 static void print_error(char *error);
 
-struct logging_utils_private_ops {
+struct LoggingUtilsPrivateOps {
   void (*log_msg)(char *msg, const char *msg_id,
                   enum stumpless_severity severity);
   int (*create_log_entry)(char *msg, const char *msg_id,
@@ -62,7 +62,7 @@ struct logging_utils_private_ops {
   void (*print_error)(char *error);
 };
 
-static struct logging_utils_private_ops logging_utils_priv_ops = {
+static struct LoggingUtilsPrivateOps logging_utils_priv_ops = {
     .log_msg = log_msg,
     .create_log_entry = create_log_entry,
     .emmit_log_entry = emmit_log_entry,
@@ -73,7 +73,7 @@ static struct logging_utils_private_ops logging_utils_priv_ops = {
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct init_registration_data init_logging_reg = {
+static struct InitRegistrationData init_logging_reg = {
     .id = LOGGING_MODULE_ID,
     .init_func = init_loggers,
     .destroy_func = destroy_loggers,
@@ -82,12 +82,11 @@ static struct init_registration_data init_logging_reg = {
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct logging_utils_ops logging_utils_ops = {
-    .init_loggers = init_loggers,
-    .destroy_loggers = destroy_loggers,
-    .log_info = log_info,
-    .log_err = log_err,
-    .private = &logging_utils_priv_ops};
+struct LoggingUtilsOps logging_utils_ops = {.init_loggers = init_loggers,
+                                            .destroy_loggers = destroy_loggers,
+                                            .log_info = log_info,
+                                            .log_err = log_err,
+                                            .private = &logging_utils_priv_ops};
 
 /*******************************************************************************
  *    PRIVATE API
