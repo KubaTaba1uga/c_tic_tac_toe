@@ -22,7 +22,7 @@
  ******************************************************************************/
 #define INPUT_KEYBOARD1_ID "keyboard1"
 
-enum input_events {
+enum InputEvents {
   INPUT_EVENT_NONE = 0,
   INPUT_EVENT_UP,
   INPUT_EVENT_DOWN,
@@ -33,7 +33,7 @@ enum input_events {
   INPUT_EVENT_MAX,
 };
 
-typedef int (*input_callback_func_t)(enum input_events input_event);
+typedef int (*input_callback_func_t)(enum InputEvents input_event);
 typedef int (*input_start_func_t)(void);
 
 struct InputRegistrationData {
