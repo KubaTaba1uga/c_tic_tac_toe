@@ -1,7 +1,7 @@
-#ifndef GAME_H
-#define GAME_H
+#ifndef GAME_LOGIC_SM_H
+#define GAME_LOGIC_SM_H
 /*******************************************************************************
- * @file game.h
+ * @file game_logic_sm.h
  * @brief TO-DO
  *
  * TO-DO
@@ -11,6 +11,8 @@
 /*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
+#include "game/game_state_machine/game_state_machine.h"
+#include "game/game_state_machine/user_move/user_move.h"
 
 /*******************************************************************************
  *    PRIVATE API
@@ -19,23 +21,20 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-enum Users {
-  UserNone,
-  User1,
-  User2,
-  UserMax,
-}
+struct GameStateCreationData {
+  enum GameStates current_state;
+  struct UserMove user_move;
+  struct UserMove *users_moves;
+  size_t count;
+};
 
-struct GameOps {};
+struct GameLogicSMOps {
+  enum GameStates (*next_state)(struct GameStateCreationData data);
+};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct GameOps game_ops;
+extern struct GameLogicSMOps game_logic_sm_ops;
 
-/*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-extern struct InitRegistrationData *init_game_reg_p;
-
-#endif // GAME_H
+#endif // GAME_LOGIC_SM_H

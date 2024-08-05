@@ -1,5 +1,5 @@
 /*******************************************************************************
- * @file game_state_machine.c
+ * @file game.c
  * @brief TO-DO
  *
  * TO-DO
@@ -10,12 +10,12 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
-#include <string.h>
+#include "string.h"
 
 // App's internal libs
 #include "config/config.h"
 #include "game/game.h"
-#include "game/user_move/user_move.h"
+#include "game/game_state_machine/game_state_machine.h"
 #include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
@@ -23,84 +23,55 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-#define MAX_USERS_MOVES 100
-
-struct GameStateMachine {
-  struct UserMove users_moves[MAX_USERS_MOVES];
-  enum Users state;
-  size_t count;
+struct GamePrivateOps {
+  int (*user1_logic)(enum InputEvents input_event);
+  int (*user2_logic)(enum InputEvents input_event);
+  int (*logic)(enum InputEvents input_event);
 };
 
-struct GameStateMachine game_state_machine;
-static char module_id[] = "game";
+static int game_init(void);
+static int game_process_user1(enum InputEvents input_event);
+static int game_process_user2(enum InputEvents input_event);
+static int game_process(enum InputEvents input_event);
 
-static int game_state_machine_init(void);
-static int game_state_machine_step(enum InputEvents input_event);
+static char module_id[] = "game";
+static struct GamePrivateOps game_priv_ops = {.user1_logic = game_process_user1,
+                                              .user2_logic = game_process_user2,
+                                              .logic = game_process};
 
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct InitRegistrationData init_game_state_machine_reg = {
+static struct InitRegistrationData init_game_reg = {
     .id = module_id,
-    .init_func = game_state_machine_init,
+    .init_func = game_init,
     .destroy_func = NULL,
 };
-struct InitRegistrationData *init_game_reg_p = &init_game_state_machine_reg;
+struct InitRegistrationData *init_game_reg_p = &init_game_reg;
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-int game_state_machine_step_user1(enum InputEvents input_event) {
-  if (game_state_machine.state != User1)
-    return 0;
+struct GameOps game_ops = {NULL};
 
-  return game_state_machine_step(input_event);
-}
-
-int game_state_machine_step_user2(enum InputEvents input_event) {
-  if (game_state_machine.state != User2)
-    return 0;
-
-  return game_state_machine_step(input_event);
-}
-
-int game_state_machine_step(enum InputEvents input_event) {
-  if (input_event <= INPUT_EVENT_NONE || input_event >= INPUT_EVENT_MAX)
-    return 0;
-
-  struct UserMove user_move;
-  struct UserMoveCreationData user_move_creation_data = {
-      .user = game_state_machine.state,
-      .input = input_event,
-      .count = game_state_machine.count,
-      .users_moves = game_state_machine.users_moves};
-
-  user_move = user_move_ops.create_move(user_move_creation_data);
-
-  (void)user_move;
-
-  return 0;
-}
-
-int game_state_machine_init(void) {
-  struct ConfigRegistrationData user1_input = {.var_name = "user1_input",
-                                               .default_value = "keyboard1"};
-  struct ConfigRegistrationData user2_input = {.var_name = "user2_input",
-                                               .default_value = "keyboard1"};
+/*******************************************************************************
+ *    PRIVATE API
+ ******************************************************************************/
+int game_init(void) {
+  struct ConfigRegistrationData user1_input, user2_input;
   int err;
 
-  // State 0
-  game_state_machine.state = User1;
-  game_state_machine.count = 0;
-
+  user1_input.var_name = "user1_input";
+  user1_input.default_value = "keyboard1";
   err = config_ops.register_var(user1_input);
   if (err) {
     logging_utils_ops.log_err(module_id,
                               "Unable to register input device for user 1.");
-
     return err;
   }
 
+  user2_input.var_name = "user2_input";
+  user2_input.default_value = "keyboard1";
   err = config_ops.register_var(user2_input);
   if (err) {
     logging_utils_ops.log_err(module_id,
@@ -114,7 +85,7 @@ int game_state_machine_init(void) {
   if (strcmp(config_ops.get_var("user1_input"),
              config_ops.get_var("user2_input")) == 0) {
     err = input_ops.register_callback(config_ops.get_var("user1_input"),
-                                      game_state_machine_step);
+                                      game_priv_ops.logic);
     if (err) {
       logging_utils_ops.log_err(
           module_id,
@@ -127,7 +98,7 @@ int game_state_machine_init(void) {
 
   // Otherwise we need to distinguish inputs at device level.
   err = input_ops.register_callback(config_ops.get_var("user1_input"),
-                                    game_state_machine_step_user1);
+                                    game_priv_ops.user1_logic);
   if (err) {
     logging_utils_ops.log_err(
         module_id, "Unable to register callback for input device for user 1.");
@@ -136,7 +107,7 @@ int game_state_machine_init(void) {
   }
 
   err = input_ops.register_callback(config_ops.get_var("user2_input"),
-                                    game_state_machine_step_user2);
+                                    game_priv_ops.user2_logic);
   if (err) {
     logging_utils_ops.log_err(
         module_id, "Unable to register callback for input device for user 2.");
@@ -147,7 +118,16 @@ int game_state_machine_init(void) {
   return 0;
 }
 
-/*******************************************************************************
- *    PRIVATE API
- ******************************************************************************/
-INIT_REGISTER_SUBSYSTEM(&init_game_state_machine_reg, INIT_MODULE_ORDER_GAME);
+int game_process_user1(enum InputEvents input_event) {
+  return game_sm_ops.step(input_event, User1);
+}
+
+int game_process_user2(enum InputEvents input_event) {
+  return game_sm_ops.step(input_event, User2);
+}
+
+int game_process(enum InputEvents input_event) {
+  return game_sm_ops.step(input_event, UserNone);
+}
+
+INIT_REGISTER_SUBSYSTEM(&init_game_reg, INIT_MODULE_ORDER_GAME);

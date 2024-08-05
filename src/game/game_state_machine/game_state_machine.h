@@ -1,7 +1,7 @@
-#ifndef USER_MOVE_H
-#define USER_MOVE_H
+#ifndef GAME_STATE_MACHINE_H
+#define GAME_STATE_MACHINE_H
 /*******************************************************************************
- * @file user_move.h
+ * @file game_state_machine.h
  * @brief TO-DO
  *
  * TO-DO
@@ -12,8 +12,8 @@
  *    IMPORTS
  ******************************************************************************/
 #include "game/game.h"
+#include "game/user_move/user_move.h"
 #include "input/input.h"
-#include <stddef.h>
 
 /*******************************************************************************
  *    PRIVATE API
@@ -22,33 +22,34 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-enum UserMoveType {
-  USER_MOVE_TYPE_HIGHLIGHT,
-  USER_MOVE_TYPE_SELECT_VALID,
-  USER_MOVE_TYPE_SELECT_INVALID,
-  USER_MOVE_TYPE_QUIT,
+#define MAX_USERS_MOVES 100
+
+enum GameStates {
+  GameStateUser1 = User1,
+  GameStateUser2 = User2,
+  GameStateQuitting,
+  GameStateQuit,
+  GameStateWin,
 };
 
-struct UserMove {
-  enum UserMoveType type;
-  enum Users user;
-  int coordinates[2];
-};
-
-struct UserMoveCreationData {
-  enum Users user;
-  enum InputEvents input;
+struct GameStateMachine {
+  struct UserMove users_moves[MAX_USERS_MOVES];
+  enum GameStates state;
   size_t count;
-  struct UserMove *users_moves;
 };
 
-struct UserMoveOps {
-  struct UserMove (*create_move)(struct UserMoveCreationData);
+struct GameStateMachineRegistrationData {
+  enum GameStates (*next_state)(struct GameStateMachine);
+  const char *id;
+};
+
+struct GameStateMachineOps {
+  int (*step)(enum InputEvents input_event, enum Users input_user);
 };
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct UserMoveOps user_move_ops;
+extern struct GameStateMachineOps game_sm_ops;
 
-#endif // USER_MOVE_H
+#endif // GAME_STATE_MACHINE_H

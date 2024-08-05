@@ -28,14 +28,14 @@ def generate_header(c_file_path):
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct {base_name.lower()}_ops {{
+struct {base_name.capitalize()}Ops {{
     
 }};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-    extern struct {base_name.lower()}_ops {base_name.lower()}_ops;
+    extern struct {base_name.capitalize()}Ops {base_name.lower()}_ops;
 
 #endif // {base_name.upper()}_H
 """
