@@ -14,7 +14,7 @@
 
 int stdin_backup;
 int mockup_callback_counter;
-enum input_events input_event;
+enum InputEvents input_event;
 int pipefd[2];
 
 struct timespec ts = {.tv_sec = 0, .tv_nsec = 5000};
@@ -28,7 +28,7 @@ static int mock_keyboard_callback(size_t n, char buffer[n]) {
   return 0;
 }
 
-static int mock_keyboard1_callback(enum input_events local_input_event) {
+static int mock_keyboard1_callback(enum InputEvents local_input_event) {
   logging_utils_ops.log_info("mock_keyboard1_callback", "executed %i",
                              local_input_event);
   mockup_callback_counter++;

@@ -1,7 +1,7 @@
-#ifndef GAME_SUBSYSTEM_H
-#define GAME_SUBSYSTEM_H
+#ifndef USER_MOVE_H
+#define USER_MOVE_H
 /*******************************************************************************
- * @file game.h
+ * @file user_move.h
  * @brief TO-DO
  *
  * TO-DO
@@ -11,6 +11,9 @@
 /*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
+#include "game/game.h"
+#include "input/input.h"
+#include <stddef.h>
 
 /*******************************************************************************
  *    PRIVATE API
@@ -19,21 +22,34 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-enum Users { User1, User2 };
+enum UserMoveType {
+  USER_MOVE_TYPE_HIGHLIGHT,
+  USER_MOVE_TYPE_SELECT_VALID,
+  USER_MOVE_TYPE_SELECT_INVALID,
+  USER_MOVE_TYPE_QUIT,
+};
 
-struct game_ops {
-  int (*start)(void);
+struct UserMove {
+  enum UserMoveType type;
+  enum Users user;
+  int coordinates[2];
+};
+
+struct UserMoveCreationData {
+  enum Users user;
+  enum InputEvents input;
+  size_t count;
+  struct UserMove *users_moves;
+};
+
+struct UserMoveOps {
+  struct UserMove (*create_move)(struct UserMoveCreationData);
   void *private;
 };
 
 /*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-extern struct InitRegistrationData *init_game_reg_p;
-
-/*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct game_ops game_ops;
+extern struct UserMoveOps user_move_ops;
 
-#endif // GAME_SUBSYSTEM_H
+#endif // USER_MOVE_H

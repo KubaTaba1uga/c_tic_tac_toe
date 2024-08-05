@@ -27,6 +27,7 @@
 enum InitModuleOrderNumber {
   INIT_MODULE_ORDER_LOGGING,
   INIT_MODULE_ORDER_INPUT,
+  INIT_MODULE_ORDER_GAME,
 };
 
 typedef int (*init_function_t)(void);

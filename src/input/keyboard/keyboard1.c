@@ -81,7 +81,7 @@ int keyboard1_start(void) {
 }
 
 int keyboard1_callback(size_t n, char buffer[n]) {
-  enum input_events input_event = INPUT_EVENT_NONE;
+  enum InputEvents input_event = INPUT_EVENT_NONE;
   size_t i;
   int err;
 
