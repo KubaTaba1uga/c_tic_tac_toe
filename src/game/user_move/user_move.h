@@ -44,7 +44,6 @@ struct UserMoveCreationData {
 
 struct UserMoveOps {
   struct UserMove (*create_move)(struct UserMoveCreationData);
-  void *private;
 };
 
 /*******************************************************************************

@@ -1,3 +1,8 @@
+#include "input/input.h"
+#include "input/keyboard/keyboard.c"
+#include "input/keyboard/keyboard.h"
+#include "input/keyboard/keyboard1.c"
+#include "utils/logging_utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,12 +10,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <unity.h>
-
-#include "input/input.h"
-#include "input/keyboard/keyboard.c"
-#include "input/keyboard/keyboard.h"
-#include "input/keyboard/keyboard1.c"
-#include "utils/logging_utils.h"
 
 int stdin_backup;
 int mockup_callback_counter;

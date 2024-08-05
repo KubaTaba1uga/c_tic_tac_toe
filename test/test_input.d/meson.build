@@ -1,5 +1,5 @@
 root = join_paths('..', '..')
-# src = join_paths(root, 'src')
+src = join_paths(root, 'src')
 utils = join_paths(src, 'utils')
 input = join_paths(src, 'input')
 init = join_paths(src, 'init')
