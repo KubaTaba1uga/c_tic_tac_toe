@@ -1,8 +1,8 @@
 #include <unity.h>
 
 #include "game/game.h"
-#include "game/user_move/user_move.c"
-#include "game/user_move/user_move.h"
+#include "game/game_state_machine/user_move/user_move.c"
+#include "game/game_state_machine/user_move/user_move.h"
 #include "input/input.h"
 
 extern struct UserMoveStateMachine user_move_state_machine;

@@ -11,8 +11,8 @@
 /*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
-#include "game/game.h"
-#include "game/user_move/user_move.h"
+#include "game/game_state_machine/game_states.h"
+#include "game/game_state_machine/user_move/user_move.h"
 #include "input/input.h"
 
 /*******************************************************************************
@@ -24,23 +24,10 @@
  ******************************************************************************/
 #define MAX_USERS_MOVES 100
 
-enum GameStates {
-  GameStateUser1 = User1,
-  GameStateUser2 = User2,
-  GameStateQuitting,
-  GameStateQuit,
-  GameStateWin,
-};
-
 struct GameStateMachine {
   struct UserMove users_moves[MAX_USERS_MOVES];
   enum GameStates state;
   size_t count;
-};
-
-struct GameStateMachineRegistrationData {
-  enum GameStates (*next_state)(struct GameStateMachine);
-  const char *id;
 };
 
 struct GameStateMachineOps {

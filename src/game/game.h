@@ -24,7 +24,7 @@ enum Users {
   User1,
   User2,
   UserMax,
-}
+};
 
 struct GameOps {};
 

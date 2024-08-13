@@ -11,6 +11,7 @@
  ******************************************************************************/
 // C standard library
 #include <errno.h>
+#include <stddef.h>
 #include <string.h>
 
 // App's internal libs
@@ -29,20 +30,21 @@
 struct GameStateMachinePrivOps {
   int (*is_input_user_valid)(enum Users input_user);
   int (*is_input_event_valid)(enum InputEvents input_event);
-  enum GameStates (*next_state)(struct UserMove user_move);
-  int (*process_state)(void);
+  void (*sanitize_last_move)(void);
 };
 
 static int game_sm_step(enum InputEvents input_event, enum Users input_user);
 static int validate_input_user(enum Users input_user);
 static int validate_input_event(enum InputEvents input_event);
 static int game_sm_init(void);
+static void sanitize_last_move(void);
 
 static char module_id[] = "game_state_machine";
 static struct GameStateMachine game_sm;
 static struct GameStateMachinePrivOps game_sm_priv_ops = {
     .is_input_event_valid = validate_input_event,
     .is_input_user_valid = validate_input_user,
+    .sanitize_last_move = sanitize_last_move,
 };
 
 /*******************************************************************************
@@ -68,11 +70,14 @@ int game_sm_init(void) {
   return 0;
 }
 
+// Next step is taken from game_logic_sm, while output is users_moves
+//    passed to display.
 int game_sm_step(enum InputEvents input_event, enum Users input_user) {
   if (game_sm_priv_ops.is_input_event_valid(input_event) != 0 ||
       game_sm_priv_ops.is_input_user_valid(input_user) != 0)
     return EINVAL;
-  // TO-DO get rid of hilights and invalid moves, aka sanitize users_moves.
+
+  game_sm_priv_ops.sanitize_last_move();
 
   struct UserMoveCreationData user_move_creation_data = {
       .user = game_sm.state,
@@ -96,10 +101,10 @@ int game_sm_step(enum InputEvents input_event, enum Users input_user) {
 int validate_input_user(enum Users input_user) {
   switch (input_user) {
   case User1:
-    if (game_sm.state != User1)
+    if (game_sm.state != GameStateUser1)
       return 1;
   case User2:
-    if (game_sm.state != User2)
+    if (game_sm.state != GameStateUser2)
       return 2;
   default:
     return 0;
@@ -110,6 +115,26 @@ int validate_input_event(enum InputEvents input_event) {
   if (input_event <= INPUT_EVENT_NONE || input_event >= INPUT_EVENT_MAX)
     return 1;
   return 0;
+}
+
+void sanitize_last_move(void) {
+  if (game_sm.count > 0) {
+    switch (game_sm.state) {
+    case GameStateUser1:
+    case GameStateUser2:
+      if (game_sm.users_moves[game_sm.count - 1].type !=
+          USER_MOVE_TYPE_SELECT_VALID) {
+        game_sm.count--;
+        break;
+      }
+
+    case GameStateWin:
+    case GameStateQuitting:
+    case GameStateQuit:
+      game_sm.count--;
+      break;
+    }
+  }
 }
 
 INIT_REGISTER_SUBSYSTEM_CHILD(&init_game_sm_reg, init_game_reg_p);

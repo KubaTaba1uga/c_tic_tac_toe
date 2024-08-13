@@ -1,5 +1,5 @@
 sources += files(
-  'game_state_machine.c', 'game.h'
+  'game.c', 'game.h'
 )
 
-subdir('user_move')
+subdir('game_state_machine')

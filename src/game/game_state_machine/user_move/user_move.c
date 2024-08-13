@@ -13,7 +13,9 @@
 #include <stdio.h>
 
 // App's internal libs
-#include "game/user_move/user_move.h"
+#include "game/game.h"
+#include "game/game_state_machine/game_state_machine.h"
+#include "game/game_state_machine/user_move/user_move.h"
 #include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
@@ -96,6 +98,7 @@ struct UserMove user_move_create(struct UserMoveCreationData data) {
 
   case INPUT_EVENT_SELECT:
     new_user_move.type = USER_MOVE_TYPE_SELECT_VALID;
+
     for (i = 0; i < data.count; i++) {
       if (data.users_moves[i].type == USER_MOVE_TYPE_SELECT_VALID &&
           data.users_moves[i].coordinates[0] == coordinates->width &&
@@ -103,7 +106,6 @@ struct UserMove user_move_create(struct UserMoveCreationData data) {
         new_user_move.type = USER_MOVE_TYPE_SELECT_INVALID;
       }
     }
-    break;
 
   case INPUT_EVENT_NONE:
   case INPUT_EVENT_MAX:

@@ -28,8 +28,15 @@ struct GameStateCreationData {
   size_t count;
 };
 
+struct GameLogicSMRegistrationData {
+  enum GameStates (*next_state)(struct GameStateCreationData data);
+  const char *id;
+};
+
 struct GameLogicSMOps {
   enum GameStates (*next_state)(struct GameStateCreationData data);
+  void (*register_state_machine)(
+      struct GameLogicSMRegistrationData *registration_data);
 };
 
 /*******************************************************************************

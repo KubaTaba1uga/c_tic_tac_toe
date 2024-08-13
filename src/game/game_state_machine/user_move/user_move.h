@@ -14,7 +14,7 @@
 #include <stddef.h>
 
 #include "game/game.h"
-#include "game/game_state_machine/game_state_machine.h"
+#include "game/game_state_machine/game_states.h"
 #include "input/input.h"
 
 /*******************************************************************************
@@ -25,7 +25,6 @@
  *    PUBLIC API
  ******************************************************************************/
 enum UserMoveType {
-  USER_MOVE_TYPE_MENU,
   USER_MOVE_TYPE_HIGHLIGHT,
   USER_MOVE_TYPE_SELECT_VALID,
   USER_MOVE_TYPE_SELECT_INVALID,
