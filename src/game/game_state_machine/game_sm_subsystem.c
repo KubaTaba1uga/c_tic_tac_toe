@@ -1,5 +1,5 @@
 /*******************************************************************************
- * @file game_logic_sm.c
+ * @file game_sm_subsystem.c
  * @brief TO-DO
  *
  * TO-DO
@@ -13,42 +13,42 @@
 #include <stddef.h>
 
 // App's internal libs
-#include "game/game_state_machine/game_logic_sm/game_logic_sm.h"
+#include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "utils/logging_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-#define MAX_GAME_LOGIC_SM_REGISTRATIONS 100
+#define MAX_GAME_SM_SUBSYSTEM_REGISTRATIONS 100
 
-struct GameLogicSMSubsystem {
-  struct GameLogicSMRegistrationData
-      *registrations[MAX_GAME_LOGIC_SM_REGISTRATIONS];
+struct GameSmSubsystem {
   size_t count;
+  struct GameSmSubsystemRegistrationData
+      *registrations[MAX_GAME_SM_SUBSYSTEM_REGISTRATIONS];
 };
 
-static enum GameStates get_next_state(struct GameStateCreationData data);
-static void
-register_state_machine(struct GameLogicSMRegistrationData *registration_data);
+static void register_state_machine(
+    struct GameSmSubsystemRegistrationData *registration_data);
+static enum GameStates get_next_state(struct GameSmNextStateCreationData data);
 
 static char module_id[] = "game_logic_sm";
-static struct GameLogicSMSubsystem game_logic_sm_subsystem = {.count = 0};
+static struct GameSmSubsystem game_sm_subsystem = {.count = 0};
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct GameLogicSMOps game_logic_sm_ops = {.next_state = get_next_state,
-                                           .register_state_machine =
-                                               register_state_machine};
+struct GameSmSubsystemOps game_sm_subsystem_ops = {.next_state = get_next_state,
+                                                   .register_state_machine =
+                                                       register_state_machine};
 
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
 void register_state_machine(
-    struct GameLogicSMRegistrationData *registration_data) {
-  if (game_logic_sm_subsystem.count < MAX_GAME_LOGIC_SM_REGISTRATIONS) {
-    game_logic_sm_subsystem.registrations[game_logic_sm_subsystem.count++] =
+    struct GameSmSubsystemRegistrationData *registration_data) {
+  if (game_sm_subsystem.count < MAX_GAME_SM_SUBSYSTEM_REGISTRATIONS) {
+    game_sm_subsystem.registrations[game_sm_subsystem.count++] =
         registration_data;
   } else {
     logging_utils_ops.log_err(module_id,
@@ -58,15 +58,15 @@ void register_state_machine(
   }
 }
 
-enum GameStates get_next_state(struct GameStateCreationData data) {
+enum GameStates get_next_state(struct GameSmNextStateCreationData data) {
   enum GameStates new_game_state;
   size_t i;
 
-  for (i = 0; i < game_logic_sm_subsystem.count; i++) {
+  for (i = 0; i < game_sm_subsystem.count; i++) {
     logging_utils_ops.log_info(module_id, "Processing %s",
-                               game_logic_sm_subsystem.registrations[i]->id);
+                               game_sm_subsystem.registrations[i]->id);
 
-    new_game_state = game_logic_sm_subsystem.registrations[i]->next_state(data);
+    new_game_state = game_sm_subsystem.registrations[i]->callback(data);
 
     if (data.current_state != new_game_state)
       return new_game_state;

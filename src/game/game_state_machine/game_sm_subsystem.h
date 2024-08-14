@@ -1,7 +1,7 @@
-#ifndef GAME_LOGIC_SM_H
-#define GAME_LOGIC_SM_H
+#ifndef GAME_SM_SUBSYSTEM_H
+#define GAME_SM_SUBSYSTEM_H
 /*******************************************************************************
- * @file game_logic_sm.h
+ * @file game_sm_subsystem.h
  * @brief TO-DO
  *
  * TO-DO
@@ -21,27 +21,27 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct GameStateCreationData {
-  enum GameStates current_state;
-  struct UserMove user_move;
-  struct UserMove *users_moves;
+struct GameSmNextStateCreationData {
   size_t count;
+  struct UserMove *users_moves;
+  enum GameStates current_state;
+  struct UserMove current_user_move;
 };
 
-struct GameLogicSMRegistrationData {
-  enum GameStates (*next_state)(struct GameStateCreationData data);
+struct GameSmSubsystemRegistrationData {
   const char *id;
+  enum GameStates (*callback)(struct GameSmNextStateCreationData data);
 };
 
-struct GameLogicSMOps {
-  enum GameStates (*next_state)(struct GameStateCreationData data);
+struct GameSmSubsystemOps {
   void (*register_state_machine)(
-      struct GameLogicSMRegistrationData *registration_data);
+      struct GameSmSubsystemRegistrationData *registration_data);
+  enum GameStates (*next_state)(struct GameSmNextStateCreationData data);
 };
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct GameLogicSMOps game_logic_sm_ops;
+extern struct GameSmSubsystemOps game_sm_subsystem_ops;
 
-#endif // GAME_LOGIC_SM_H
+#endif // GAME_SM_SUBSYSTEM_H

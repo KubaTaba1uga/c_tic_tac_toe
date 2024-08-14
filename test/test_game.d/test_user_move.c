@@ -4,8 +4,7 @@
 #include "game/game_state_machine/user_move/user_move.c"
 #include "game/game_state_machine/user_move/user_move.h"
 #include "input/input.h"
-
-extern struct UserMoveStateMachine user_move_state_machine;
+#include "utils/logging_utils.h"
 
 void setUp() {
   logging_utils_ops.init_loggers();

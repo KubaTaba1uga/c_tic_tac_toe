@@ -17,7 +17,7 @@
 // App's internal libs
 #include "config/config.h"
 #include "game/game.h"
-#include "game/game_state_machine/game_logic_sm/game_logic_sm.h"
+#include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/user_move/user_move.h"
 #include "init/init.h"
@@ -28,19 +28,19 @@
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
 struct GameStateMachinePrivOps {
+  void (*sanitize_last_move)(void);
   int (*is_input_user_valid)(enum Users input_user);
   int (*is_input_event_valid)(enum InputEvents input_event);
-  void (*sanitize_last_move)(void);
 };
 
-static int game_sm_step(enum InputEvents input_event, enum Users input_user);
-static int validate_input_user(enum Users input_user);
-static int validate_input_event(enum InputEvents input_event);
 static int game_sm_init(void);
 static void sanitize_last_move(void);
+static int validate_input_user(enum Users input_user);
+static int validate_input_event(enum InputEvents input_event);
+static int game_sm_step(enum InputEvents input_event, enum Users input_user);
 
-static char module_id[] = "game_state_machine";
 static struct GameStateMachine game_sm;
+static char module_id[] = "game_state_machine";
 static struct GameStateMachinePrivOps game_sm_priv_ops = {
     .is_input_event_valid = validate_input_event,
     .is_input_user_valid = validate_input_user,
@@ -70,8 +70,7 @@ int game_sm_init(void) {
   return 0;
 }
 
-// Next step is taken from game_logic_sm, while output is users_moves
-//    passed to display.
+// Next step is taken from game_logic_sm, while output is users_moves.
 int game_sm_step(enum InputEvents input_event, enum Users input_user) {
   if (game_sm_priv_ops.is_input_event_valid(input_event) != 0 ||
       game_sm_priv_ops.is_input_user_valid(input_user) != 0)
@@ -85,15 +84,16 @@ int game_sm_step(enum InputEvents input_event, enum Users input_user) {
       .count = game_sm.count,
       .users_moves = game_sm.users_moves};
 
-  struct GameStateCreationData game_state_creation_data = {
+  struct GameSmNextStateCreationData game_state_creation_data = {
       .current_state = game_sm.state,
-      .user_move = user_move_ops.create_move(user_move_creation_data),
+      .current_user_move = user_move_ops.create_move(user_move_creation_data),
       .count = game_sm.count,
       .users_moves = game_sm.users_moves};
 
-  game_sm.state = game_logic_sm_ops.next_state(game_state_creation_data);
+  game_sm.state = game_sm_subsystem_ops.next_state(game_state_creation_data);
 
-  game_sm.users_moves[game_sm.count++] = game_state_creation_data.user_move;
+  game_sm.users_moves[game_sm.count++] =
+      game_state_creation_data.current_user_move;
 
   return 0;
 }
