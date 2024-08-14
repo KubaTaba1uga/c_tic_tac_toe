@@ -43,7 +43,6 @@ void setUp() {
 
 void tearDown() {
   restore_orig_stdin();
-  keyboard_ops.destroy();
   logging_utils_ops.destroy_loggers();
 }
 
@@ -56,6 +55,8 @@ void test_process_single_stdin() {
   close(pipefd[1]);
 
   thrd_sleep(&ts, NULL);
+
+  keyboard_ops.destroy();
 
   // Check if the callback was executed
   TEST_ASSERT_EQUAL_INT(1, mockup_callback_counter);
@@ -76,6 +77,8 @@ void test_process_multiple_stdin() {
   close(pipefd[1]);
 
   thrd_sleep(&ts, NULL);
+
+  keyboard_ops.destroy();
 
   // Check if the callback was executed
   TEST_ASSERT_EQUAL_INT(2, mockup_callback_counter);

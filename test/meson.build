@@ -3,7 +3,7 @@ cmock_subproject = subproject('cmock')
 unity_dependency = cmock_subproject.get_variable('unity_dep')
 cmock_dependency = cmock_subproject.get_variable('cmock_dep')
 
-test_dependencies = [logging_dep, unity_dependency, cmock_dependency]
+test_dependencies = [logging_dep, pthread_dep, unity_dependency, cmock_dependency]
 
 scripts = join_paths('..', 'scripts')
 

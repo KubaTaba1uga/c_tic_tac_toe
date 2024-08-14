@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <poll.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -55,6 +56,7 @@ static void *keyboard_process_stdin(void *);
 static void keyboard_read_stdin(void);
 static int keyboard_register_callback(keyboard_callback_func_t callback);
 static void keyboard_execute_callbacks(void);
+static void keyboard_signal_handler(int sig);
 
 struct KeyboardPrivateOps {
   void *(*process_stdin)(void *);
@@ -102,8 +104,9 @@ int keyboard_initialize(void) {
 
   // Create the thread for processing stdin input
   is_keyboard_initialized = true; // Set the initialized flag
+
   err = pthread_create(&keyboard_subsystem.thread, NULL,
-                       &keyboard_process_stdin, NULL);
+                       keyboard_private_ops.process_stdin, NULL);
   if (err) {
     logging_utils_ops.log_err(INPUT_KEYBOARD_ID,
                               "Unable to start keyboard_subsystem.thread: %s",
@@ -116,11 +119,20 @@ int keyboard_initialize(void) {
   return 0;
 }
 
-void keyboard_destroy(void) { is_keyboard_initialized = false; }
+void keyboard_destroy(void) {
+  // Send killing signal to the thread
+  pthread_kill(keyboard_subsystem.thread, SIGUSR1);
+  pthread_join(keyboard_subsystem.thread, NULL);
+  is_keyboard_initialized = false;
+}
 
 void *keyboard_process_stdin(void *_) {
   struct pollfd fds[1];
   int err;
+
+  // Set signal handler for input processing thread.
+  // This is needed to properly destruct thread.
+  signal(SIGUSR1, keyboard_signal_handler);
 
   // Set the file descriptor and events to monitor
   fds[0].fd = STDIN_FILENO;
@@ -142,7 +154,8 @@ void *keyboard_process_stdin(void *_) {
     }
   }
 
-  pthread_exit(NULL); // Exit the thread
+  /* pthread_exit(NULL); // Exit the thread */
+  return NULL;
 }
 
 void keyboard_read_stdin(void) {
@@ -216,4 +229,12 @@ int keyboard_register_callback(keyboard_callback_func_t callback) {
                              "Succesfully registered callback in keyboard.");
 
   return 0;
+}
+
+void keyboard_signal_handler(int sig) {
+  if (sig == SIGUSR1) {
+    printf("Thread received signal SIGUSR1. Exiting.\n");
+    // You can use this to interrupt or terminate the thread
+    pthread_exit(NULL);
+  }
 }

@@ -14,10 +14,13 @@
                                            .default_value = "super value"}
 
 void setUp() {
+  logging_utils_ops.init_loggers();
   config_subsystem.count = 0;
   memset(config_subsystem.registrations, 0,
          sizeof(config_subsystem.registrations));
 }
+
+void tearDown() { logging_utils_ops.destroy_loggers(); }
 
 void test_config_register_var_success(void) {
   int err;

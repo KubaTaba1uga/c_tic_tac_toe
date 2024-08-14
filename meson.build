@@ -27,9 +27,16 @@ logging_proj = cmake.subproject('stumpless', options: opt_var)
 logging_dep = logging_proj.dependency('stumpless')
 
 # ******************************************************************************
+# *    Multi-threading
+# ******************************************************************************
+# Declare a dependency on the pthread library
+pthread_dep = dependency('threads')
+
+
+# ******************************************************************************
 # *    App
 # ******************************************************************************
-app_deps = [logging_dep]
+app_deps = [logging_dep, pthread_dep]
 subdir('src')
 
 main = executable('main', sources, dependencies: app_deps, include_directories: [join_paths('.', 'src')])
