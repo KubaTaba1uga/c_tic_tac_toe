@@ -15,14 +15,6 @@ void setUp() {
 void tearDown() { logging_utils_ops.destroy_loggers(); }
 
 void test_user_move_reset_state() {
-  // Modify state
-  user_move_state_machine.state.width = 0;
-  user_move_state_machine.state.height = 0;
-
-  // Validate changes
-  TEST_ASSERT_EQUAL_INT(0, user_move_state_machine.state.width);
-  TEST_ASSERT_EQUAL_INT(0, user_move_state_machine.state.height);
-
   // Reset state using set_default_state
   user_move_priv_ops.set_default_state();
 

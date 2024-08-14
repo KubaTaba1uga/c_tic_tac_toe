@@ -106,6 +106,7 @@ struct UserMove user_move_create(struct UserMoveCreationData data) {
         new_user_move.type = USER_MOVE_TYPE_SELECT_INVALID;
       }
     }
+    break;
 
   case INPUT_EVENT_NONE:
   case INPUT_EVENT_MAX:
