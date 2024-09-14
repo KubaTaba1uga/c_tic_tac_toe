@@ -57,6 +57,7 @@ static void keyboard_read_stdin(void);
 static int keyboard_register_callback(keyboard_callback_func_t callback);
 static void keyboard_execute_callbacks(void);
 static void keyboard_signal_handler(int sig);
+static void keyboard_wait(void);
 
 struct KeyboardPrivateOps {
   void *(*process_stdin)(void *);
@@ -74,6 +75,7 @@ static struct KeyboardPrivateOps keyboard_private_ops = {
  ******************************************************************************/
 // Structure for keyboard operations
 struct KeyboardOps keyboard_ops = {.initialize = keyboard_initialize,
+                                   .wait = keyboard_wait,
                                    .destroy = keyboard_destroy,
                                    .register_callback =
                                        keyboard_register_callback,
@@ -127,6 +129,8 @@ void keyboard_destroy(void) {
   is_keyboard_initialized = false;
 }
 
+void keyboard_wait(void) { pthread_join(keyboard_subsystem.thread, NULL); }
+
 void *keyboard_process_stdin(void *_) {
   struct pollfd fds[1];
   int err;
@@ -157,8 +161,8 @@ void *keyboard_process_stdin(void *_) {
     }
 
     if (fds[0].revents & POLLIN) {
-      keyboard_read_stdin();
-      keyboard_execute_callbacks();
+      keyboard_private_ops.read_stdin();
+      keyboard_private_ops.execute_callbacks();
     }
   }
 

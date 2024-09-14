@@ -27,10 +27,12 @@ struct InputSubsystem {
 struct InputSubsystem input_subsystem = {.count = 0};
 
 static int input_init(void);
+static void input_wait(void);
 static void input_destroy(void);
 static void
 input_register_module(struct InputRegistrationData *init_registration_data);
 static int input_register_callback(char *id, input_callback_func_t callback);
+static int input_unregister_callback(char *id);
 static int input_start_non_blocking(void);
 
 /*******************************************************************************
@@ -48,7 +50,9 @@ struct InitRegistrationData *init_input_reg_p = &init_input_reg;
  ******************************************************************************/
 struct InputOps input_ops = {.register_module = input_register_module,
                              .register_callback = input_register_callback,
-                             .start = input_start_non_blocking};
+                             .unregister_callback = input_unregister_callback,
+                             .start = input_start_non_blocking,
+                             .wait = input_wait};
 
 /*******************************************************************************
  *    PRIVATE API
@@ -88,6 +92,10 @@ int input_register_callback(char *id, input_callback_func_t callback) {
   return EINVAL;
 }
 
+int input_unregister_callback(char *id) {
+  return input_register_callback(id, NULL);
+}
+
 int input_start_non_blocking(void) {
   size_t i;
   int err;
@@ -109,6 +117,16 @@ int input_start_non_blocking(void) {
   return 0;
 }
 
+void input_wait(void) {
+  size_t i;
+  for (i = 0; i < input_subsystem.count; ++i) {
+    if (input_subsystem.registrations[i]->callback == NULL)
+      continue;
+
+    input_subsystem.registrations[i]->wait();
+  }
+}
+
 int input_init(void) {
   /* size_t i; */
   /* for (i = 0; i < init_input_reg.child_count; ++i) { */
@@ -117,6 +135,14 @@ int input_init(void) {
   return 0;
 }
 
-void input_destroy(void) {}
+void input_destroy(void) {
+  size_t i;
+  for (i = 0; i < input_subsystem.count; ++i) {
+    if (input_subsystem.registrations[i]->callback == NULL)
+      continue;
+
+    input_subsystem.registrations[i]->destroy();
+  }
+}
 
 INIT_REGISTER_SUBSYSTEM(init_input_reg_p, INIT_MODULE_ORDER_INPUT);

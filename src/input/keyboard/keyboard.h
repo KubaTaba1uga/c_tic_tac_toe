@@ -24,6 +24,7 @@ typedef int (*keyboard_callback_func_t)(size_t n, char buffer[n]);
 struct KeyboardOps {
   int (*initialize)(void);
   void (*destroy)(void);
+  void (*wait)(void);
   int (*register_callback)(keyboard_callback_func_t);
   void *private;
 };

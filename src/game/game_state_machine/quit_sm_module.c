@@ -18,6 +18,7 @@
 #include "game/game_state_machine/game_states.h"
 #include "game/game_state_machine/user_move/user_move.h"
 #include "init/init.h"
+#include "input/input.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
@@ -27,8 +28,9 @@ struct QuitSmData {
 };
 
 static int quit_state_machine_init(void);
-enum GameStates
+static enum GameStates
 quit_state_machine_next_state(struct GameSmNextStateCreationData data);
+static void quit_state_machine_quit(void);
 
 struct QuitSmData quit_sm_data;
 static char module_id[] = "quit_state_machine";
@@ -68,10 +70,14 @@ quit_state_machine_next_state(struct GameSmNextStateCreationData data) {
     break;
 
   case (GameStateQuitting):
+    // If user confirms quitting, just quit.
     if (data.current_user_move.type == USER_MOVE_TYPE_QUIT) {
+      quit_state_machine_quit();
       return GameStateQuit;
-    } else if (data.current_user_move.type == USER_MOVE_TYPE_SELECT_VALID ||
-               data.current_user_move.type == USER_MOVE_TYPE_SELECT_INVALID) {
+    }
+    // If user cancels quitting, return to last user turn.
+    else if (data.current_user_move.type == USER_MOVE_TYPE_SELECT_VALID ||
+             data.current_user_move.type == USER_MOVE_TYPE_SELECT_INVALID) {
       return quit_sm_data.last_user;
     }
     break;
@@ -81,5 +87,7 @@ quit_state_machine_next_state(struct GameSmNextStateCreationData data) {
 
   return data.current_state;
 };
+
+void quit_state_machine_quit(void) { input_ops.destroy(); }
 
 INIT_REGISTER_SUBSYSTEM_CHILD(&init_quit_state_machine_reg, init_game_reg_p);

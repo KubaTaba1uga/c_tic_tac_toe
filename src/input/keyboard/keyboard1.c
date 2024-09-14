@@ -32,7 +32,9 @@ static const char *module_id = INPUT_KEYBOARD1_ID;
 static int keyboard1_module_init(void);
 static void keyboard1_module_destroy(void);
 static int keyboard1_start(void);
+static void keyboard1_wait(void);
 static int keyboard1_callback(size_t n, char buffer[n]);
+static void keyboard1_destroy(void);
 
 static struct InitRegistrationData init_keyboard1_reg = {
     .id = INPUT_KEYBOARD1_ID,
@@ -41,7 +43,10 @@ static struct InitRegistrationData init_keyboard1_reg = {
 };
 
 static struct InputRegistrationData input_keyboard1_reg = {
-    .start = keyboard1_start, .id = INPUT_KEYBOARD1_ID};
+    .start = keyboard1_start,
+    .id = INPUT_KEYBOARD1_ID,
+    .wait = keyboard1_wait,
+    .destroy = keyboard1_destroy};
 
 /*******************************************************************************
  *    PUBLIC API
@@ -79,6 +84,10 @@ int keyboard1_start(void) {
 
   return 0;
 }
+
+void keyboard1_wait(void) { keyboard_ops.wait(); }
+
+void keyboard1_destroy(void) { keyboard_ops.destroy(); }
 
 int keyboard1_callback(size_t n, char buffer[n]) {
   enum InputEvents input_event = INPUT_EVENT_NONE;

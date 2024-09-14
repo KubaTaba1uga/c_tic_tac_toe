@@ -18,6 +18,7 @@
 
 // App's internal libs
 #include "init/init.h"
+#include "input/input.h"
 #include "utils/logging_utils.h"
 
 /*******************************************************************************
@@ -45,6 +46,13 @@ int main(void)
   }
 
   logging_utils_ops.log_info("main", "Game initialized");
+
+  // Game logic is triggered by new input. That's why main
+  //  game's thread is waiting until all input's are destroyed
+  //  by user decision to quit.
+  input_ops.wait();
+
+  logging_utils_ops.log_info("main", "Game finished");
 
   init_ops.destroy_system();
 
