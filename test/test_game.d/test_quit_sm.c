@@ -4,13 +4,19 @@
 #include "game/game_state_machine/game_states.h"
 #include "game/game_state_machine/quit_sm_module.c"
 #include "game/game_state_machine/user_move/user_move.h"
+#include "input/input.h"
 #include "utils/logging_utils.h"
 
 #define MAGIC_NUMBER 7337
 
+static int destroy_counter;
+static void mock_input_ops_destroy();
+
 void setUp() {
   quit_sm_data.last_user = MAGIC_NUMBER + 1;
   logging_utils_ops.init_loggers();
+  input_ops.destroy = mock_input_ops_destroy;
+  destroy_counter = 0;
 }
 
 void tearDown() { logging_utils_ops.destroy_loggers(); }
@@ -57,6 +63,7 @@ void test_quit_sm_get_quit_state() {
   next_state = quit_state_machine_next_state(next_state_data);
 
   TEST_ASSERT_EQUAL_INT(GameStateQuit, next_state);
+  TEST_ASSERT_EQUAL_INT(1, destroy_counter);
 }
 
 void test_quit_sm_get_last_user_state() {
@@ -102,3 +109,5 @@ void test_quit_sm_get_default_value() {
 
   TEST_ASSERT_EQUAL_INT(GameStateUser2, next_state);
 }
+
+void mock_input_ops_destroy() { destroy_counter++; }

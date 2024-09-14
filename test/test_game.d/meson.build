@@ -36,7 +36,16 @@ test('test_user_move', test_user_move_exe)
 ############################################################################
 test_quit_sm_name = 'test_quit_sm.c'
 
-test_quit_sm_src = [test_quit_sm_name, user_move / 'user_move.c', game_state_machine / 'game_state_machine.c', game_state_machine / 'game_sm_subsystem.c', game / 'game.c', utils / 'logging_utils.c', utils / 'std_lib_utils.c', input / 'input.c', init / 'init.c', config / 'config.c']
+test_quit_sm_src = [test_quit_sm_name,
+		 user_move / 'user_move.c',
+		 game_state_machine / 'game_state_machine.c',
+		 game_state_machine / 'game_sm_subsystem.c',
+		 game / 'game.c',
+		 utils / 'logging_utils.c',
+		 utils / 'std_lib_utils.c',
+		 input / 'input.c',
+		 init / 'init.c',
+		 config / 'config.c']
 
 test_quit_sm_exe = executable('test_quit_sm',
   sources: [
