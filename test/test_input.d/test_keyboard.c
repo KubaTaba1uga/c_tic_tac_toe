@@ -1,3 +1,5 @@
+// TO-DO test if destruction and init arte working properly.
+
 #include "input/input.h"
 #include "input/keyboard/keyboard.c"
 #include "input/keyboard/keyboard.h"

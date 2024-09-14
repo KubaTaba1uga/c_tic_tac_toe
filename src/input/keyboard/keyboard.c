@@ -102,9 +102,10 @@ int keyboard_initialize(void) {
   // Clear the keyboard subsystem structure
   memset(&keyboard_subsystem, 0, sizeof(struct KeyboardSubsystem));
 
-  // Create the thread for processing stdin input
-  is_keyboard_initialized = true; // Set the initialized flag
+  // Set the initialized flag
+  is_keyboard_initialized = true;
 
+  // Create the thread for processing stdin input
   err = pthread_create(&keyboard_subsystem.thread, NULL,
                        keyboard_private_ops.process_stdin, NULL);
   if (err) {
@@ -130,6 +131,13 @@ void *keyboard_process_stdin(void *_) {
   struct pollfd fds[1];
   int err;
 
+  if (!is_keyboard_initialized) {
+    logging_utils_ops.log_err(
+        INPUT_KEYBOARD_ID, "Keyboard needs to be initialized for processing");
+
+    return NULL;
+  }
+
   // Set signal handler for input processing thread.
   // This is needed to properly destruct thread.
   signal(SIGUSR1, keyboard_signal_handler);
@@ -154,7 +162,6 @@ void *keyboard_process_stdin(void *_) {
     }
   }
 
-  /* pthread_exit(NULL); // Exit the thread */
   return NULL;
 }
 
