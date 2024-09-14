@@ -6,6 +6,8 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <termios.h>
+#include <unistd.h>
 
 // App's internal libs
 #include "init/init.h"
@@ -25,6 +27,7 @@ struct InputSubsystem {
 };
 
 struct InputSubsystem input_subsystem = {.count = 0};
+struct termios old_termios;
 
 static int input_init(void);
 static void input_wait(void);
@@ -34,6 +37,8 @@ input_register_module(struct InputRegistrationData *init_registration_data);
 static int input_register_callback(char *id, input_callback_func_t callback);
 static int input_unregister_callback(char *id);
 static int input_start_non_blocking(void);
+static void input_disable_canonical_mode(struct termios *old_termios);
+static void input_restore_terminal_mode(const struct termios *old_termios);
 
 /*******************************************************************************
  *    INIT BOILERCODE
@@ -129,10 +134,9 @@ void input_wait(void) {
 }
 
 int input_init(void) {
-  /* size_t i; */
-  /* for (i = 0; i < init_input_reg.child_count; ++i) { */
+  // Disable canonical mode and echo
+  input_disable_canonical_mode(&old_termios);
 
-  /* } */
   return 0;
 }
 
@@ -145,6 +149,31 @@ void input_destroy(void) {
     input_subsystem.registrations[i]->destroy();
     input_subsystem.registrations[i]->callback = NULL;
   }
+
+  input_restore_terminal_mode(&old_termios);
+}
+
+// Function to disable canonical mode and echo
+void input_disable_canonical_mode(struct termios *old_termios) {
+  struct termios new_termios;
+
+  // Get the current terminal settings
+  tcgetattr(STDIN_FILENO, old_termios);
+
+  // Copy the settings to modify them
+  new_termios = *old_termios;
+
+  // Disable canonical mode (ICANON) and echo (ECHO)
+  new_termios.c_lflag &= ~(ICANON | ECHO);
+
+  // Apply the new settings immediately
+  tcsetattr(STDIN_FILENO, TCSANOW, &new_termios);
+}
+
+// Function to restore the original terminal settings
+void input_restore_terminal_mode(const struct termios *old_termios) {
+  // Restore the original terminal settings
+  tcsetattr(STDIN_FILENO, TCSANOW, old_termios);
 }
 
 INIT_REGISTER_SUBSYSTEM(init_input_reg_p, INIT_MODULE_ORDER_INPUT);
