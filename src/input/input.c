@@ -52,7 +52,8 @@ struct InputOps input_ops = {.register_module = input_register_module,
                              .register_callback = input_register_callback,
                              .unregister_callback = input_unregister_callback,
                              .start = input_start_non_blocking,
-                             .wait = input_wait};
+                             .wait = input_wait,
+                             .destroy = input_destroy};
 
 /*******************************************************************************
  *    PRIVATE API
@@ -142,6 +143,7 @@ void input_destroy(void) {
       continue;
 
     input_subsystem.registrations[i]->destroy();
+    input_subsystem.registrations[i]->callback = NULL;
   }
 }
 

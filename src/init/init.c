@@ -90,6 +90,9 @@ int init_initialize_system(void) {
 
     err = init_initialize_subsystem(init_subsystem.registrations[i]);
     if (err) {
+      logging_utils_ops.log_err(module_id, "Unable to initialize %s\n",
+                                init_subsystem.registrations[i]->id);
+
       return err;
     }
   }

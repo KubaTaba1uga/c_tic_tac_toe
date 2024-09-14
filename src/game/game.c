@@ -11,6 +11,7 @@
  ******************************************************************************/
 // C standard library
 #include "string.h"
+#include <unistd.h>
 
 // App's internal libs
 #include "config/config.h"
@@ -93,24 +94,34 @@ int game_init(void) {
       return err;
     }
 
-    return 0;
+  } else {
+
+    // Otherwise we need to distinguish inputs at device level.
+    err = input_ops.register_callback(config_ops.get_var("user1_input"),
+                                      game_priv_ops.user1_logic);
+    if (err) {
+      logging_utils_ops.log_err(
+          module_id,
+          "Unable to register callback for input device for user 1.");
+
+      return err;
+    }
+
+    err = input_ops.register_callback(config_ops.get_var("user2_input"),
+                                      game_priv_ops.user2_logic);
+    if (err) {
+      logging_utils_ops.log_err(
+          module_id,
+          "Unable to register callback for input device for user 2.");
+
+      return err;
+    }
   }
 
-  // Otherwise we need to distinguish inputs at device level.
-  err = input_ops.register_callback(config_ops.get_var("user1_input"),
-                                    game_priv_ops.user1_logic);
-  if (err) {
-    logging_utils_ops.log_err(
-        module_id, "Unable to register callback for input device for user 1.");
+  err = input_ops.start();
 
-    return err;
-  }
-
-  err = input_ops.register_callback(config_ops.get_var("user2_input"),
-                                    game_priv_ops.user2_logic);
   if (err) {
-    logging_utils_ops.log_err(
-        module_id, "Unable to register callback for input device for user 2.");
+    logging_utils_ops.log_err(module_id, "Unable to start input devices.");
 
     return err;
   }

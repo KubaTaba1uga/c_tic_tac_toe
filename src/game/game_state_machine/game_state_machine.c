@@ -76,6 +76,9 @@ int game_sm_step(enum InputEvents input_event, enum Users input_user) {
       game_sm_priv_ops.is_input_user_valid(input_user) != 0)
     return EINVAL;
 
+  logging_utils_ops.log_info(module_id,
+                             "Performing step of game state machine.");
+
   game_sm_priv_ops.sanitize_last_move();
 
   struct UserMoveCreationData user_move_creation_data = {
