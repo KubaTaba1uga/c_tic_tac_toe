@@ -151,8 +151,12 @@ void *keyboard_process_stdin(void *_) {
   fds[0].events = POLLIN;
 
   while (is_keyboard_initialized) {
+    logging_utils_ops.log_err(INPUT_KEYBOARD_ID, "Waiting for stdin.");
+
     // Wait for input on stdin
     err = poll(fds, 1, -1);
+
+    logging_utils_ops.log_err(INPUT_KEYBOARD_ID, "Stdin triggered.");
 
     if (err == -1) {
       logging_utils_ops.log_err(
@@ -161,7 +165,9 @@ void *keyboard_process_stdin(void *_) {
     }
 
     if (fds[0].revents & POLLIN) {
+      logging_utils_ops.log_err(INPUT_KEYBOARD_ID, "Processing triggered.");
       keyboard_private_ops.read_stdin();
+      logging_utils_ops.log_err(INPUT_KEYBOARD_ID, "Callbacks triggered.");
       keyboard_private_ops.execute_callbacks();
     }
   }
@@ -176,24 +182,14 @@ void keyboard_read_stdin(void) {
   keyboard_subsystem.stdin_buffer_count = 0;
 
   // Read input from stdin into the buffer
-  while (keyboard_subsystem.stdin_buffer_count <
-         KEYBOARD_STDIN_BUFFER_MAX - 1) {
+  bytes_read = read(STDIN_FILENO, keyboard_subsystem.stdin_buffer,
+                    KEYBOARD_STDIN_BUFFER_MAX - 1);
 
-    bytes_read = read(
-        STDIN_FILENO,
-        keyboard_subsystem.stdin_buffer + keyboard_subsystem.stdin_buffer_count,
-        KEYBOARD_STDIN_BUFFER_MAX - keyboard_subsystem.stdin_buffer_count - 1);
+  printf("%zd bytes read\n", bytes_read);
 
-    printf("%zd bytes read\n", bytes_read);
-
-    if (bytes_read < 0) {
-      logging_utils_ops.log_err(INPUT_KEYBOARD_ID, "Unable to read from stdin");
-      break; // Break on error
-    } else if (bytes_read == 0) {
-      // EOF
-      break;
-    }
-
+  if (bytes_read < 0) {
+    logging_utils_ops.log_err(INPUT_KEYBOARD_ID, "Unable to read from stdin");
+  } else {
     keyboard_subsystem.stdin_buffer_count += bytes_read;
   }
 
