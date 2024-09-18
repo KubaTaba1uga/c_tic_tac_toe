@@ -21,22 +21,21 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct GameSmNextStateCreationData {
-  size_t count;
-  struct UserMove *users_moves;
-  enum GameStates current_state;
-  struct UserMove current_user_move;
-};
+typedef struct GameStateMachineState (*gsm_subsystem_next_state_function_t)(
+    struct GameStateMachineInput input, struct GameStateMachineState state);
 
 struct GameSmSubsystemRegistrationData {
   const char *id;
-  enum GameStates (*callback)(struct GameSmNextStateCreationData data);
+  gsm_subsystem_next_state_function_t next_state;
+  int priority;
 };
 
+typedef void (*gsm_subsystem_register_state_machine_function_t)(
+    struct GameSmSubsystemRegistrationData *registration_data);
+
 struct GameSmSubsystemOps {
-  void (*register_state_machine)(
-      struct GameSmSubsystemRegistrationData *registration_data);
-  enum GameStates (*next_state)(struct GameSmNextStateCreationData data);
+  gsm_subsystem_next_state_function_t next_state;
+  gsm_subsystem_register_state_machine_function_t register_state_machine;
 };
 
 /*******************************************************************************

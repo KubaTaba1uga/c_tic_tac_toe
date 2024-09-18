@@ -30,7 +30,10 @@ struct GameSmSubsystem {
 
 static void register_state_machine(
     struct GameSmSubsystemRegistrationData *registration_data);
-static enum GameStates get_next_state(struct GameSmNextStateCreationData data);
+struct GameStateMachineState get_next_state(struct GameStateMachineInput input,
+                                            struct GameStateMachineState state);
+static void handle_positive_priority();
+static void handle_negative_priority();
 
 static char module_id[] = "game_logic_sm";
 static struct GameSmSubsystem game_sm_subsystem = {.count = 0};
@@ -55,22 +58,81 @@ void register_state_machine(
                               "Unable to register %s in game logic SM, "
                               "no enough space in `registrations` array.",
                               registration_data->id);
+    return;
   }
 }
 
-enum GameStates get_next_state(struct GameSmNextStateCreationData data) {
-  enum GameStates new_game_state;
+struct GameStateMachineState get_next_state(struct GameStateMachineInput input,
+                                            struct GameStateMachineState data) {
+  struct GameStateMachineState new_data;
   size_t i;
 
   for (i = 0; i < game_sm_subsystem.count; i++) {
     logging_utils_ops.log_info(module_id, "Processing %s",
                                game_sm_subsystem.registrations[i]->id);
 
-    new_game_state = game_sm_subsystem.registrations[i]->callback(data);
+    new_data = game_sm_subsystem.registrations[i]->next_state(input, data);
 
-    if (data.current_state != new_game_state)
-      return new_game_state;
+    if (data.current_state != new_data.current_state)
+      return new_data;
   }
 
-  return data.current_state;
+  return data;
 };
+
+void handle_priorities(void) {
+  handle_positive_priority();
+  handle_negative_priority();
+}
+
+void handle_positive_priority(void) {
+  struct GameSmSubsystemRegistrationData *new_reg =
+      game_sm_subsystem.registrations[game_sm_subsystem.count - 1];
+  struct GameSmSubsystemRegistrationData *tmp_reg;
+  size_t i;
+
+  for (i = 0; i < game_sm_subsystem.count; i++) {
+    tmp_reg = game_sm_subsystem.registrations[i];
+    // If negative/no priority stop handling. Negative/no priorities
+    //  are always at the end so there is no need in proceeding
+    //  further once they are reached.
+    if (new_reg->priority <= 0)
+      break;
+
+    // 1 is biggest priority. The bigger number the smaller priority.
+    if (new_reg->priority <= tmp_reg->priority) {
+      game_sm_subsystem.registrations[i] = new_reg;
+      game_sm_subsystem.registrations[game_sm_subsystem.count - 1] = tmp_reg;
+      break;
+    }
+  }
+}
+
+void handle_negative_priority(void) {
+  struct GameSmSubsystemRegistrationData *new_reg =
+      game_sm_subsystem.registrations[game_sm_subsystem.count - 1];
+  struct GameSmSubsystemRegistrationData *tmp_reg, *nested_tmp_reg;
+  size_t i, k;
+
+  for (i = 0; i < game_sm_subsystem.count; i++) {
+    tmp_reg = game_sm_subsystem.registrations[i];
+
+    // If positive/no priority skip. Negative priorities are at the end.
+    if (tmp_reg->priority >= 0)
+      continue;
+
+    // -1 is smallest priority. The smaller number the smaller priority.
+    // If given -2 and -5, -2 should be after -5.
+    if (new_reg->priority >= tmp_reg->priority) {
+      game_sm_subsystem.registrations[i] = new_reg;
+
+      for (k = i + 1; k < game_sm_subsystem.count; k++) {
+        nested_tmp_reg = game_sm_subsystem.registrations[k];
+        game_sm_subsystem.registrations[k] = tmp_reg;
+        tmp_reg = nested_tmp_reg;
+      }
+
+      break;
+    }
+  }
+}

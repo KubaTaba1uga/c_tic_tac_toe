@@ -28,14 +28,18 @@ struct QuitSmData {
 };
 
 static int quit_state_machine_init(void);
-static enum GameStates
-quit_state_machine_next_state(struct GameSmNextStateCreationData data);
-static void quit_state_machine_quit(void);
+static struct GameStateMachineState
+quit_state_machine_next_state(struct GameStateMachineInput input,
+                              struct GameStateMachineState state);
+/* static void quit_state_machine_quit(void); */
 
 struct QuitSmData quit_sm_data;
 static char module_id[] = "quit_state_machine";
 struct GameSmSubsystemRegistrationData gsm_registration_data = {
-    .callback = quit_state_machine_next_state, .id = module_id};
+    .next_state = quit_state_machine_next_state,
+    .id = module_id,
+    .priority = 0 // No priority
+};
 
 /*******************************************************************************
  *    INIT BOILERCODE
@@ -58,36 +62,40 @@ int quit_state_machine_init(void) {
   return 0;
 }
 
-enum GameStates
-quit_state_machine_next_state(struct GameSmNextStateCreationData data) {
-  switch (data.current_state) {
-  case (GameStatePlay):
+struct GameStateMachineState
+quit_state_machine_next_state(struct GameStateMachineInput input,
+                              struct GameStateMachineState state) {
+  switch (state.current_state) {
+    /* case (GameStatePlay): */
 
-    if (data.current_user_move.type == USER_MOVE_TYPE_QUIT) {
-      quit_sm_data.last_user = data.current_state;
-      return GameStateQuitting;
-    }
-    break;
+    /*   if (state.current_user_move.type == USER_MOVE_TYPE_QUIT) { */
+    /*     quit_sm_data.last_user = state.current_state; */
+    /*     state.current_state = GameStateQuitting; */
+    /*   } */
+    /*   break; */
 
-  case (GameStateQuitting):
-    // If user confirms quitting, just quit.
-    if (data.current_user_move.type == USER_MOVE_TYPE_QUIT) {
-      quit_state_machine_quit();
-      return GameStateQuit;
-    }
-    // If user cancels quitting, return to last user turn.
-    else if (data.current_user_move.type == USER_MOVE_TYPE_SELECT_VALID ||
-             data.current_user_move.type == USER_MOVE_TYPE_SELECT_INVALID) {
-      return quit_sm_data.last_user;
-    }
-    break;
+    /* case (GameStateQuitting): */
+    /*   // If user confirms quitting, just quit. */
+    /*   if (state.current_user_move.type == USER_MOVE_TYPE_QUIT) { */
+    /*     quit_state_machine_quit(); */
+    /*     state.current_state = GameStateQuit; */
+    /*   } */
+
+    /*   // If user cancels quitting, return to last user turn. */
+    /*   else if (state.current_user_move.type == USER_MOVE_TYPE_SELECT_VALID ||
+     */
+    /*            state.current_user_move.type == USER_MOVE_TYPE_SELECT_INVALID)
+     * { */
+    /*     state.current_state = GameStatePlay; */
+    /*   } */
+    /*   break; */
 
   default:;
   }
 
-  return data.current_state;
+  return state;
 };
 
-void quit_state_machine_quit(void) { input_ops.destroy(); }
+/* void quit_state_machine_quit(void) { input_ops.destroy(); } */
 
 INIT_REGISTER_SUBSYSTEM_CHILD(&init_quit_state_machine_reg, init_game_reg_p);

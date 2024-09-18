@@ -29,11 +29,6 @@ struct GameStateMachineInput {
   enum Users input_user;
 };
 
-struct GameStateMachineOutput {
-  enum GameStates next_state;
-  enum Users next_user;
-};
-
 struct GameStateMachineState {
   struct UserMove users_moves_data[MAX_USERS_MOVES];
   enum GameStates current_state;
@@ -42,7 +37,7 @@ struct GameStateMachineState {
 };
 
 struct GameStateMachineOps {
-  int (*step)(struct GameStateMachineInput);
+  int (*step)(enum InputEvents input_event, enum Users input_user);
 };
 
 /*******************************************************************************
