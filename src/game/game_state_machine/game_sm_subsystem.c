@@ -60,6 +60,9 @@ void register_state_machine(
                               registration_data->id);
     return;
   }
+
+  handle_positive_priority();
+  handle_negative_priority();
 }
 
 struct GameStateMachineState get_next_state(struct GameStateMachineInput input,
@@ -80,27 +83,27 @@ struct GameStateMachineState get_next_state(struct GameStateMachineInput input,
   return data;
 };
 
-void handle_priorities(void) {
-  handle_positive_priority();
-  handle_negative_priority();
-}
-
 void handle_positive_priority(void) {
   struct GameSmSubsystemRegistrationData *new_reg =
       game_sm_subsystem.registrations[game_sm_subsystem.count - 1];
   struct GameSmSubsystemRegistrationData *tmp_reg;
   size_t i;
 
+  if (new_reg->priority <= 0)
+    return;
+
+  logging_utils_ops.log_info(module_id, "Start for %s", new_reg->id);
+
   for (i = 0; i < game_sm_subsystem.count; i++) {
     tmp_reg = game_sm_subsystem.registrations[i];
-    // If negative/no priority stop handling. Negative/no priorities
-    //  are always at the end so there is no need in proceeding
-    //  further once they are reached.
-    if (new_reg->priority <= 0)
-      break;
+    // Do not handle negative priority.
+    if (tmp_reg->priority < 0)
+      continue;
 
-    // 1 is biggest priority. The bigger number the smaller priority.
-    if (new_reg->priority <= tmp_reg->priority) {
+    if ( // If no priority, write new_reg before tmp_reg.
+        (tmp_reg->priority == 0) ||
+        // 1 is biggest priority. The bigger number the smaller priority.
+        (new_reg->priority <= tmp_reg->priority)) {
       game_sm_subsystem.registrations[i] = new_reg;
       game_sm_subsystem.registrations[game_sm_subsystem.count - 1] = tmp_reg;
       break;
@@ -113,6 +116,9 @@ void handle_negative_priority(void) {
       game_sm_subsystem.registrations[game_sm_subsystem.count - 1];
   struct GameSmSubsystemRegistrationData *tmp_reg, *nested_tmp_reg;
   size_t i, k;
+
+  if (new_reg->priority >= 0)
+    return;
 
   for (i = 0; i < game_sm_subsystem.count; i++) {
     tmp_reg = game_sm_subsystem.registrations[i];
