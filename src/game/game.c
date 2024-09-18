@@ -58,6 +58,24 @@ struct GameOps game_ops = {};
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
+int game_process_user1(enum InputEvents input_event) {
+  struct GameStateMachineInput input = {.input_event = input_event,
+                                        .input_user = User1};
+  return game_sm_ops.step(input);
+}
+
+int game_process_user2(enum InputEvents input_event) {
+  struct GameStateMachineInput input = {.input_event = input_event,
+                                        .input_user = User2};
+  return game_sm_ops.step(input);
+}
+
+int game_process(enum InputEvents input_event) {
+  struct GameStateMachineInput input = {.input_event = input_event,
+                                        .input_user = UserNone};
+  return game_sm_ops.step(input);
+}
+
 int game_init(void) {
   struct ConfigRegistrationData user1_input, user2_input;
   int err;
@@ -93,10 +111,9 @@ int game_init(void) {
           "Unable to register callback for input device for both users.");
       return err;
     }
+  } // Otherwise we need to distinguish inputs at device level.
+  else {
 
-  } else {
-
-    // Otherwise we need to distinguish inputs at device level.
     err = input_ops.register_callback(config_ops.get_var("user1_input"),
                                       game_priv_ops.user1_logic);
     if (err) {
@@ -127,18 +144,6 @@ int game_init(void) {
   }
 
   return 0;
-}
-
-int game_process_user1(enum InputEvents input_event) {
-  return game_sm_ops.step(input_event, User1);
-}
-
-int game_process_user2(enum InputEvents input_event) {
-  return game_sm_ops.step(input_event, User2);
-}
-
-int game_process(enum InputEvents input_event) {
-  return game_sm_ops.step(input_event, UserNone);
 }
 
 INIT_REGISTER_SUBSYSTEM(&init_game_reg, INIT_MODULE_ORDER_GAME);

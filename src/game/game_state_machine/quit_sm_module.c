@@ -61,8 +61,8 @@ int quit_state_machine_init(void) {
 enum GameStates
 quit_state_machine_next_state(struct GameSmNextStateCreationData data) {
   switch (data.current_state) {
-  case (GameStateUser1):
-  case (GameStateUser2):
+  case (GameStatePlay):
+
     if (data.current_user_move.type == USER_MOVE_TYPE_QUIT) {
       quit_sm_data.last_user = data.current_state;
       return GameStateQuitting;

@@ -24,14 +24,25 @@
  ******************************************************************************/
 #define MAX_USERS_MOVES 100
 
-struct GameStateMachine {
-  struct UserMove users_moves[MAX_USERS_MOVES];
-  enum GameStates state;
-  size_t count;
+struct GameStateMachineInput {
+  enum InputEvents input_event;
+  enum Users input_user;
+};
+
+struct GameStateMachineOutput {
+  enum GameStates next_state;
+  enum Users next_user;
+};
+
+struct GameStateMachineState {
+  struct UserMove users_moves_data[MAX_USERS_MOVES];
+  enum GameStates current_state;
+  size_t users_moves_count;
+  enum Users current_user;
 };
 
 struct GameStateMachineOps {
-  int (*step)(enum InputEvents input_event, enum Users input_user);
+  int (*step)(struct GameStateMachineInput);
 };
 
 /*******************************************************************************

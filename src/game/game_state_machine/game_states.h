@@ -14,8 +14,7 @@
 #include "game/game.h"
 
 enum GameStates {
-  GameStateUser1 = User1,
-  GameStateUser2 = User2,
+  GameStatePlay,
   GameStateQuitting,
   GameStateQuit,
   GameStateWin,
