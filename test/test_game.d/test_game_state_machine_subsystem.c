@@ -156,140 +156,169 @@ void test_register_negative_prioritized_state_machine() {
                         game_sm_subsystem.registrations[6]);
 }
 
-/* void test_register_all_prioritized_state_machine_small() { */
-/*   struct GameSmSubsystemRegistrationData mock_registration_data_3 = { */
-/*       .id = "TestSM3", .priority = 0, .next_state = mock_next_state}; */
-/*   struct GameSmSubsystemRegistrationData mock_registration_data_4 = { */
-/*       .id = "TestSM4", .priority = -1, .next_state = mock_next_state}; */
-/*   struct GameSmSubsystemRegistrationData mock_registration_data_5 = { */
-/*       .id = "TestSM5", .priority = -3, .next_state = mock_next_state}; */
-/*   struct GameSmSubsystemRegistrationData mock_registration_data_6 = { */
-/*       .id = "TestSM6", .priority = 2, .next_state = mock_next_state}; */
+void test_register_all_prioritized_state_machine_small() {
+  struct GameSmSubsystemRegistrationData mock_registration_data_0 = {
+      .id = "TestSM0", .priority = 0, .next_state = mock_next_state};
+  struct GameSmSubsystemRegistrationData mock_registration_data_1 = {
+      .id = "TestSM1", .priority = 1, .next_state = mock_next_state};
+  struct GameSmSubsystemRegistrationData mock_registration_data_2 = {
+      .id = "TestSM2", .priority = 2, .next_state = mock_next_state};
+  struct GameSmSubsystemRegistrationData mock_registration_data_3 = {
+      .id = "TestSM-2", .priority = -2, .next_state = mock_next_state};
+  struct GameSmSubsystemRegistrationData mock_registration_data_4 = {
+      .id = "TestSM-1", .priority = -1, .next_state = mock_next_state};
 
-/*   register_state_machine(&mock_registration_data_2); */
-/*   TEST_ASSERT_EQUAL_INT(1, game_sm_subsystem.count); */
+  register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(1, game_sm_subsystem.count);
 
-/*   register_state_machine(&mock_registration_data_3); */
-/*   TEST_ASSERT_EQUAL_INT(2, game_sm_subsystem.count); */
+  register_state_machine(&mock_registration_data_3);
+  TEST_ASSERT_EQUAL_INT(2, game_sm_subsystem.count);
 
-/*   register_state_machine(&mock_registration_data_4); */
-/*   TEST_ASSERT_EQUAL_INT(3, game_sm_subsystem.count); */
+  register_state_machine(&mock_registration_data_1);
+  TEST_ASSERT_EQUAL_INT(3, game_sm_subsystem.count);
 
-/*   register_state_machine(&mock_registration_data_5); */
-/*   TEST_ASSERT_EQUAL_INT(4, game_sm_subsystem.count); */
+  register_state_machine(&mock_registration_data_4);
+  TEST_ASSERT_EQUAL_INT(4, game_sm_subsystem.count);
 
-/*   register_state_machine(&mock_registration_data_6); */
-/*   TEST_ASSERT_EQUAL_INT(5, game_sm_subsystem.count); */
+  register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(5, game_sm_subsystem.count);
 
-/*   register_state_machine(&mock_registration_data_1); */
-/*   TEST_ASSERT_EQUAL_INT(6, game_sm_subsystem.count); */
+  register_state_machine(&mock_registration_data_2);
+  TEST_ASSERT_EQUAL_INT(6, game_sm_subsystem.count);
 
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_1, */
-/*                         game_sm_subsystem.registrations[0]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_6, */
-/*                         game_sm_subsystem.registrations[1]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_3, */
-/*                         game_sm_subsystem.registrations[2]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_5, */
-/*                         game_sm_subsystem.registrations[3]); */
-/* } */
+  register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(7, game_sm_subsystem.count);
 
-/* /\* void test_register_all_prioritized_state_machine_big() { *\/ */
-/* /\*   struct GameSmSubsystemRegistrationData mock_registration_data_3 = { *\/
- */
-/* /\*       .id = "TestSM3", .priority = 3, .next_state = mock_next_state}; *\/
- */
-/* /\*   struct GameSmSubsystemRegistrationData mock_registration_data_4 = { *\/
- */
-/* /\*       .id = "TestSM4", .priority = 4, .next_state = mock_next_state}; *\/
- */
-/* /\*   struct GameSmSubsystemRegistrationData mock_registration_data_5 = { *\/
- */
-/* /\*       .id = "TestSM5", .priority = 5, .next_state = mock_next_state}; *\/
- */
-/* /\*   struct GameSmSubsystemRegistrationData mock_registration_data_6 = { *\/
- */
-/* /\*       .id = "TestSM6", .priority = -3, .next_state = mock_next_state};
- * *\/ */
-/* /\*   struct GameSmSubsystemRegistrationData mock_registration_data_7 = { *\/
- */
-/* /\*       .id = "TestSM7", .priority = -4, .next_state = mock_next_state};
- * *\/ */
-/* /\*   struct GameSmSubsystemRegistrationData mock_registration_data_8 = { *\/
- */
-/* /\*       .id = "TestSM8", .priority = -5, .next_state = mock_next_state};
- * *\/ */
-/* /\*   struct GameSmSubsystemRegistrationData mock_registration_data_9 = { *\/
- */
-/* /\*       .id = "TestSM0", .priority = 0, .next_state = mock_next_state}; *\/
- */
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_1,
+                        game_sm_subsystem.registrations[0]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_2,
+                        game_sm_subsystem.registrations[1]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
+                        game_sm_subsystem.registrations[2]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
+                        game_sm_subsystem.registrations[3]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
+                        game_sm_subsystem.registrations[4]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_3,
+                        game_sm_subsystem.registrations[5]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_4,
+                        game_sm_subsystem.registrations[6]);
+}
 
-/* /\*   register_state_machine(&mock_registration_data_1); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(1, game_sm_subsystem.count); *\/ */
+void test_register_all_prioritized_state_machine_big() {
+  struct GameSmSubsystemRegistrationData mock_registration_data_0 = {
+      .id = "TestSM0", .priority = 0, .next_state = mock_next_state};
+  struct GameSmSubsystemRegistrationData mock_registration_data_1 = {
+      .id = "TestSM1", .priority = 1, .next_state = mock_next_state};
+  struct GameSmSubsystemRegistrationData mock_registration_data_2 = {
+      .id = "TestSM2", .priority = 2, .next_state = mock_next_state};
+  struct GameSmSubsystemRegistrationData mock_registration_data_3 = {
+      .id = "TestSM3", .priority = 3, .next_state = mock_next_state};
+  struct GameSmSubsystemRegistrationData mock_registration_data_4 = {
+      .id = "TestSM4", .priority = 4, .next_state = mock_next_state};
+  struct GameSmSubsystemRegistrationData mock_registration_data_5 = {
+      .id = "TestSM-4", .priority = -4, .next_state = mock_next_state};
+  struct GameSmSubsystemRegistrationData mock_registration_data_6 = {
+      .id = "TestSM-3", .priority = -3, .next_state = mock_next_state};
+  struct GameSmSubsystemRegistrationData mock_registration_data_7 = {
+      .id = "TestSM-2", .priority = -2, .next_state = mock_next_state};
+  struct GameSmSubsystemRegistrationData mock_registration_data_8 = {
+      .id = "TestSM-1", .priority = -1, .next_state = mock_next_state};
 
-/* /\*   register_state_machine(&mock_registration_data_9); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(2, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_4);
+  TEST_ASSERT_EQUAL_INT(1, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_2); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(3, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(2, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_9); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(4, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_8);
+  TEST_ASSERT_EQUAL_INT(3, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_3); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(5, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(4, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_9); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(6, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_3);
+  TEST_ASSERT_EQUAL_INT(5, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_4); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(7, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(6, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_9); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(8, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_7);
+  TEST_ASSERT_EQUAL_INT(7, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_5); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(9, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(8, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_9); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(10, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_2);
+  TEST_ASSERT_EQUAL_INT(9, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_6); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(11, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(10, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_9); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(12, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_6);
+  TEST_ASSERT_EQUAL_INT(11, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_7); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(13, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(12, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_9); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(14, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_1);
+  TEST_ASSERT_EQUAL_INT(13, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_8); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(15, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(14, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_9); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(16, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_5);
+  TEST_ASSERT_EQUAL_INT(15, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_1); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(17, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(16, game_sm_subsystem.count);
 
-/* /\*   register_state_machine(&mock_registration_data_9); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_INT(18, game_sm_subsystem.count); *\/ */
+  register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(17, game_sm_subsystem.count);
 
-/* /\*   for (size_t i = 0; i < game_sm_subsystem.count; i++) { *\/ */
-/* /\*     logging_utils_ops.log_info("test", *\/ */
-/* /\*                                (char */
-/*  * *)game_sm_subsystem.registrations[i]->id); *\/ */
-/* /\*   } *\/ */
+  register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(18, game_sm_subsystem.count);
 
-/* /\*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_1, *\/ */
-/* /\*                         game_sm_subsystem.registrations[0]); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_3, *\/ */
-/* /\*                         game_sm_subsystem.registrations[1]); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_4, *\/ */
-/* /\*                         game_sm_subsystem.registrations[2]); *\/ */
-/* /\*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_5, *\/ */
-/* /\*                         game_sm_subsystem.registrations[3]); *\/ */
-/* /\* } *\/ */
+  /* for (size_t i = 0; i < game_sm_subsystem.count; i++) { */
+  /*   logging_utils_ops.log_info("test", */
+  /*                              (char
+   * *)game_sm_subsystem.registrations[i]->id); */
+  /* } */
+
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_1,
+                        game_sm_subsystem.registrations[0]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_2,
+                        game_sm_subsystem.registrations[1]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_3,
+                        game_sm_subsystem.registrations[2]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_4,
+                        game_sm_subsystem.registrations[3]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
+                        game_sm_subsystem.registrations[4]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
+                        game_sm_subsystem.registrations[5]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
+                        game_sm_subsystem.registrations[6]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
+                        game_sm_subsystem.registrations[7]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
+                        game_sm_subsystem.registrations[8]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
+                        game_sm_subsystem.registrations[9]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
+                        game_sm_subsystem.registrations[10]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
+                        game_sm_subsystem.registrations[11]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
+                        game_sm_subsystem.registrations[12]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
+                        game_sm_subsystem.registrations[13]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_5,
+                        game_sm_subsystem.registrations[14]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_6,
+                        game_sm_subsystem.registrations[15]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_7,
+                        game_sm_subsystem.registrations[16]);
+  TEST_ASSERT_EQUAL_PTR(&mock_registration_data_8,
+                        game_sm_subsystem.registrations[17]);
+}
