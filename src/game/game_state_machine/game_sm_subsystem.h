@@ -22,7 +22,7 @@
  *    PUBLIC API
  ******************************************************************************/
 typedef struct GameStateMachineState (*gsm_subsystem_next_state_function_t)(
-    struct GameStateMachineInput input, struct GameStateMachineState state);
+    struct GameStateMachineInput input, struct GameStateMachineState *state);
 
 struct GameSmSubsystemRegistrationData {
   const char *id;

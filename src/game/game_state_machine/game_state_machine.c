@@ -84,7 +84,7 @@ int game_sm_step(enum InputEvents input_event, enum Users input_user) {
   data.input_event = input_event;
   data.input_user = input_user;
 
-  game_sm = game_sm_subsystem_ops.next_state(data, game_sm);
+  game_sm = game_sm_subsystem_ops.next_state(data, *game_sm);
 
   return 0;
 }
