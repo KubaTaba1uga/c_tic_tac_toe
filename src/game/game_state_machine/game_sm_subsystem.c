@@ -32,9 +32,13 @@ static void register_state_machine(
     struct GameSmSubsystemRegistrationData *registration_data);
 struct GameStateMachineState get_next_state(struct GameStateMachineInput input,
                                             struct GameStateMachineState state);
-static void handle_positive_priority(void);
-static void handle_negative_priority(void);
-static void handle_no_priority(void);
+static void priority_handle_new_registration(void);
+static void
+priority_handle_positive_value(struct GameSmSubsystemRegistrationData *new_reg);
+static void
+priority_handle_negative_value(struct GameSmSubsystemRegistrationData *new_reg);
+static void
+priority_handle_no_value(struct GameSmSubsystemRegistrationData *new_reg);
 static void
 insert_registration(int start, struct GameSmSubsystemRegistrationData *new_reg);
 
@@ -64,9 +68,7 @@ void register_state_machine(
     return;
   }
 
-  handle_positive_priority();
-  handle_negative_priority();
-  handle_no_priority();
+  priority_handle_new_registration();
 }
 
 struct GameStateMachineState get_next_state(struct GameStateMachineInput input,
@@ -87,15 +89,22 @@ struct GameStateMachineState get_next_state(struct GameStateMachineInput input,
   return data;
 };
 
-void handle_positive_priority(void) {
+void priority_handle_new_registration(void) {
   struct GameSmSubsystemRegistrationData *new_reg =
       game_sm_subsystem.registrations[game_sm_subsystem.count - 1];
+
+  if (new_reg->priority > 0)
+    priority_handle_positive_value(new_reg);
+  else if (new_reg->priority < 0)
+    priority_handle_negative_value(new_reg);
+  else // if (new_reg->priority == 0)
+    priority_handle_no_value(new_reg);
+}
+
+void priority_handle_positive_value(
+    struct GameSmSubsystemRegistrationData *new_reg) {
   struct GameSmSubsystemRegistrationData *tmp_reg;
   size_t i;
-
-  // Do not handle negative/no priority
-  if (new_reg->priority <= 0)
-    return;
 
   for (i = 0; i < game_sm_subsystem.count; i++) {
     tmp_reg = game_sm_subsystem.registrations[i];
@@ -114,20 +123,13 @@ void handle_positive_priority(void) {
   }
 }
 
-void handle_negative_priority(void) {
-  struct GameSmSubsystemRegistrationData *new_reg =
-      game_sm_subsystem.registrations[game_sm_subsystem.count - 1];
+void priority_handle_negative_value(
+    struct GameSmSubsystemRegistrationData *new_reg) {
   struct GameSmSubsystemRegistrationData *tmp_reg;
   size_t i = game_sm_subsystem.count;
 
-  // Do not handle positive/no priority
-  if (new_reg->priority >= 0)
-    return;
-
   while (i-- > 0) {
     tmp_reg = game_sm_subsystem.registrations[i];
-    /* logging_utils_ops.log_info("test", "Compare %s to %s", new_reg->id, */
-    /*                            tmp_reg->id); */
 
     // If negative priority -1 is smallest value. The smaller
     //  number the bigger priority.
@@ -141,25 +143,11 @@ void handle_negative_priority(void) {
       break;
     }
   }
-
-  /* for (size_t i = 0; i < game_sm_subsystem.count; i++) { */
-  /*   logging_utils_ops.log_info("test", */
-  /*                              (char
-   * *)game_sm_subsystem.registrations[i]->id); */
-  /* } */
-
-  /* logging_utils_ops.log_info("test", "    "); */
 }
 
-void handle_no_priority(void) {
-  struct GameSmSubsystemRegistrationData *new_reg =
-      game_sm_subsystem.registrations[game_sm_subsystem.count - 1];
+void priority_handle_no_value(struct GameSmSubsystemRegistrationData *new_reg) {
   struct GameSmSubsystemRegistrationData *tmp_reg;
   size_t i;
-
-  // Do not handle positive/negative priority
-  if (new_reg->priority != 0)
-    return;
 
   for (i = 0; i < game_sm_subsystem.count; i++) {
     tmp_reg = game_sm_subsystem.registrations[i];
