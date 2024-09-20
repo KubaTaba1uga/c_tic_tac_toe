@@ -10,31 +10,28 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <errno.h>
 
 // App's internal libs
 #include "game/game.h"
 #include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/game_states.h"
-#include "game/game_state_machine/user_move/user_move.h"
+#include "game/game_state_machine/sub_state_machines/common.h"
+#include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
 #include "init/init.h"
 #include "input/input.h"
+#include "utils/logging_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-struct QuitSmData {
-  enum GameStates last_user;
-};
 
 static int quit_state_machine_init(void);
-static struct GameStateMachineState
-quit_state_machine_next_state(struct GameStateMachineInput input,
-                              struct GameStateMachineState state);
-/* static void quit_state_machine_quit(void); */
+static int quit_state_machine_next_state(struct GameStateMachineInput input,
+                                         struct GameStateMachineState *state);
 
-struct QuitSmData quit_sm_data;
-static char module_id[] = "quit_state_machine";
+static char module_id[] = "quit_sm_module";
 struct GameSmSubsystemRegistrationData gsm_registration_data = {
     .next_state = quit_state_machine_next_state,
     .id = module_id,
@@ -57,45 +54,41 @@ static struct InitRegistrationData init_quit_state_machine_reg = {
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
-int quit_state_machine_init(void) {
-  game_sm_subsystem_ops.register_state_machine(&gsm_registration_data);
-  return 0;
-}
+int quit_state_machine_next_state(struct GameStateMachineInput input,
+                                  struct GameStateMachineState *state) {
 
-struct GameStateMachineState
-quit_state_machine_next_state(struct GameStateMachineInput input,
-                              struct GameStateMachineState state) {
-  switch (state.current_state) {
-    /* case (GameStatePlay): */
+  struct UserMove *current_user_move = gsm_common_ops.get_last_move(state);
 
-    /*   if (state.current_user_move.type == USER_MOVE_TYPE_QUIT) { */
-    /*     quit_sm_data.last_user = state.current_state; */
-    /*     state.current_state = GameStateQuitting; */
-    /*   } */
-    /*   break; */
+  switch (state->current_state) {
 
-    /* case (GameStateQuitting): */
-    /*   // If user confirms quitting, just quit. */
-    /*   if (state.current_user_move.type == USER_MOVE_TYPE_QUIT) { */
-    /*     quit_state_machine_quit(); */
-    /*     state.current_state = GameStateQuit; */
-    /*   } */
+  case (GameStatePlay):
+    if (current_user_move->type == USER_MOVE_TYPE_QUIT) {
+      state->current_state = GameStateQuitting;
+    }
+    break;
 
-    /*   // If user cancels quitting, return to last user turn. */
-    /*   else if (state.current_user_move.type == USER_MOVE_TYPE_SELECT_VALID ||
-     */
-    /*            state.current_user_move.type == USER_MOVE_TYPE_SELECT_INVALID)
-     * { */
-    /*     state.current_state = GameStatePlay; */
-    /*   } */
-    /*   break; */
+  case (GameStateQuitting):
+    // If user confirms quitting, just quit.
+    if (current_user_move->type == USER_MOVE_TYPE_QUIT) {
+      state->current_state = GameStateQuit;
+      game_sm_ops.quit();
+    }
+    // If user cancels quitting, return to play.
+    else if (current_user_move->type == USER_MOVE_TYPE_SELECT_VALID ||
+             current_user_move->type == USER_MOVE_TYPE_SELECT_INVALID) {
+      state->current_state = GameStatePlay;
+    }
+    break;
 
   default:;
   }
 
-  return state;
+  return 0;
 };
 
-/* void quit_state_machine_quit(void) { input_ops.destroy(); } */
+int quit_state_machine_init(void) {
+  game_sm_subsystem_ops.register_state_machine(&gsm_registration_data);
+  return 0;
+}
 
 INIT_REGISTER_SUBSYSTEM_CHILD(&init_quit_state_machine_reg, init_game_reg_p);

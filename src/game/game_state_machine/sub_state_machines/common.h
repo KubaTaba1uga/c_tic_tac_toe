@@ -1,7 +1,7 @@
-#ifndef USER_MOVE_H
-#define USER_MOVE_H
+#ifndef GAME_STATE_MACHINE_COMMON_H
+#define GAME_STATE_MACHINE_COMMON_H
 /*******************************************************************************
- * @file user_move.h
+ * @file game_state_machine_common.h
  * @brief TO-DO
  *
  * TO-DO
@@ -11,11 +11,8 @@
 /*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
-#include <stddef.h>
-
-#include "game/game.h"
-#include "game/game_state_machine/game_states.h"
-#include "input/input.h"
+#include "game/game_state_machine/game_state_machine.h"
+#include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
 
 /*******************************************************************************
  *    PRIVATE API
@@ -24,21 +21,13 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-enum UserMoveType {
-  USER_MOVE_TYPE_HIGHLIGHT,
-  USER_MOVE_TYPE_SELECT_VALID,
-  USER_MOVE_TYPE_SELECT_INVALID,
-  USER_MOVE_TYPE_QUIT,
-};
-
-struct UserMove {
-  enum UserMoveType type;
-  enum Users user;
-  int coordinates[2];
+struct GameStateMachineCommonOps {
+  struct UserMove *(*get_last_move)(struct GameStateMachineState *state);
 };
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
+extern struct GameStateMachineCommonOps gsm_common_ops;
 
-#endif // USER_MOVE_H
+#endif // COMMON_H

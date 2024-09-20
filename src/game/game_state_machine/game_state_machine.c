@@ -20,7 +20,6 @@
 #include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/game_states.h"
-#include "game/game_state_machine/user_move/user_move.h"
 #include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
@@ -38,6 +37,7 @@ static int game_sm_init(void);
 static int validate_input_user(enum Users input_user);
 static int validate_input_event(enum InputEvents input_event);
 static int game_sm_step(enum InputEvents input_event, enum Users input_user);
+static void game_sm_quit(void);
 
 static struct GameStateMachineState game_sm;
 static char module_id[] = "game_state_machine";
@@ -58,21 +58,15 @@ static struct InitRegistrationData init_game_sm_reg = {
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct GameStateMachineOps game_sm_ops = {.step = game_sm_step};
+struct GameStateMachineOps game_sm_ops = {.step = game_sm_step,
+                                          .quit = game_sm_quit};
 
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
-int game_sm_init(void) {
-  game_sm.users_moves_count = 0;
-  game_sm.current_state = GameStatePlay;
-  game_sm.current_user = User1;
-
-  return 0;
-}
-
 int game_sm_step(enum InputEvents input_event, enum Users input_user) {
   struct GameStateMachineInput data;
+  int err;
 
   if (game_sm_priv_ops.is_input_event_valid(input_event) != 0 ||
       game_sm_priv_ops.is_input_user_valid(input_user) != 0)
@@ -84,18 +78,34 @@ int game_sm_step(enum InputEvents input_event, enum Users input_user) {
   data.input_event = input_event;
   data.input_user = input_user;
 
-  game_sm = game_sm_subsystem_ops.next_state(data, *game_sm);
+  err = game_sm_subsystem_ops.next_state(data, &game_sm);
+  if (err) {
+    logging_utils_ops.log_err(
+        module_id, "Quitting the game, because an error %s.", strerror(err));
+
+    game_sm_ops.quit();
+
+    return err;
+  }
 
   return 0;
 }
+
+void game_sm_quit(void) { input_ops.destroy(); }
 
 int validate_input_user(enum Users input_user) {
   return game_sm.current_user != input_user;
 }
 
 int validate_input_event(enum InputEvents input_event) {
-  if (input_event <= INPUT_EVENT_NONE || input_event >= INPUT_EVENT_MAX)
-    return 1;
+  return (input_event <= INPUT_EVENT_NONE) || (input_event >= INPUT_EVENT_MAX);
+}
+
+int game_sm_init(void) {
+  game_sm.users_moves_count = 0;
+  game_sm.current_state = GameStatePlay;
+  game_sm.current_user = User1;
+
   return 0;
 }
 

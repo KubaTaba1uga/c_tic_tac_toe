@@ -12,7 +12,7 @@
  *    IMPORTS
  ******************************************************************************/
 #include "game/game_state_machine/game_states.h"
-#include "game/game_state_machine/user_move/user_move.h"
+#include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
 #include "input/input.h"
 
 /*******************************************************************************
@@ -38,6 +38,7 @@ struct GameStateMachineState {
 
 struct GameStateMachineOps {
   int (*step)(enum InputEvents input_event, enum Users input_user);
+  void (*quit)(void);
 };
 
 /*******************************************************************************

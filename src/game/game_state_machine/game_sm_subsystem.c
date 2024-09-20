@@ -11,6 +11,7 @@
  ******************************************************************************/
 // C standard library
 #include <stddef.h>
+#include <string.h>
 
 // App's internal libs
 #include "game/game_state_machine/game_sm_subsystem.h"
@@ -30,8 +31,8 @@ struct GameSmSubsystem {
 
 static void register_state_machine(
     struct GameSmSubsystemRegistrationData *registration_data);
-struct GameStateMachineState get_next_state(struct GameStateMachineInput input,
-                                            struct GameStateMachineState state);
+static int get_next_state(struct GameStateMachineInput input,
+                          struct GameStateMachineState *state);
 static void priority_handle_new_registration(void);
 static void
 priority_handle_positive_value(struct GameSmSubsystemRegistrationData *new_reg);
@@ -71,22 +72,26 @@ void register_state_machine(
   priority_handle_new_registration();
 }
 
-struct GameStateMachineState get_next_state(struct GameStateMachineInput input,
-                                            struct GameStateMachineState data) {
-  struct GameStateMachineState new_data;
+static int get_next_state(struct GameStateMachineInput input,
+                          struct GameStateMachineState *data) {
   size_t i;
+  int err;
 
   for (i = 0; i < game_sm_subsystem.count; i++) {
     logging_utils_ops.log_info(module_id, "Processing %s",
                                game_sm_subsystem.registrations[i]->id);
 
-    new_data = game_sm_subsystem.registrations[i]->next_state(input, data);
+    err = game_sm_subsystem.registrations[i]->next_state(input, data);
 
-    if (data.current_state != new_data.current_state)
-      return new_data;
+    if (err) {
+      logging_utils_ops.log_err(module_id, "Unable to process %s: %s",
+                                game_sm_subsystem.registrations[i]->id,
+                                strerror(err));
+      return err;
+    }
   }
 
-  return data;
+  return 0;
 };
 
 void priority_handle_new_registration(void) {

@@ -12,7 +12,7 @@
  *    IMPORTS
  ******************************************************************************/
 #include "game/game_state_machine/game_state_machine.h"
-#include "game/game_state_machine/user_move/user_move.h"
+#include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
 
 /*******************************************************************************
  *    PRIVATE API
@@ -21,7 +21,7 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-typedef struct GameStateMachineState (*gsm_subsystem_next_state_function_t)(
+typedef int (*gsm_subsystem_next_state_function_t)(
     struct GameStateMachineInput input, struct GameStateMachineState *state);
 
 struct GameSmSubsystemRegistrationData {

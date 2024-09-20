@@ -1,8 +1,12 @@
+#include <string.h>
 #include <unity.h>
 
 #include "game/game.h"
-#include "game/game_state_machine/user_move/user_move.c"
-#include "game/game_state_machine/user_move/user_move.h"
+#include "game/game_state_machine/game_state_machine.h"
+#include "game/game_state_machine/game_states.h"
+#include "game/game_state_machine/sub_state_machines/common.h"
+#include "game/game_state_machine/sub_state_machines/user_move_sm_module.c"
+#include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
 
@@ -23,172 +27,232 @@ void test_user_move_reset_state() {
 }
 
 void test_user_move_create_up_higlith() {
-  struct UserMove src_users_moves[] = {};
+  struct GameStateMachineInput input = {.input_event = INPUT_EVENT_UP,
+                                        .input_user = User1};
+  struct GameStateMachineState state = {.current_state = GameStatePlay,
+                                        .current_user = User1,
+                                        .users_moves_count = 0,
+                                        .users_moves_data = {}};
 
-  struct UserMoveCreationData src_user_move_data = {
-      .user = User1,
-      .count = sizeof(src_users_moves) / sizeof(struct UserMove),
-      .input = INPUT_EVENT_UP,
-      .users_moves = src_users_moves};
-  struct UserMove new_user_move;
+  struct UserMove *new_user_move;
+  int err;
 
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  err = user_move_state_machine_next_state(input, &state);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[0]);
-  TEST_ASSERT_EQUAL_INT(2, new_user_move.coordinates[1]);
+  TEST_ASSERT_EQUAL_INT(0, err);
 
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  new_user_move = gsm_common_ops.get_last_move(&state);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[0]);
-  TEST_ASSERT_EQUAL_INT(0, new_user_move.coordinates[1]);
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
+  TEST_ASSERT_EQUAL_INT(2, new_user_move->coordinates[1]);
 
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  err = user_move_state_machine_next_state(input, &state);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[0]);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[1]);
+  TEST_ASSERT_EQUAL_INT(0, err);
+
+  new_user_move = gsm_common_ops.get_last_move(&state);
+
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
+  TEST_ASSERT_EQUAL_INT(0, new_user_move->coordinates[1]);
+
+  err = user_move_state_machine_next_state(input, &state);
+
+  TEST_ASSERT_EQUAL_INT(0, err);
+
+  new_user_move = gsm_common_ops.get_last_move(&state);
+
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[1]);
 }
 
 void test_user_move_create_down_higlith() {
-  struct UserMove src_users_moves[] = {};
+  struct GameStateMachineInput input = {.input_event = INPUT_EVENT_DOWN,
+                                        .input_user = User1};
+  struct GameStateMachineState state = {.current_state = GameStatePlay,
+                                        .current_user = User1,
+                                        .users_moves_count = 0,
+                                        .users_moves_data = {}};
+  struct UserMove *new_user_move;
+  int err;
 
-  struct UserMoveCreationData src_user_move_data = {
-      .user = User1,
-      .count = sizeof(src_users_moves) / sizeof(struct UserMove),
-      .input = INPUT_EVENT_DOWN,
-      .users_moves = src_users_moves};
-  struct UserMove new_user_move;
+  err = user_move_state_machine_next_state(input, &state);
 
-  user_move_init();
-  TEST_ASSERT_EQUAL_INT(1, user_move_state_machine.state.width);
-  TEST_ASSERT_EQUAL_INT(1, user_move_state_machine.state.height);
+  TEST_ASSERT_EQUAL_INT(0, err);
 
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  new_user_move = gsm_common_ops.get_last_move(&state);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[0]);
-  TEST_ASSERT_EQUAL_INT(0, new_user_move.coordinates[1]);
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
+  TEST_ASSERT_EQUAL_INT(0, new_user_move->coordinates[1]);
 
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  err = user_move_state_machine_next_state(input, &state);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[0]);
-  TEST_ASSERT_EQUAL_INT(2, new_user_move.coordinates[1]);
+  TEST_ASSERT_EQUAL_INT(0, err);
 
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  new_user_move = gsm_common_ops.get_last_move(&state);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[0]);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[1]);
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
+  TEST_ASSERT_EQUAL_INT(2, new_user_move->coordinates[1]);
+
+  err = user_move_state_machine_next_state(input, &state);
+
+  TEST_ASSERT_EQUAL_INT(0, err);
+
+  new_user_move = gsm_common_ops.get_last_move(&state);
+
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[1]);
 }
 
 void test_user_move_create_left_higlith() {
-  struct UserMove src_users_moves[] = {};
+  struct GameStateMachineInput input = {.input_event = INPUT_EVENT_LEFT,
+                                        .input_user = User1};
+  struct GameStateMachineState state = {.current_state = GameStatePlay,
+                                        .current_user = User1,
+                                        .users_moves_count = 0,
+                                        .users_moves_data = {}};
+  struct UserMove *new_user_move;
+  int err;
 
-  struct UserMoveCreationData src_user_move_data = {
-      .user = User1,
-      .count = sizeof(src_users_moves) / sizeof(struct UserMove),
-      .input = INPUT_EVENT_LEFT,
-      .users_moves = src_users_moves};
-  struct UserMove new_user_move;
+  err = user_move_state_machine_next_state(input, &state);
 
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  TEST_ASSERT_EQUAL_INT(0, err);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[1]);
-  TEST_ASSERT_EQUAL_INT(0, new_user_move.coordinates[0]);
+  new_user_move = gsm_common_ops.get_last_move(&state);
 
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[1]);
+  TEST_ASSERT_EQUAL_INT(0, new_user_move->coordinates[0]);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[1]);
-  TEST_ASSERT_EQUAL_INT(2, new_user_move.coordinates[0]);
+  err = user_move_state_machine_next_state(input, &state);
 
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  TEST_ASSERT_EQUAL_INT(0, err);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[0]);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[1]);
+  new_user_move = gsm_common_ops.get_last_move(&state);
+
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[1]);
+  TEST_ASSERT_EQUAL_INT(2, new_user_move->coordinates[0]);
+
+  err = user_move_state_machine_next_state(input, &state);
+
+  TEST_ASSERT_EQUAL_INT(0, err);
+
+  new_user_move = gsm_common_ops.get_last_move(&state);
+
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[1]);
 }
 
 void test_user_move_create_right_higlith() {
-  struct UserMove src_users_moves[] = {};
+  struct GameStateMachineInput input = {.input_event = INPUT_EVENT_RIGHT,
+                                        .input_user = User1};
+  struct GameStateMachineState state = {.current_state = GameStatePlay,
+                                        .current_user = User1,
+                                        .users_moves_count = 0,
+                                        .users_moves_data = {}};
+  struct UserMove *new_user_move;
+  int err;
 
-  struct UserMoveCreationData src_user_move_data = {
-      .user = User1,
-      .count = sizeof(src_users_moves) / sizeof(struct UserMove),
-      .input = INPUT_EVENT_RIGHT,
-      .users_moves = src_users_moves};
-  struct UserMove new_user_move;
+  err = user_move_state_machine_next_state(input, &state);
 
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  TEST_ASSERT_EQUAL_INT(0, err);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[1]);
-  TEST_ASSERT_EQUAL_INT(2, new_user_move.coordinates[0]);
+  new_user_move = gsm_common_ops.get_last_move(&state);
 
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[1]);
+  TEST_ASSERT_EQUAL_INT(2, new_user_move->coordinates[0]);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[1]);
-  TEST_ASSERT_EQUAL_INT(0, new_user_move.coordinates[0]);
+  err = user_move_state_machine_next_state(input, &state);
 
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  TEST_ASSERT_EQUAL_INT(0, err);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[0]);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[1]);
+  new_user_move = gsm_common_ops.get_last_move(&state);
+
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[1]);
+  TEST_ASSERT_EQUAL_INT(0, new_user_move->coordinates[0]);
+
+  err = user_move_state_machine_next_state(input, &state);
+
+  TEST_ASSERT_EQUAL_INT(0, err);
+
+  new_user_move = gsm_common_ops.get_last_move(&state);
+
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[1]);
 }
 
 void test_user_move_create_select() {
-  struct UserMove src_users_moves[2] = {{.user = User1,
-                                         .type = USER_MOVE_TYPE_SELECT_VALID,
-                                         .coordinates = {0, 0}},
-                                        {.user = User2,
-                                         .type = USER_MOVE_TYPE_SELECT_VALID,
-                                         .coordinates = {1, 0}}};
+  struct GameStateMachineInput input = {.input_event = INPUT_EVENT_SELECT,
+                                        .input_user = User1};
+  struct GameStateMachineState state = {
+      .current_state = GameStatePlay,
+      .current_user = User1,
+      .users_moves_count = 2,
+      .users_moves_data = {{.user = User1,
+                            .type = USER_MOVE_TYPE_SELECT_VALID,
+                            .coordinates = {0, 0}},
+                           {.user = User2,
+                            .type = USER_MOVE_TYPE_SELECT_VALID,
+                            .coordinates = {1, 0}}}
 
-  struct UserMoveCreationData src_user_move_data = {
-      .user = User1,
-      .count = sizeof(src_users_moves) / sizeof(struct UserMove),
-      .input = INPUT_EVENT_SELECT,
-      .users_moves = src_users_moves};
-  struct UserMove new_user_move;
+  };
+  struct UserMove *new_user_move;
+  int err;
 
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  err = user_move_state_machine_next_state(input, &state);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_SELECT_VALID, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[0]);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[1]);
+  TEST_ASSERT_EQUAL_INT(0, err);
 
-  src_user_move_data.input = INPUT_EVENT_DOWN; // Move to 1, 0
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  new_user_move = gsm_common_ops.get_last_move(&state);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[0]);
-  TEST_ASSERT_EQUAL_INT(0, new_user_move.coordinates[1]);
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_SELECT_VALID, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[1]);
 
-  src_user_move_data.input = INPUT_EVENT_SELECT;
-  new_user_move = user_move_ops.create_move(src_user_move_data);
+  input.input_event = INPUT_EVENT_DOWN; // Move to 1, 0
+  err = user_move_state_machine_next_state(input, &state);
 
-  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_SELECT_INVALID, new_user_move.type);
-  TEST_ASSERT_EQUAL_INT(User1, new_user_move.user);
-  TEST_ASSERT_EQUAL_INT(1, new_user_move.coordinates[0]);
-  TEST_ASSERT_EQUAL_INT(0, new_user_move.coordinates[1]);
+  TEST_ASSERT_EQUAL_INT(0, err);
+
+  new_user_move = gsm_common_ops.get_last_move(&state);
+
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_HIGHLIGHT, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
+  TEST_ASSERT_EQUAL_INT(0, new_user_move->coordinates[1]);
+
+  input.input_event = INPUT_EVENT_SELECT;
+  err = user_move_state_machine_next_state(input, &state);
+
+  TEST_ASSERT_EQUAL_INT(0, err);
+
+  new_user_move = gsm_common_ops.get_last_move(&state);
+
+  TEST_ASSERT_EQUAL_INT(USER_MOVE_TYPE_SELECT_INVALID, new_user_move->type);
+  TEST_ASSERT_EQUAL_INT(User1, new_user_move->user);
+  TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
+  TEST_ASSERT_EQUAL_INT(0, new_user_move->coordinates[1]);
 }

@@ -39,8 +39,7 @@ struct UserMovePrivateOps {
 
 static int user_move_init(void);
 static void set_default_state(void);
-static struct UserMove user_move_create(struct UserMoveCreationData);
-struct GameStateMachineState
+static int
 user_move_state_machine_next_state(struct GameStateMachineInput input,
                                    struct GameStateMachineState *state);
 static void
@@ -56,7 +55,7 @@ static void user_move_state_machine_handle_exit_event(
     struct UserMoveCoordinates *coordinates, struct UserMove *new_user_move);
 static void user_move_state_machine_handle_select_event(
     struct UserMoveCoordinates *coordinates, struct UserMove *new_user_move,
-    struct GameStateMachineState data);
+    struct GameStateMachineState *data);
 
 static char module_id[] = "user_move_sm_module";
 static struct UserMoveStateMachine user_move_state_machine;
@@ -84,14 +83,13 @@ static struct InitRegistrationData init_user_move_reg = {
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
-struct GameStateMachineState
-user_move_state_machine_next_state(struct GameStateMachineInput input,
-                                   struct GameStateMachineState state) {
+int user_move_state_machine_next_state(struct GameStateMachineInput input,
+                                       struct GameStateMachineState *state) {
   struct UserMoveCoordinates *coordinates;
   struct UserMove new_user_move;
-  size_t i;
 
   coordinates = &user_move_state_machine.state;
+  new_user_move.user = input.input_user;
 
   switch (input.input_event) {
   case INPUT_EVENT_UP:
@@ -100,6 +98,7 @@ user_move_state_machine_next_state(struct GameStateMachineInput input,
 
   case INPUT_EVENT_DOWN:
     user_move_state_machine_handle_down_event(coordinates, &new_user_move);
+    break;
 
   case INPUT_EVENT_RIGHT:
     user_move_state_machine_handle_right_event(coordinates, &new_user_move);
@@ -114,9 +113,21 @@ user_move_state_machine_next_state(struct GameStateMachineInput input,
     break;
 
   case INPUT_EVENT_SELECT:
+    user_move_state_machine_handle_select_event(coordinates, &new_user_move,
+                                                state);
+    break;
+
+  default:
+    logging_utils_ops.log_err(module_id, "Invalid input event %i from %s",
+                              input.input_event, input.input_user);
+    new_user_move.type = USER_MOVE_TYPE_SELECT_INVALID;
   }
 
-  return state;
+  new_user_move.coordinates[0] = coordinates->width;
+  new_user_move.coordinates[1] = coordinates->height;
+  state->users_moves_data[state->users_moves_count++] = new_user_move;
+
+  return 0;
 }
 
 void user_move_state_machine_handle_up_event(
@@ -148,85 +159,28 @@ void user_move_state_machine_handle_exit_event(
   (void)coordinates;
   new_user_move->type = USER_MOVE_TYPE_QUIT;
 }
+
 void user_move_state_machine_handle_select_event(
     struct UserMoveCoordinates *coordinates, struct UserMove *new_user_move,
-    struct GameStateMachineState data) {
+    struct GameStateMachineState *data) {
   size_t i;
 
   new_user_move->type = USER_MOVE_TYPE_SELECT_VALID;
 
-  for (i = 0; i < data.users_moves_count; i++) {
-    if (data.users_moves_data[i].type == USER_MOVE_TYPE_SELECT_VALID &&
-        data.users_moves_data[i].coordinates[0] == coordinates->width &&
-        data.users_moves_data[i].coordinates[1] == coordinates->height) {
+  for (i = 0; i < data->users_moves_count; i++) {
+    if (data->users_moves_data[i].type == USER_MOVE_TYPE_SELECT_VALID &&
+        data->users_moves_data[i].coordinates[0] == coordinates->width &&
+        data->users_moves_data[i].coordinates[1] == coordinates->height) {
       new_user_move->type = USER_MOVE_TYPE_SELECT_INVALID;
       break;
     }
   }
 }
-struct UserMove user_move_create(struct UserMoveCreationData data) {
-  struct UserMoveCoordinates *coordinates;
-  struct UserMove new_user_move;
-  size_t i;
-
-  coordinates = &user_move_state_machine.state;
-
-  switch (data.input) {
-  case INPUT_EVENT_UP:
-    coordinates->height = (coordinates->height + 1) % 3;
-    new_user_move.type = USER_MOVE_TYPE_HIGHLIGHT;
-    break;
-
-  case INPUT_EVENT_DOWN:
-    coordinates->height = (coordinates->height + 2) % 3;
-    new_user_move.type = USER_MOVE_TYPE_HIGHLIGHT;
-    break;
-
-  case INPUT_EVENT_RIGHT:
-    coordinates->width = (coordinates->width + 1) % 3;
-    new_user_move.type = USER_MOVE_TYPE_HIGHLIGHT;
-    break;
-
-  case INPUT_EVENT_LEFT:
-    coordinates->width = (coordinates->width + 2) % 3;
-    new_user_move.type = USER_MOVE_TYPE_HIGHLIGHT;
-    break;
-
-  case INPUT_EVENT_EXIT:
-    new_user_move.type = USER_MOVE_TYPE_QUIT;
-    break;
-
-  case INPUT_EVENT_SELECT:
-    new_user_move.type = USER_MOVE_TYPE_SELECT_VALID;
-
-    for (i = 0; i < data.count; i++) {
-      if (data.users_moves[i].type == USER_MOVE_TYPE_SELECT_VALID &&
-          data.users_moves[i].coordinates[0] == coordinates->width &&
-          data.users_moves[i].coordinates[1] == coordinates->height) {
-        new_user_move.type = USER_MOVE_TYPE_SELECT_INVALID;
-      }
-    }
-    break;
-
-  case INPUT_EVENT_NONE:
-  case INPUT_EVENT_MAX:
-    logging_utils_ops.log_err(module_id, "Invalid input event: %i", data.input);
-    new_user_move.type = USER_MOVE_TYPE_SELECT_INVALID;
-    break;
-  }
-
-  new_user_move.user = data.user;
-  new_user_move.coordinates[0] = coordinates->width;
-  new_user_move.coordinates[1] = coordinates->height;
-
-  if (new_user_move.type == USER_MOVE_TYPE_SELECT_VALID)
-    user_move_priv_ops.set_default_state();
-
-  return new_user_move;
-}
 
 int user_move_init(void) {
   user_move_priv_ops.set_default_state();
+
+  game_sm_subsystem_ops.register_state_machine(&gsm_registration_data);
 
   return 0;
 }

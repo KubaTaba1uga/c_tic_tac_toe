@@ -13,10 +13,9 @@ struct GameStateMachineState mock_new_state = {.current_state = 1};
 struct GameStateMachineInput mock_input = {};
 
 // Mock next_state function
-struct GameStateMachineState
-mock_next_state(struct GameStateMachineInput input,
-                struct GameStateMachineState state) {
-  return mock_new_state;
+int mock_next_state(struct GameStateMachineInput input,
+                    struct GameStateMachineState *state) {
+  return 0;
 }
 
 // Test initialization

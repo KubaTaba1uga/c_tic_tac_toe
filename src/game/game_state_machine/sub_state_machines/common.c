@@ -1,7 +1,5 @@
-#ifndef USER_MOVE_H
-#define USER_MOVE_H
 /*******************************************************************************
- * @file user_move.h
+ * @file common.c
  * @brief TO-DO
  *
  * TO-DO
@@ -11,34 +9,33 @@
 /*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
-#include <stddef.h>
+// C standard library
 
-#include "game/game.h"
-#include "game/game_state_machine/game_states.h"
-#include "input/input.h"
+// App's internal libs
+#include "game/game_state_machine/sub_state_machines/common.h"
+#include "utils/logging_utils.h"
 
 /*******************************************************************************
- *    PRIVATE API
+ *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
+static const char *module_id = "game_state_machines_common";
+static struct UserMove *get_last_move(struct GameStateMachineState *state);
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-enum UserMoveType {
-  USER_MOVE_TYPE_HIGHLIGHT,
-  USER_MOVE_TYPE_SELECT_VALID,
-  USER_MOVE_TYPE_SELECT_INVALID,
-  USER_MOVE_TYPE_QUIT,
-};
-
-struct UserMove {
-  enum UserMoveType type;
-  enum Users user;
-  int coordinates[2];
-};
+struct GameStateMachineCommonOps gsm_common_ops = {.get_last_move =
+                                                       get_last_move};
 
 /*******************************************************************************
- *    MODULARITY BOILERCODE
+ *    PRIVATE API
  ******************************************************************************/
+struct UserMove *get_last_move(struct GameStateMachineState *state) {
+  if (state->users_moves_count == 0) {
+    logging_utils_ops.log_err(
+        module_id, "No last move to get. This is unexpected behaviour");
+    return NULL;
+  }
 
-#endif // USER_MOVE_H
+  return &(state->users_moves_data[state->users_moves_count - 1]);
+}
