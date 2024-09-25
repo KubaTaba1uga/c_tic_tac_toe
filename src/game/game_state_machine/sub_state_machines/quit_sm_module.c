@@ -30,10 +30,10 @@
 static int quit_state_machine_init(void);
 static int quit_state_machine_next_state(struct GameStateMachineInput input,
                                          struct GameStateMachineState *state);
-static char module_id[] = "quit_sm_module";
+static char gsm_quit_module_id[] = "quit_sm_module";
 static struct GameSmSubsystemRegistrationData gsm_registration_data = {
     .next_state = quit_state_machine_next_state,
-    .id = module_id,
+    .id = gsm_quit_module_id,
     .priority = 0 // No priority
 };
 
@@ -41,7 +41,7 @@ static struct GameSmSubsystemRegistrationData gsm_registration_data = {
  *    INIT BOILERCODE
  ******************************************************************************/
 static struct InitRegistrationData init_quit_state_machine_reg = {
-    .id = module_id,
+    .id = gsm_quit_module_id,
     .init_func = quit_state_machine_init,
     .destroy_func = NULL,
 };

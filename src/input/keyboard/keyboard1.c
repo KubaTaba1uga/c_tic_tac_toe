@@ -48,6 +48,8 @@ static struct InputRegistrationData input_keyboard1_reg = {
     .wait = keyboard1_wait,
     .destroy = keyboard1_destroy};
 
+static struct InputOps *input_ops = NULL;
+
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
@@ -57,7 +59,8 @@ struct Keyboard1Ops keyboard1_ops = {};
  *    PRIVATE API
  ******************************************************************************/
 int keyboard1_module_init(void) {
-  input_ops.register_module(&input_keyboard1_reg);
+  input_ops = get_input_ops();
+  input_ops->register_module(&input_keyboard1_reg);
 
   return 0;
 }

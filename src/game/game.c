@@ -72,7 +72,10 @@ int game_process(enum InputEvents input_event) {
 
 int game_init(void) {
   struct ConfigRegistrationData user1_input, user2_input;
+  struct InputOps *input_ops;
   int err;
+
+  input_ops = get_input_ops();
 
   user1_input.var_name = "user1_input";
   user1_input.default_value = "keyboard1";
@@ -97,8 +100,8 @@ int game_init(void) {
   //  at input device level. We can make this decision on game level.
   if (strcmp(config_ops.get_var("user1_input"),
              config_ops.get_var("user2_input")) == 0) {
-    err = input_ops.register_callback(config_ops.get_var("user1_input"),
-                                      game_priv_ops.logic);
+    err = input_ops->register_callback(config_ops.get_var("user1_input"),
+                                       game_priv_ops.logic);
     if (err) {
       logging_utils_ops.log_err(
           module_id,
@@ -108,8 +111,8 @@ int game_init(void) {
   } // Otherwise we need to distinguish inputs at device level.
   else {
 
-    err = input_ops.register_callback(config_ops.get_var("user1_input"),
-                                      game_priv_ops.user1_logic);
+    err = input_ops->register_callback(config_ops.get_var("user1_input"),
+                                       game_priv_ops.user1_logic);
     if (err) {
       logging_utils_ops.log_err(
           module_id,
@@ -118,8 +121,8 @@ int game_init(void) {
       return err;
     }
 
-    err = input_ops.register_callback(config_ops.get_var("user2_input"),
-                                      game_priv_ops.user2_logic);
+    err = input_ops->register_callback(config_ops.get_var("user2_input"),
+                                       game_priv_ops.user2_logic);
     if (err) {
       logging_utils_ops.log_err(
           module_id,
@@ -129,7 +132,7 @@ int game_init(void) {
     }
   }
 
-  err = input_ops.start();
+  err = input_ops->start();
 
   if (err) {
     logging_utils_ops.log_err(module_id, "Unable to start input devices.");

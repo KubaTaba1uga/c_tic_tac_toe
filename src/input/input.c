@@ -60,6 +60,7 @@ struct InputOps input_ops = {.register_module = input_register_module,
                              .wait = input_wait,
                              .initialize = input_init,
                              .destroy = input_destroy};
+struct InputOps *get_input_ops(void) { return &input_ops; };
 
 /*******************************************************************************
  *    PRIVATE API
@@ -94,7 +95,7 @@ int input_register_callback(char *id, input_callback_func_t callback) {
   logging_utils_ops.log_err(INPUT_MODULE_ID,
                             "Unable to register callback for %s, "
                             "no input module with this id",
-                            input_subsystem.registrations[i]->id);
+                            id);
 
   return EINVAL;
 }

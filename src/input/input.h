@@ -66,6 +66,6 @@ extern struct InitRegistrationData *init_input_reg_p;
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct InputOps input_ops;
+struct InputOps *get_input_ops(void);
 
 #endif // INPUT_H

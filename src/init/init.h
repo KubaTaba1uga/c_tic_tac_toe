@@ -49,15 +49,21 @@ struct InitOps {
   void (*destroy_system)(void);
 };
 
+// We are using line of definition to generate random function names, it is
+// especially usefull when importing multiple .c files into test.
+#define CONCAT_IMPL(a, b) a##b
+#define CONCAT(a, b) CONCAT_IMPL(a, b)
+#define UNIQUE_NAME(base) CONCAT(base, __LINE__)
+
 #define INIT_REGISTER_SUBSYSTEM(_init_registration_data, _priority)            \
-  static void _init_register() __attribute__((constructor(101 + _priority)));  \
-  static void _init_register() {                                               \
+  static void UNIQUE_NAME(_init_register)() __attribute__((constructor(101 + _priority)));  \
+  static void UNIQUE_NAME(_init_register)() {                                  \
     init_ops.register_module(_init_registration_data);                         \
   }
 
 #define INIT_REGISTER_SUBSYSTEM_CHILD(_child, _parent)                         \
-  static void _init_register() __attribute__((constructor));                   \
-  static void _init_register() {                                               \
+  static void UNIQUE_NAME(_init_register)() __attribute__((constructor));      \
+  static void UNIQUE_NAME(_init_register)() {                                  \
     init_ops.register_child_module(_child, _parent);                           \
   }
 
