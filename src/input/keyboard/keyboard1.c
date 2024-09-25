@@ -49,6 +49,7 @@ static struct InputRegistrationData input_keyboard1_reg = {
     .destroy = keyboard1_destroy};
 
 static struct InputOps *input_ops = NULL;
+static struct KeyboardOps *keyboard_ops = NULL;
 
 /*******************************************************************************
  *    PUBLIC API
@@ -61,6 +62,7 @@ struct Keyboard1Ops keyboard1_ops = {};
 int keyboard1_module_init(void) {
   input_ops = get_input_ops();
   input_ops->register_module(&input_keyboard1_reg);
+  keyboard_ops = get_keyboard_ops();
 
   return 0;
 }
@@ -70,14 +72,14 @@ void keyboard1_module_destroy(void) {}
 int keyboard1_start(void) {
   int err;
 
-  err = keyboard_ops.initialize();
+  err = keyboard_ops->initialize();
   if (err) {
     logging_utils_ops.log_err(module_id,
                               "Unable to initialize keyboard1 module");
     return err;
   }
 
-  err = keyboard_ops.register_callback(keyboard1_callback);
+  err = keyboard_ops->register_callback(keyboard1_callback);
   if (err) {
     logging_utils_ops.log_err(
         module_id, "Unable to register callback for keyboard1 module");
@@ -88,9 +90,9 @@ int keyboard1_start(void) {
   return 0;
 }
 
-void keyboard1_wait(void) { keyboard_ops.wait(); }
+void keyboard1_wait(void) { keyboard_ops->wait(); }
 
-void keyboard1_destroy(void) { keyboard_ops.destroy(); }
+void keyboard1_destroy(void) { keyboard_ops->destroy(); }
 
 int keyboard1_callback(size_t n, char buffer[n]) {
   enum InputEvents input_event = INPUT_EVENT_NONE;

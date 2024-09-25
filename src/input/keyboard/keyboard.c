@@ -73,12 +73,12 @@ static struct KeyboardPrivateOps keyboard_private_ops = {
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct KeyboardOps keyboard_ops = {.initialize = keyboard_initialize,
-                                   .destroy = keyboard_destroy,
-                                   .wait = keyboard_wait,
-                                   .register_callback =
-                                       keyboard_register_callback,
-                                   .private = &keyboard_private_ops};
+static struct KeyboardOps keyboard_ops = {
+    .initialize = keyboard_initialize,
+    .destroy = keyboard_destroy,
+    .wait = keyboard_wait,
+    .register_callback = keyboard_register_callback,
+};
 struct KeyboardOps *get_keyboard_ops(void) { return &keyboard_ops; };
 
 /*******************************************************************************
