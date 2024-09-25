@@ -79,7 +79,8 @@ test('test_gsm_subsystem', test_gsm_subsystem_exe)
 test_quit_sm_name = 'test_quit_sm.c'
 
 test_quit_sm_src = [test_quit_sm_name,
-		 game_sub_sms / 'user_move_sm_module.c',
+		 game_sub_sms / 'quit_sm_module.c',
+		 game_sub_sms / 'common.c',		 
 		 game_state_machine / 'game_state_machine.c',
 		 game_state_machine / 'game_sm_subsystem.c',
 		 game / 'game.c',

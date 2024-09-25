@@ -124,9 +124,9 @@ int keyboard_initialize(void) {
 
 void keyboard_destroy(void) {
   // Send killing signal to the thread
+  is_keyboard_initialized = false;
   pthread_kill(keyboard_subsystem.thread, SIGUSR1);
   pthread_join(keyboard_subsystem.thread, NULL);
-  is_keyboard_initialized = false;
 }
 
 void keyboard_wait(void) { pthread_join(keyboard_subsystem.thread, NULL); }
@@ -165,10 +165,10 @@ void *keyboard_process_stdin(void *_) {
     }
 
     if (fds[0].revents & POLLIN) {
-      logging_utils_ops.log_err(INPUT_KEYBOARD_ID, "Processing triggered.");
       keyboard_private_ops.read_stdin();
-      logging_utils_ops.log_err(INPUT_KEYBOARD_ID, "Callbacks triggered.");
       keyboard_private_ops.execute_callbacks();
+    } else {
+      logging_utils_ops.log_info(INPUT_KEYBOARD_ID, "Skipping invalid events.");
     }
   }
 
@@ -178,6 +178,8 @@ void *keyboard_process_stdin(void *_) {
 void keyboard_read_stdin(void) {
   ssize_t bytes_read;
 
+  logging_utils_ops.log_info(INPUT_KEYBOARD_ID, "Reading from stdin.");
+
   // Clear the stdin buffer count
   keyboard_subsystem.stdin_buffer_count = 0;
 
@@ -185,7 +187,8 @@ void keyboard_read_stdin(void) {
   bytes_read = read(STDIN_FILENO, keyboard_subsystem.stdin_buffer,
                     KEYBOARD_STDIN_BUFFER_MAX - 1); // TO-DO fix hang here
 
-  printf("%zd bytes read\n", bytes_read);
+  logging_utils_ops.log_info(INPUT_KEYBOARD_ID, "%zd bytes read from stdin\n",
+                             bytes_read);
 
   if (bytes_read < 0) {
     logging_utils_ops.log_err(INPUT_KEYBOARD_ID, "Unable to read from stdin");
@@ -199,6 +202,9 @@ void keyboard_read_stdin(void) {
 
 void keyboard_execute_callbacks(void) {
   size_t i;
+
+  logging_utils_ops.log_info(INPUT_KEYBOARD_ID, "Executing callbacks.");
+
   for (i = 0; i < keyboard_subsystem.callback_count; ++i) {
     if (keyboard_subsystem.callbacks[i]) {
       keyboard_subsystem.callbacks[i](keyboard_subsystem.stdin_buffer_count,

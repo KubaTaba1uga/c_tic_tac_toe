@@ -30,7 +30,6 @@
 static int quit_state_machine_init(void);
 static int quit_state_machine_next_state(struct GameStateMachineInput input,
                                          struct GameStateMachineState *state);
-
 static char module_id[] = "quit_sm_module";
 static struct GameSmSubsystemRegistrationData gsm_registration_data = {
     .next_state = quit_state_machine_next_state,
