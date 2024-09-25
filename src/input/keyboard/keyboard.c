@@ -183,7 +183,7 @@ void keyboard_read_stdin(void) {
 
   // Read input from stdin into the buffer
   bytes_read = read(STDIN_FILENO, keyboard_subsystem.stdin_buffer,
-                    KEYBOARD_STDIN_BUFFER_MAX - 1);
+                    KEYBOARD_STDIN_BUFFER_MAX - 1); // TO-DO fix hang here
 
   printf("%zd bytes read\n", bytes_read);
 

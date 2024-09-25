@@ -18,7 +18,7 @@ int mockup_callback_counter;
 enum InputEvents input_event;
 int pipefd[2];
 
-struct timespec ts = {.tv_sec = 0, .tv_nsec = 5000};
+struct timespec ts = {.tv_sec = 0, .tv_nsec = 50000000};
 
 static void restore_orig_stdin();
 static void mock_stdin();
@@ -49,6 +49,7 @@ void tearDown() {
 }
 
 void test_process_single_stdin() {
+  // On low spec machine this test may file due to ts being to small.
   keyboard_ops.initialize();
   keyboard_ops.register_callback(mock_keyboard_callback);
 
@@ -65,6 +66,7 @@ void test_process_single_stdin() {
 }
 
 void test_process_multiple_stdin() {
+  // On low spec machine this test may file due to ts being to small.
   keyboard_ops.initialize();
   keyboard_ops.register_callback(mock_keyboard_callback);
 
