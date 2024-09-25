@@ -22,23 +22,10 @@ struct timespec ts = {.tv_sec = 0, .tv_nsec = 50000000};
 
 static void restore_orig_stdin();
 static void mock_stdin();
-
-static int mock_keyboard_callback(size_t n, char buffer[n]) {
-  logging_utils_ops.log_info("mock_keyboard_callback", "executed");
-  mockup_callback_counter++;
-  return 0;
-}
-
-static int mock_keyboard1_callback(enum InputEvents local_input_event) {
-  logging_utils_ops.log_info("mock_keyboard1_callback", "executed %i",
-                             local_input_event);
-  mockup_callback_counter++;
-  input_event = local_input_event;
-  return 0;
-}
+static int mock_keyboard_callback(size_t n, char buffer[n]);
+static int mock_keyboard1_callback(enum InputEvents local_input_event);
 
 void setUp() {
-  input_ops.initialize();
   logging_utils_ops.init_loggers();
   mockup_callback_counter = 0;
   mock_stdin();
@@ -46,12 +33,11 @@ void setUp() {
 
 void tearDown() {
   restore_orig_stdin();
-  input_ops.destroy();
   logging_utils_ops.destroy_loggers();
 }
 
 void test_process_single_stdin() {
-  // On low spec machine this test may file due to ts being to small.
+  // On low spec machine this test may fail due to ts being too small.
   keyboard_ops.initialize();
   keyboard_ops.register_callback(mock_keyboard_callback);
 
@@ -187,4 +173,18 @@ void restore_orig_stdin() {
   // Restore the original stdin
   dup2(stdin_backup, STDIN_FILENO);
   close(pipefd[0]);
+}
+
+int mock_keyboard_callback(size_t n, char buffer[n]) {
+  logging_utils_ops.log_info("mock_keyboard_callback", "executed");
+  mockup_callback_counter++;
+  return 0;
+}
+
+int mock_keyboard1_callback(enum InputEvents local_input_event) {
+  logging_utils_ops.log_info("mock_keyboard1_callback", "executed %i",
+                             local_input_event);
+  mockup_callback_counter++;
+  input_event = local_input_event;
+  return 0;
 }
