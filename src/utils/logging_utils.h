@@ -30,6 +30,6 @@ struct LoggingUtilsOps {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct LoggingUtilsOps logging_utils_ops;
+struct LoggingUtilsOps *get_logging_utils_ops(void);
 
 #endif // LOGGING_UTILS_H

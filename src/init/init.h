@@ -56,20 +56,23 @@ struct InitOps {
 #define UNIQUE_NAME(base) CONCAT(base, __LINE__)
 
 #define INIT_REGISTER_SUBSYSTEM(_init_registration_data, _priority)            \
-  static void UNIQUE_NAME(_init_register)() __attribute__((constructor(101 + _priority)));  \
+  static void UNIQUE_NAME(_init_register)()                                    \
+      __attribute__((constructor(101 + _priority)));                           \
   static void UNIQUE_NAME(_init_register)() {                                  \
-    init_ops.register_module(_init_registration_data);                         \
+    struct InitOps *init_ops = get_init_ops();                                 \
+    init_ops->register_module(_init_registration_data);                        \
   }
 
 #define INIT_REGISTER_SUBSYSTEM_CHILD(_child, _parent)                         \
   static void UNIQUE_NAME(_init_register)() __attribute__((constructor));      \
   static void UNIQUE_NAME(_init_register)() {                                  \
-    init_ops.register_child_module(_child, _parent);                           \
+    struct InitOps *init_ops = get_init_ops();                                 \
+    init_ops->register_child_module(_child, _parent);                          \
   }
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct InitOps init_ops;
+struct InitOps *get_init_ops(void);
 
 #endif // INIT_SUBSYSTEM_H

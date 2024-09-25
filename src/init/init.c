@@ -52,36 +52,41 @@ struct InitOps init_ops = {.register_module = init_register_subsystem,
                                init_register_child_subsystem,
                            .initialize_system = init_initialize_system,
                            .destroy_system = init_destroy_system};
+struct InitOps *get_init_ops(void) { return &init_ops; }
 
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
 void init_register_subsystem(
     struct InitRegistrationData *init_registration_data) {
+  struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
+
   if (init_subsystem.count < MAX_INIT_REGISTRATIONS) {
     init_subsystem.registrations[init_subsystem.count++] =
         init_registration_data;
   } else {
-    logging_utils_ops.log_err(module_id,
-                              "Unable to register %s in init, "
-                              "no enough space in `registrations` array.",
-                              init_registration_data->id);
+    logging_ops->log_err(module_id,
+                         "Unable to register %s in init, "
+                         "no enough space in `registrations` array.",
+                         init_registration_data->id);
   }
 }
 
 void init_register_child_subsystem(struct InitRegistrationData *child,
                                    struct InitRegistrationData *parent) {
+  struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
+
   if (parent->child_count < INIT_MAX_CHILDREN) {
     parent->children[parent->child_count++] = child;
   } else {
-    logging_utils_ops.log_err(module_id, "Max children reached for %s\n",
-                              parent->id);
+    logging_ops->log_err(module_id, "Max children reached for %s\n",
+                         parent->id);
   }
 }
 
 int init_initialize_system(void) {
+  struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   int err = 0;
-
   size_t i;
 
   for (i = 0; i < init_subsystem.count; ++i) {
@@ -90,8 +95,8 @@ int init_initialize_system(void) {
 
     err = init_initialize_subsystem(init_subsystem.registrations[i]);
     if (err) {
-      logging_utils_ops.log_err(module_id, "Unable to initialize %s\n",
-                                init_subsystem.registrations[i]->id);
+      logging_ops->log_err(module_id, "Unable to initialize %s\n",
+                           init_subsystem.registrations[i]->id);
 
       return err;
     }
@@ -112,6 +117,7 @@ void init_destroy_system() {
 }
 
 int init_initialize_subsystem(struct InitRegistrationData *subsystem) {
+  struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   size_t i;
   int err;
 
@@ -125,17 +131,18 @@ int init_initialize_subsystem(struct InitRegistrationData *subsystem) {
 
   err = subsystem->init_func();
   if (err) {
-    logging_utils_ops.log_err(module_id, "Failed to initialize %s: %s",
-                              subsystem->id, strerror(err));
+    logging_ops->log_err(module_id, "Failed to initialize %s: %s",
+                         subsystem->id, strerror(err));
     return err;
   }
 
-  logging_utils_ops.log_info(module_id, "Initialized %s", subsystem->id);
+  logging_ops->log_info(module_id, "Initialized %s", subsystem->id);
 
   return 0;
 }
 
 void init_destroy_subsystem(struct InitRegistrationData *subsystem) {
+  struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   size_t i;
 
   if (subsystem->child_count != 0) {
@@ -144,7 +151,7 @@ void init_destroy_subsystem(struct InitRegistrationData *subsystem) {
     }
   }
 
-  logging_utils_ops.log_info(module_id, "Destroying %s", subsystem->id);
+  logging_ops->log_info(module_id, "Destroying %s", subsystem->id);
 
   subsystem->destroy_func();
 }

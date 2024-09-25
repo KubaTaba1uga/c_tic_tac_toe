@@ -46,8 +46,9 @@ static char *config_get_variable(char *var_name);
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct ConfigOps config_ops = {.register_var = config_register_variable,
-                               .get_var = config_get_variable};
+static struct ConfigOps config_ops = {.register_var = config_register_variable,
+                                      .get_var = config_get_variable};
+struct ConfigOps *get_config_ops(void) { return &config_ops; }
 
 /*******************************************************************************
  *    PRIVATE API

@@ -54,6 +54,7 @@ struct InitRegistrationData *init_game_reg_p = &init_game_reg;
  *    PUBLIC API
  ******************************************************************************/
 struct GameOps game_ops = {};
+struct GameOps *get_game_ops(void) { return &game_ops; }
 
 /*******************************************************************************
  *    PRIVATE API
@@ -73,13 +74,15 @@ int game_process(enum InputEvents input_event) {
 int game_init(void) {
   struct ConfigRegistrationData user1_input, user2_input;
   struct InputOps *input_ops;
+  struct ConfigOps *config_ops;
   int err;
 
   input_ops = get_input_ops();
+  config_ops = get_config_ops();
 
   user1_input.var_name = "user1_input";
   user1_input.default_value = "keyboard1";
-  err = config_ops.register_var(user1_input);
+  err = config_ops->register_var(user1_input);
   if (err) {
     logging_utils_ops.log_err(module_id,
                               "Unable to register input device for user 1.");
@@ -88,7 +91,7 @@ int game_init(void) {
 
   user2_input.var_name = "user2_input";
   user2_input.default_value = "keyboard1";
-  err = config_ops.register_var(user2_input);
+  err = config_ops->register_var(user2_input);
   if (err) {
     logging_utils_ops.log_err(module_id,
                               "Unable to register input device for user 2.");
@@ -98,9 +101,9 @@ int game_init(void) {
 
   // If there is one input device we do not need to distinguish between users
   //  at input device level. We can make this decision on game level.
-  if (strcmp(config_ops.get_var("user1_input"),
-             config_ops.get_var("user2_input")) == 0) {
-    err = input_ops->register_callback(config_ops.get_var("user1_input"),
+  if (strcmp(config_ops->get_var("user1_input"),
+             config_ops->get_var("user2_input")) == 0) {
+    err = input_ops->register_callback(config_ops->get_var("user1_input"),
                                        game_priv_ops.logic);
     if (err) {
       logging_utils_ops.log_err(
@@ -111,7 +114,7 @@ int game_init(void) {
   } // Otherwise we need to distinguish inputs at device level.
   else {
 
-    err = input_ops->register_callback(config_ops.get_var("user1_input"),
+    err = input_ops->register_callback(config_ops->get_var("user1_input"),
                                        game_priv_ops.user1_logic);
     if (err) {
       logging_utils_ops.log_err(
@@ -121,7 +124,7 @@ int game_init(void) {
       return err;
     }
 
-    err = input_ops->register_callback(config_ops.get_var("user2_input"),
+    err = input_ops->register_callback(config_ops->get_var("user2_input"),
                                        game_priv_ops.user2_logic);
     if (err) {
       logging_utils_ops.log_err(

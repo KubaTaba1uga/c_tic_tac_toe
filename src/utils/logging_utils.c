@@ -87,6 +87,9 @@ struct LoggingUtilsOps logging_utils_ops = {.init_loggers = init_loggers,
                                             .log_info = log_info,
                                             .log_err = log_err,
                                             .private = &logging_utils_priv_ops};
+struct LoggingUtilsOps *get_logging_utils_ops(void) {
+  return &logging_utils_ops;
+}
 
 /*******************************************************************************
  *    PRIVATE API

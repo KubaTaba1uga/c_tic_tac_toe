@@ -36,6 +36,6 @@ struct ConfigOps {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct ConfigOps config_ops;
+struct ConfigOps *get_config_ops(void);
 
 #endif // CONFIG_H
