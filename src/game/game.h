@@ -20,7 +20,7 @@
  *    PUBLIC API
  ******************************************************************************/
 enum Users {
-  UserNone,
+  UserNone = 0,
   User1,
   User2,
   UserMax,

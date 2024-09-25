@@ -61,7 +61,7 @@ static char module_id[] = "user_move_sm_module";
 static struct UserMoveStateMachine user_move_state_machine;
 struct UserMovePrivateOps user_move_priv_ops = {.set_default_state =
                                                     set_default_state};
-struct GameSmSubsystemRegistrationData gsm_registration_data = {
+static struct GameSmSubsystemRegistrationData gsm_registration_data = {
     .next_state = user_move_state_machine_next_state,
     .id = module_id,
     .priority = 1 // Always perform first

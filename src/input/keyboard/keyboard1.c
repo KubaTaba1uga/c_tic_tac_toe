@@ -129,6 +129,7 @@ int keyboard1_callback(size_t n, char buffer[n]) {
     }
   }
 
+  logging_utils_ops.log_info(module_id, "Input: %i", input_event);
   err = input_keyboard1_reg.callback(input_event);
   if (err != 0) {
     logging_utils_ops.log_err(module_id, "Callback failed: %s", strerror(err));

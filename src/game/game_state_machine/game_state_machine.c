@@ -68,6 +68,9 @@ int game_sm_step(enum InputEvents input_event, enum Users input_user) {
   struct GameStateMachineInput data;
   int err;
 
+  logging_utils_ops.log_err(module_id, "Event %i User %i.", input_event,
+                            input_user);
+
   if (game_sm_priv_ops.is_input_event_valid(input_event) != 0 ||
       game_sm_priv_ops.is_input_user_valid(input_user) != 0)
     return EINVAL;
@@ -94,7 +97,13 @@ int game_sm_step(enum InputEvents input_event, enum Users input_user) {
 void game_sm_quit(void) { input_ops.destroy(); }
 
 int validate_input_user(enum Users input_user) {
-  return game_sm.current_user != input_user;
+  enum Users valid_values[] = {game_sm.current_user, UserNone};
+  size_t i;
+  for (i = 0; i < sizeof(valid_values) / sizeof(enum Users); i++) {
+    if (input_user == valid_values[i])
+      return 0;
+  }
+  return 1;
 }
 
 int validate_input_event(enum InputEvents input_event) {
