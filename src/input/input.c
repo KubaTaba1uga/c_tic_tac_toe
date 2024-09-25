@@ -53,13 +53,15 @@ struct InitRegistrationData *init_input_reg_p = &init_input_reg;
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct InputOps input_ops = {.register_module = input_register_module,
-                             .register_callback = input_register_callback,
-                             .unregister_callback = input_unregister_callback,
-                             .start = input_start_non_blocking,
-                             .wait = input_wait,
-                             .initialize = input_init,
-                             .destroy = input_destroy};
+struct InputOps input_ops = {
+    .initialize = input_init,
+    .destroy = input_destroy,
+    .start = input_start_non_blocking,
+    .wait = input_wait,
+    .register_module = input_register_module,
+    .register_callback = input_register_callback,
+    .unregister_callback = input_unregister_callback,
+};
 struct InputOps *get_input_ops(void) { return &input_ops; };
 
 /*******************************************************************************

@@ -17,6 +17,7 @@ int stdin_backup;
 int mockup_callback_counter;
 enum InputEvents input_event;
 int pipefd[2];
+struct KeyboardOps *keyboard_ops;
 
 struct timespec ts = {.tv_sec = 0, .tv_nsec = 50000000};
 
@@ -26,6 +27,7 @@ static int mock_keyboard_callback(size_t n, char buffer[n]);
 static int mock_keyboard1_callback(enum InputEvents local_input_event);
 
 void setUp() {
+  keyboard_ops = get_keyboard_ops();
   logging_utils_ops.init_loggers();
   mockup_callback_counter = 0;
   mock_stdin();
@@ -38,8 +40,8 @@ void tearDown() {
 
 void test_process_single_stdin() {
   // On low spec machine this test may fail due to ts being too small.
-  keyboard_ops.initialize();
-  keyboard_ops.register_callback(mock_keyboard_callback);
+  keyboard_ops->initialize();
+  keyboard_ops->register_callback(mock_keyboard_callback);
 
   // Write something to the pipe to simulate stdin input
   write(pipefd[1], "test", strlen("test"));
@@ -47,7 +49,7 @@ void test_process_single_stdin() {
 
   thrd_sleep(&ts, NULL);
 
-  keyboard_ops.destroy();
+  keyboard_ops->destroy();
 
   // Check if the callback was executed
   TEST_ASSERT_EQUAL_INT(1, mockup_callback_counter);
@@ -55,8 +57,8 @@ void test_process_single_stdin() {
 
 void test_process_multiple_stdin() {
   // On low spec machine this test may file due to ts being to small.
-  keyboard_ops.initialize();
-  keyboard_ops.register_callback(mock_keyboard_callback);
+  keyboard_ops->initialize();
+  keyboard_ops->register_callback(mock_keyboard_callback);
 
   // Write something to the pipe to simulate stdin input
   write(pipefd[1], "test \n", strlen("test \n"));
@@ -70,7 +72,7 @@ void test_process_multiple_stdin() {
 
   thrd_sleep(&ts, NULL);
 
-  keyboard_ops.destroy();
+  keyboard_ops->destroy();
 
   // Check if the callback was executed
   TEST_ASSERT_EQUAL_INT(2, mockup_callback_counter);

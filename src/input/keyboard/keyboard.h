@@ -12,7 +12,6 @@
  *    IMPORTS
  ******************************************************************************/
 #include <stddef.h>
-typedef int (*keyboard_callback_func_t)(size_t n, char buffer[n]);
 
 /*******************************************************************************
  *    PRIVATE API
@@ -21,6 +20,8 @@ typedef int (*keyboard_callback_func_t)(size_t n, char buffer[n]);
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
+typedef int (*keyboard_callback_func_t)(size_t n, char buffer[n]);
+
 struct KeyboardOps {
   int (*initialize)(void);
   void (*destroy)(void);
@@ -32,6 +33,6 @@ struct KeyboardOps {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct KeyboardOps keyboard_ops;
+struct KeyboardOps *get_keyboard_ops(void);
 
 #endif // KEYBOARD_H
