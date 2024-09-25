@@ -37,31 +37,22 @@ void test_quit_sm_get_quitting_state() {
   TEST_ASSERT_EQUAL_INT(GameStateQuitting, state.current_state);
 }
 
-/* void test_quit_sm_get_quit_state() { */
-/*   enum GameStates next_state; */
-/*   struct UserMove users_moves[] = {}; */
-/*   struct UserMove current_move = {.user = GameStatePlay, */
-/*                                   .coordinates = {0, 0}, */
-/*                                   .type = USER_MOVE_TYPE_QUIT}; */
+void test_quit_sm_get_quit_state() {
+  struct UserMove current_move = {
+      .user = User1, .coordinates = {0, 0}, .type = USER_MOVE_TYPE_QUIT};
+  struct GameStateMachineInput input = {.input_user = User1,
+                                        .input_event = INPUT_EVENT_EXIT};
+  struct GameStateMachineState state = {.current_state = GameStatePlay,
+                                        .current_user = User1,
+                                        .users_moves_count = 1,
+                                        .users_moves_data = {current_move}};
+  int err;
+  err = quit_state_machine_next_state(input, &state);
 
-/*   struct GameSmNextStateCreationData next_state_data = { */
-/*       .current_user_move = current_move, */
-/*       .current_state = GameStatePlay, */
-/*       .users_moves = users_moves, */
-/*       .count = 0}; */
-
-/*   next_state = quit_state_machine_next_state(next_state_data); */
-
-/*   TEST_ASSERT_EQUAL_INT(GameStateQuitting, next_state); */
-/*   TEST_ASSERT_EQUAL_INT(GameStatePlay, quit_sm_data.last_user); */
-
-/*   next_state_data.current_state = next_state; */
-
-/*   next_state = quit_state_machine_next_state(next_state_data); */
-
-/*   TEST_ASSERT_EQUAL_INT(GameStateQuit, next_state); */
-/*   TEST_ASSERT_EQUAL_INT(1, destroy_counter); */
-/* } */
+  TEST_ASSERT_EQUAL_INT(0, err);
+  TEST_ASSERT_EQUAL_INT(GameStateQuitting, state.current_state);
+  TEST_ASSERT_EQUAL_INT(1, destroy_counter);
+}
 
 /* void test_quit_sm_get_last_user_state() { */
 /*   enum GameStates next_state; */
