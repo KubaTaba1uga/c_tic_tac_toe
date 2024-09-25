@@ -58,6 +58,7 @@ struct InputOps input_ops = {.register_module = input_register_module,
                              .unregister_callback = input_unregister_callback,
                              .start = input_start_non_blocking,
                              .wait = input_wait,
+                             .initialize = input_init,
                              .destroy = input_destroy};
 
 /*******************************************************************************
@@ -134,7 +135,7 @@ void input_wait(void) {
 }
 
 int input_init(void) {
-  // Disable canonical mode and echo
+  // Disable canonical mode and echo, to receive input without pressing enter.
   input_disable_canonical_mode(&old_termios);
 
   return 0;

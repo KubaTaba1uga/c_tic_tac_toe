@@ -245,9 +245,11 @@ int keyboard_register_callback(keyboard_callback_func_t callback) {
 }
 
 void keyboard_signal_handler(int sig) {
+  // You can use SIGUSR1 to interrupt or terminate all input threads.
   if (sig == SIGUSR1) {
-    printf("Thread received signal SIGUSR1. Exiting.\n");
-    // You can use this to interrupt or terminate the thread
+    logging_utils_ops.log_info(INPUT_KEYBOARD_ID,
+                               "Thread received signal SIGUSR1. Exiting.");
+
     pthread_exit(NULL);
   }
 }

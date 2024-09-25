@@ -1,4 +1,4 @@
-// TO-DO test if destruction and init arte working properly.
+// TO-DO test if destruction and init are working properly.
 
 #include "input/input.h"
 #include "input/keyboard/keyboard.c"
@@ -38,6 +38,7 @@ static int mock_keyboard1_callback(enum InputEvents local_input_event) {
 }
 
 void setUp() {
+  input_ops.initialize();
   logging_utils_ops.init_loggers();
   mockup_callback_counter = 0;
   mock_stdin();
@@ -45,6 +46,7 @@ void setUp() {
 
 void tearDown() {
   restore_orig_stdin();
+  input_ops.destroy();
   logging_utils_ops.destroy_loggers();
 }
 

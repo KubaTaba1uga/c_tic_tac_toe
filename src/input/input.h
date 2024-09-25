@@ -37,6 +37,7 @@ typedef int (*input_callback_func_t)(enum InputEvents input_event);
 typedef int (*input_start_func_t)(void);
 typedef void (*input_wait_func_t)(void);
 typedef void (*input_destroy_func_t)(void);
+typedef int (*input_init_func_t)(void);
 
 struct InputRegistrationData {
   input_start_func_t start;
@@ -53,6 +54,7 @@ struct InputOps {
   int (*unregister_callback)(char *id);
   input_start_func_t start;
   input_wait_func_t wait;
+  input_init_func_t initialize;
   input_destroy_func_t destroy;
 };
 
