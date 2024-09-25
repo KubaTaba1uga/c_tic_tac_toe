@@ -55,7 +55,6 @@ static struct InitRegistrationData init_quit_state_machine_reg = {
  ******************************************************************************/
 int quit_state_machine_next_state(struct GameStateMachineInput input,
                                   struct GameStateMachineState *state) {
-
   struct UserMove *current_user_move = gsm_common_ops.get_last_move(state);
 
   switch (state->current_state) {
