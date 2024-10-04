@@ -5,6 +5,7 @@
 
 #include "game/game_state_machine/game_state_machine.h"
 
+#include "init/init.h"
 #include "utils/logging_utils.h"
 
 struct LoggingUtilsOps *logging_ops_;
@@ -22,14 +23,25 @@ int mock_next_state(struct GameStateMachineInput input,
 
 // Test initialization
 void setUp() {
+  struct InitOps *init_ops;
+  int err;
+  init_ops = get_init_ops();
   logging_ops_ = get_logging_utils_ops();
-  logging_ops_->init_loggers();
+
+  err = init_ops->initialize_system();
+  if (err)
+    TEST_FAIL();
+
+  /* logging_ops_->init_loggers(); */
   game_sm_subsystem.count = 0;
 }
 
 void tearDown() {
   // Cleanup code if needed
-  logging_ops_->destroy_loggers();
+  /* logging_ops_->destroy_loggers(); */
+  struct InitOps *init_ops;
+  init_ops = get_init_ops();
+  init_ops->destroy_system();
 }
 
 // Test register_state_machine
