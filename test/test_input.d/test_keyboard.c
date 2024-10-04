@@ -7,8 +7,8 @@
 #include <unistd.h>
 #include <unity.h>
 
+#include "init/init.h"
 #include "input/input.h"
-#include "input/keyboard/keyboard.c"
 #include "input/keyboard/keyboard.h"
 #include "utils/logging_utils.h"
 
@@ -25,22 +25,22 @@ static void mock_stdin();
 static int mock_keyboard_callback(size_t n, char buffer[n]);
 
 void setUp() {
-  /* struct InitOps *init_ops = get_init_ops(); */
+  struct InitOps *init_ops = get_init_ops();
+  init_ops->initialize_system();
   mock_stdin();
-  /* init_ops->initialize_system(); */
 
   logging_ops_ = get_logging_utils_ops();
-  logging_ops_->init_loggers();
   keyboard_ops_ = get_keyboard_ops();
 
   mockup_callback_counter = 0;
 }
 
 void tearDown() {
-  /* struct InitOps *init_ops = get_init_ops(); */
-  /* init_ops->destroy_system(); */
+  struct InitOps *init_ops = get_init_ops();
+
   restore_orig_stdin();
-  logging_ops_->destroy_loggers();
+
+  init_ops->destroy_system();
 }
 
 void test_process_single_stdin() {

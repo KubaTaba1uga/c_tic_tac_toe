@@ -26,7 +26,8 @@
 // App's internal libs
 #include "init/init.h"
 #include "input/input.h"
-#include "keyboard.h"
+#include "input/keyboard/keyboard.h"
+#include "input/keyboard/keyboard1.h"
 #include "utils/logging_utils.h"
 
 /*******************************************************************************
@@ -82,6 +83,7 @@ static struct InitRegistrationData init_keyboard_reg = {
     .init_func = keyboard_module_init,
     .destroy_func = NULL,
 };
+struct InitRegistrationData *init_keyboard_reg_p = &init_keyboard_reg;
 
 /*******************************************************************************
  *    PUBLIC API
@@ -129,13 +131,13 @@ int keyboard_initialize(void) {
   err = pthread_create(&keyboard_subsystem.thread, NULL,
                        keyboard_private_ops.process_stdin, NULL);
   if (err) {
-    /* logging_ops->log_err(INPUT_KEYBOARD_ID, */
-    /* "Unable to start keyboard_subsystem.thread: %s", */
-    /* strerror(err)); */
+    logging_ops->log_err(INPUT_KEYBOARD_ID,
+                         "Unable to start keyboard_subsystem.thread: %s",
+                         strerror(err));
     return err;
   }
 
-  /* logging_ops->log_info(INPUT_KEYBOARD_ID, "Initialized keyboard"); */
+  logging_ops->log_info(INPUT_KEYBOARD_ID, "Initialized keyboard");
 
   return 0;
 }
@@ -154,8 +156,8 @@ void *keyboard_process_stdin(void *_) {
   int err;
 
   if (!is_keyboard_initialized) {
-    /* logging_ops->log_err(INPUT_KEYBOARD_ID, */
-    /* "Keyboard needs to be initialized for processing"); */
+    logging_ops->log_err(INPUT_KEYBOARD_ID,
+                         "Keyboard needs to be initialized for processing");
 
     return NULL;
   }
@@ -169,17 +171,16 @@ void *keyboard_process_stdin(void *_) {
   fds[0].events = POLLIN;
 
   while (is_keyboard_initialized) {
-    /* logging_ops->log_err(INPUT_KEYBOARD_ID, "Waiting for stdin."); */
+    logging_ops->log_err(INPUT_KEYBOARD_ID, "Waiting for stdin.");
 
     // Wait for input on stdin
     err = poll(fds, 1, -1);
 
-    /* logging_ops->log_err(INPUT_KEYBOARD_ID, "Stdin triggered."); */
+    logging_ops->log_err(INPUT_KEYBOARD_ID, "Stdin triggered.");
 
     if (err == -1) {
-      /* logging_ops->log_err(INPUT_KEYBOARD_ID, "Unable to wait for stdin: %s",
-       */
-      /* strerror(errno)); */
+      logging_ops->log_err(INPUT_KEYBOARD_ID, "Unable to wait for stdin: %s",
+                           strerror(errno));
       continue;
     }
 
@@ -187,8 +188,7 @@ void *keyboard_process_stdin(void *_) {
       keyboard_private_ops.read_stdin();
       keyboard_private_ops.execute_callbacks();
     } else {
-      /* logging_ops->log_info(INPUT_KEYBOARD_ID, "Skipping invalid events.");
-       */
+      logging_ops->log_info(INPUT_KEYBOARD_ID, "Skipping invalid events.");
     }
   }
 
@@ -198,7 +198,7 @@ void *keyboard_process_stdin(void *_) {
 void keyboard_read_stdin(void) {
   ssize_t bytes_read;
 
-  /* logging_ops->log_info(INPUT_KEYBOARD_ID, "Reading from stdin."); */
+  logging_ops->log_info(INPUT_KEYBOARD_ID, "Reading from stdin.");
 
   // Clear the stdin buffer count
   keyboard_subsystem.stdin_buffer_count = 0;
@@ -207,11 +207,11 @@ void keyboard_read_stdin(void) {
   bytes_read = read(STDIN_FILENO, keyboard_subsystem.stdin_buffer,
                     KEYBOARD_STDIN_BUFFER_MAX - 1); // TO-DO fix hang here
 
-  /* logging_ops->log_info(INPUT_KEYBOARD_ID, "%zd bytes read from stdin\n", */
-  /* bytes_read); */
+  logging_ops->log_info(INPUT_KEYBOARD_ID, "%zd bytes read from stdin\n",
+                        bytes_read);
 
   if (bytes_read < 0) {
-    /* logging_ops->log_err(INPUT_KEYBOARD_ID, "Unable to read from stdin"); */
+    logging_ops->log_err(INPUT_KEYBOARD_ID, "Unable to read from stdin");
   } else {
     keyboard_subsystem.stdin_buffer_count += bytes_read;
   }
@@ -223,7 +223,7 @@ void keyboard_read_stdin(void) {
 void keyboard_execute_callbacks(void) {
   size_t i;
 
-  /* logging_ops->log_info(INPUT_KEYBOARD_ID, "Executing callbacks."); */
+  logging_ops->log_info(INPUT_KEYBOARD_ID, "Executing callbacks.");
 
   for (i = 0; i < keyboard_subsystem.callback_count; ++i) {
     if (keyboard_subsystem.callbacks[i]) {
@@ -252,14 +252,14 @@ int keyboard_register_callback(keyboard_callback_func_t callback) {
     keyboard_subsystem.callbacks[keyboard_subsystem.callback_count++] =
         callback;
   } else {
-    /* logging_ops->log_err(INPUT_KEYBOARD_ID, */
-    /* "Unable to register callback in keyboard, " */
-    /* "no enough space in callbacks array."); */
+    logging_ops->log_err(INPUT_KEYBOARD_ID,
+                         "Unable to register callback in keyboard, "
+                         "no enough space in callbacks array.");
     return ENOMEM;
   }
 
-  /* logging_ops->log_info(INPUT_KEYBOARD_ID, */
-  /* "Succesfully registered callback in keyboard."); */
+  logging_ops->log_info(INPUT_KEYBOARD_ID,
+                        "Succesfully registered callback in keyboard.");
 
   return 0;
 }
@@ -267,12 +267,12 @@ int keyboard_register_callback(keyboard_callback_func_t callback) {
 void keyboard_signal_handler(int sig) {
   // You can use SIGUSR1 to interrupt or terminate all input threads.
   if (sig == SIGUSR1) {
-    /* logging_ops->log_info(INPUT_KEYBOARD_ID, */
-    /* "Thread received signal SIGUSR1. Exiting."); */
-    /* printf("Received SIGUSR1"); */
+    logging_ops->log_info(INPUT_KEYBOARD_ID,
+                          "Thread received signal SIGUSR1. Exiting.");
+
     pthread_exit(NULL);
   }
-  /* printf("Received signal"); */
 }
 
-INIT_REGISTER_SUBSYSTEM_CHILD(&init_keyboard_reg, init_input_reg_p);
+/* INIT_REGISTER_SUBSYSTEM_CHILD(&init_keyboard_reg, init_input_reg_p); */
+INIT_REGISTER_SUBSYSTEM_CHILD(&init_keyboard_reg, init_keyboard1_reg_p);

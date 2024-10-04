@@ -10,7 +10,6 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
-#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -42,6 +41,7 @@ static struct InitRegistrationData init_keyboard1_reg = {
     .init_func = keyboard1_module_init,
     .destroy_func = keyboard1_module_destroy,
 };
+struct InitRegistrationData *init_keyboard1_reg_p = &init_keyboard1_reg;
 
 static struct InputRegistrationData input_keyboard1_reg = {
     .start = keyboard1_start,
@@ -76,18 +76,19 @@ int keyboard1_start(void) {
 
   err = keyboard_ops->initialize();
   if (err) {
-    /* logging_ops->log_err(module_id, "Unable to initialize keyboard1 module");
-     */
+    logging_ops->log_err(module_id, "Unable to initialize keyboard1 module");
     return err;
   }
 
   err = keyboard_ops->register_callback(keyboard1_callback);
   if (err) {
-    /* logging_ops->log_err(module_id, */
-    /* "Unable to register callback for keyboard1 module"); */
+    logging_ops->log_err(module_id,
+                         "Unable to register callback for keyboard1 module");
 
     return err;
   }
+
+  logging_ops->log_info(module_id, "Keyboard1 started");
 
   return 0;
 }
@@ -102,7 +103,7 @@ int keyboard1_callback(size_t n, char buffer[n]) {
   int err;
 
   if (input_keyboard1_reg.callback == NULL) {
-    /* logging_ops->log_err(module_id, "No callback set up for keyboard1"); */
+    logging_ops->log_err(module_id, "No callback set up for keyboard1");
     return EINVAL;
   }
 
@@ -138,11 +139,12 @@ int keyboard1_callback(size_t n, char buffer[n]) {
 
   err = input_keyboard1_reg.callback(input_event);
   if (err != 0) {
-    /* logging_ops->log_err(module_id, "Callback failed: %s", strerror(err)); */
+    logging_ops->log_err(module_id, "Callback failed: %s", strerror(err));
     return err;
   }
 
   return 0;
 }
 
+/* INIT_REGISTER_SUBSYSTEM_CHILD(&init_keyboard1_reg, init_keyboard_reg_p); */
 INIT_REGISTER_SUBSYSTEM_CHILD(&init_keyboard1_reg, init_input_reg_p);

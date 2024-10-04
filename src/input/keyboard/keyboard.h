@@ -34,4 +34,9 @@ struct KeyboardOps {
  ******************************************************************************/
 struct KeyboardOps *get_keyboard_ops(void);
 
+/*******************************************************************************
+ *    INIT BOILERCODE
+ ******************************************************************************/
+extern struct InitRegistrationData *init_keyboard_reg_p;
+
 #endif // KEYBOARD_H
