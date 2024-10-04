@@ -129,6 +129,9 @@ int init_initialize_subsystem(struct InitRegistrationData *subsystem) {
     }
   }
 
+  if (!subsystem->init_func)
+    return 0;
+
   err = subsystem->init_func();
   if (err) {
     logging_ops->log_err(module_id, "Failed to initialize %s: %s",
@@ -150,6 +153,9 @@ void init_destroy_subsystem(struct InitRegistrationData *subsystem) {
       init_destroy_subsystem(subsystem->children[i]);
     }
   }
+
+  if (!subsystem->destroy_func)
+    return;
 
   logging_ops->log_info(module_id, "Destroying %s", subsystem->id);
 

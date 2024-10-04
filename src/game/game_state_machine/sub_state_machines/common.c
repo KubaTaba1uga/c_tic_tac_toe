@@ -20,6 +20,7 @@
  ******************************************************************************/
 static const char *module_id = "game_state_machines_common";
 static struct UserMove *get_last_move(struct GameStateMachineState *state);
+static struct LoggingUtilsOps *logging_ops;
 
 /*******************************************************************************
  *    PUBLIC API
@@ -31,9 +32,11 @@ struct GameStateMachineCommonOps gsm_common_ops = {.get_last_move =
  *    PRIVATE API
  ******************************************************************************/
 struct UserMove *get_last_move(struct GameStateMachineState *state) {
+  logging_ops = get_logging_utils_ops();
+
   if (state->users_moves_count == 0) {
-    logging_utils_ops.log_err(
-        module_id, "No last move to get. This is unexpected behaviour");
+    logging_ops->log_err(module_id,
+                         "No last move to get. This is unexpected behaviour");
     return NULL;
   }
 

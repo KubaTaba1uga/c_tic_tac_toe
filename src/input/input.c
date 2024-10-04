@@ -26,8 +26,9 @@ struct InputSubsystem {
   size_t count;
 };
 
-struct InputSubsystem input_subsystem = {.count = 0};
-struct termios old_termios;
+static struct InputSubsystem input_subsystem = {.count = 0};
+static struct LoggingUtilsOps *logging_ops;
+static struct termios old_termios;
 
 static int input_init(void);
 static void input_wait(void);
@@ -69,17 +70,16 @@ struct InputOps *get_input_ops(void) { return &input_ops; };
  ******************************************************************************/
 void input_register_module(
     struct InputRegistrationData *input_registration_data) {
-
   input_registration_data->callback = NULL;
 
   if (input_subsystem.count < MAX_INPUT_REGISTRATIONS) {
     input_subsystem.registrations[input_subsystem.count++] =
         input_registration_data;
   } else {
-    logging_utils_ops.log_err(INPUT_MODULE_ID,
-                              "Unable to register %s in input, "
-                              "no enough space in `registrations` array.",
-                              input_registration_data->id);
+    logging_ops->log_err(INPUT_MODULE_ID,
+                         "Unable to register %s in input, "
+                         "no enough space in `registrations` array.",
+                         input_registration_data->id);
   }
 }
 
@@ -94,10 +94,10 @@ int input_register_callback(char *id, input_callback_func_t callback) {
     }
   }
 
-  logging_utils_ops.log_err(INPUT_MODULE_ID,
-                            "Unable to register callback for %s, "
-                            "no input module with this id",
-                            id);
+  logging_ops->log_err(INPUT_MODULE_ID,
+                       "Unable to register callback for %s, "
+                       "no input module with this id",
+                       id);
 
   return EINVAL;
 }
@@ -117,9 +117,8 @@ int input_start_non_blocking(void) {
     err = input_subsystem.registrations[i]->start();
 
     if (err != 0) {
-      logging_utils_ops.log_err(
-          INPUT_MODULE_ID, "Unable to start module %s: %s",
-          input_subsystem.registrations[i]->id, strerror(err));
+      logging_ops->log_err(INPUT_MODULE_ID, "Unable to start module %s: %s",
+                           input_subsystem.registrations[i]->id, strerror(err));
       return err;
     }
   }
@@ -138,6 +137,8 @@ void input_wait(void) {
 }
 
 int input_init(void) {
+  logging_ops = get_logging_utils_ops();
+
   // Disable canonical mode and echo, to receive input without pressing enter.
   input_disable_canonical_mode(&old_termios);
 

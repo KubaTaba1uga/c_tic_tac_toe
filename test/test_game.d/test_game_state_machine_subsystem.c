@@ -7,6 +7,8 @@
 
 #include "utils/logging_utils.h"
 
+struct LoggingUtilsOps *logging_ops_;
+
 // Mock data for testing
 struct GameStateMachineState mock_state = {.current_state = 0};
 struct GameStateMachineState mock_new_state = {.current_state = 1};
@@ -20,13 +22,14 @@ int mock_next_state(struct GameStateMachineInput input,
 
 // Test initialization
 void setUp() {
-  logging_utils_ops.init_loggers();
+  logging_ops_ = get_logging_utils_ops();
+  logging_ops_->init_loggers();
   game_sm_subsystem.count = 0;
 }
 
 void tearDown() {
   // Cleanup code if needed
-  logging_utils_ops.destroy_loggers();
+  logging_ops_->destroy_loggers();
 }
 
 // Test register_state_machine
@@ -279,7 +282,7 @@ void test_register_all_prioritized_state_machine_big() {
   TEST_ASSERT_EQUAL_INT(18, game_sm_subsystem.count);
 
   /* for (size_t i = 0; i < game_sm_subsystem.count; i++) { */
-  /*   logging_utils_ops.log_info("test", */
+  /*   logging_ops_->log_info("test", */
   /*                              (char
    * *)game_sm_subsystem.registrations[i]->id); */
   /* } */

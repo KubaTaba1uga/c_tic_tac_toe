@@ -4,6 +4,8 @@
 
 #include "config/config.c"
 #include "config/config.h"
+#include "init/init.h"
+#include "utils/logging_utils.h"
 
 #define NULL_DEF()                                                             \
   struct ConfigRegistrationData null_def = {                                   \
@@ -13,14 +15,20 @@
   struct ConfigRegistrationData val_def = {.var_name = "existing_var_321",     \
                                            .default_value = "super value"}
 
+struct LoggingUtilsOps *logging_utils_ops;
+
 void setUp() {
-  logging_utils_ops.init_loggers();
+  struct InitOps *init_ops = get_init_ops();
+  init_ops->initialize_system();
   config_subsystem.count = 0;
   memset(config_subsystem.registrations, 0,
          sizeof(config_subsystem.registrations));
 }
 
-void tearDown() { logging_utils_ops.destroy_loggers(); }
+void tearDown() {
+  struct InitOps *init_ops = get_init_ops();
+  init_ops->destroy_system();
+}
 
 void test_config_register_var_success(void) {
   int err;

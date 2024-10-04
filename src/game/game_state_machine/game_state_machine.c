@@ -45,7 +45,8 @@ static struct GameStateMachinePrivOps game_sm_priv_ops = {
     .is_input_event_valid = validate_input_event,
     .is_input_user_valid = validate_input_user,
 };
-static struct InputOps *input_ops = NULL;
+static struct LoggingUtilsOps *logging_ops;
+static struct InputOps *input_ops;
 
 /*******************************************************************************
  *    INIT BOILERCODE
@@ -65,28 +66,38 @@ struct GameStateMachineOps game_sm_ops = {.step = game_sm_step,
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
+int game_sm_init(void) {
+  logging_ops = get_logging_utils_ops();
+  input_ops = get_input_ops();
+  game_sm.users_moves_count = 0;
+  game_sm.current_state = GameStatePlay;
+  game_sm.current_user = User1;
+
+  return 0;
+}
+
 int game_sm_step(enum InputEvents input_event, enum Users input_user) {
   struct GameStateMachineInput data;
   int err;
 
-  logging_utils_ops.log_err(gsm_module_id, "Event %i User %i.", input_event,
-                            input_user);
+  /* logging_ops->log_err(gsm_module_id, "Event %i User %i.", input_event, */
+  /* input_user); */
 
   if (game_sm_priv_ops.is_input_event_valid(input_event) != 0 ||
       game_sm_priv_ops.is_input_user_valid(input_user) != 0)
     return EINVAL;
 
-  logging_utils_ops.log_info(gsm_module_id,
-                             "Performing step of game state machine");
+  /* logging_ops->log_info(gsm_module_id, "Performing step of game state
+   * machine"); */
 
   data.input_event = input_event;
   data.input_user = input_user;
 
   err = game_sm_subsystem_ops.next_state(data, &game_sm);
   if (err) {
-    logging_utils_ops.log_err(gsm_module_id,
-                              "Quitting the game, because an error %s.",
-                              strerror(err));
+    logging_ops->log_err(gsm_module_id,
+                         "Quitting the game, because of an error %s.",
+                         strerror(err));
 
     game_sm_ops.quit();
 
@@ -110,15 +121,6 @@ int validate_input_user(enum Users input_user) {
 
 int validate_input_event(enum InputEvents input_event) {
   return (input_event <= INPUT_EVENT_NONE) || (input_event >= INPUT_EVENT_MAX);
-}
-
-int game_sm_init(void) {
-  input_ops = get_input_ops();
-  game_sm.users_moves_count = 0;
-  game_sm.current_state = GameStatePlay;
-  game_sm.current_user = User1;
-
-  return 0;
 }
 
 INIT_REGISTER_SUBSYSTEM_CHILD(&init_game_sm_reg, init_game_reg_p);

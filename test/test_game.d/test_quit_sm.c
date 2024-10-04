@@ -11,16 +11,18 @@
 
 static int destroy_counter;
 static void mock_input_ops_destroy();
+static struct LoggingUtilsOps *logging_ops_;
 
 void setUp() {
   struct InputOps *input_ops = get_input_ops();
-  logging_utils_ops.init_loggers();
+  logging_ops_ = get_logging_utils_ops();
+  logging_ops_->init_loggers();
   game_sm_init();
   input_ops->destroy = mock_input_ops_destroy;
   destroy_counter = 0;
 }
 
-void tearDown() { logging_utils_ops.destroy_loggers(); }
+void tearDown() { logging_ops_->destroy_loggers(); }
 
 void test_quit_sm_get_quitting_state() {
   struct UserMove current_move = {

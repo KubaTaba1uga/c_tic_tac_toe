@@ -57,6 +57,7 @@ static void user_move_state_machine_handle_select_event(
     struct UserMoveCoordinates *coordinates, struct UserMove *new_user_move,
     struct GameStateMachineState *data);
 
+static struct LoggingUtilsOps *logging_ops;
 static char module_id[] = "user_move_sm_module";
 static struct UserMoveStateMachine user_move_state_machine;
 struct UserMovePrivateOps user_move_priv_ops = {.set_default_state =
@@ -83,6 +84,16 @@ static struct InitRegistrationData init_user_move_reg = {
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
+int user_move_init(void) {
+  logging_ops = get_logging_utils_ops();
+
+  user_move_priv_ops.set_default_state();
+
+  game_sm_subsystem_ops.register_state_machine(&gsm_registration_data);
+
+  return 0;
+}
+
 int user_move_state_machine_next_state(struct GameStateMachineInput input,
                                        struct GameStateMachineState *state) {
   struct UserMoveCoordinates *coordinates;
@@ -118,8 +129,8 @@ int user_move_state_machine_next_state(struct GameStateMachineInput input,
     break;
 
   default:
-    logging_utils_ops.log_err(module_id, "Invalid input event %i from %s",
-                              input.input_event, input.input_user);
+    logging_ops->log_err(module_id, "Invalid input event %i from %s",
+                         input.input_event, input.input_user);
     new_user_move.type = USER_MOVE_TYPE_SELECT_INVALID;
   }
 
@@ -175,14 +186,6 @@ void user_move_state_machine_handle_select_event(
       break;
     }
   }
-}
-
-int user_move_init(void) {
-  user_move_priv_ops.set_default_state();
-
-  game_sm_subsystem_ops.register_state_machine(&gsm_registration_data);
-
-  return 0;
 }
 
 void set_default_state(void) {

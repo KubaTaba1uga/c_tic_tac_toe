@@ -10,12 +10,15 @@
 #include "input/input.h"
 #include "utils/logging_utils.h"
 
+struct LoggingUtilsOps *logging_ops_;
+
 void setUp() {
-  logging_utils_ops.init_loggers();
+  logging_ops_ = get_logging_utils_ops();
+  logging_ops_->init_loggers();
   user_move_priv_ops.set_default_state();
 }
 
-void tearDown() { logging_utils_ops.destroy_loggers(); }
+void tearDown() { logging_ops_->destroy_loggers(); }
 
 void test_user_move_reset_state() {
   // Reset state using set_default_state

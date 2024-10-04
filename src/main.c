@@ -38,10 +38,12 @@ int main__(void)
 int main(void)
 #endif
 {
+  struct LoggingUtilsOps *logging_ops;
   struct InputOps *input_ops;
   struct InitOps *init_ops;
   int err;
 
+  logging_ops = get_logging_utils_ops();
   input_ops = get_input_ops();
   init_ops = get_init_ops();
 
@@ -50,14 +52,14 @@ int main(void)
     return 1;
   }
 
-  logging_utils_ops.log_info("main", "Game initialized");
+  logging_ops->log_info("main", "Game initialized");
 
   // Game logic is triggered by new input. That's why main
   //  game's thread is waiting until all input's are destroyed
   //  by user decision to quit.
   input_ops->wait();
 
-  logging_utils_ops.log_info("main", "Game finished");
+  logging_ops->log_info("main", "Game finished");
 
   init_ops->destroy_system();
 

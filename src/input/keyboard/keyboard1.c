@@ -28,6 +28,7 @@
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
 static const char *module_id = INPUT_KEYBOARD1_ID;
+static struct LoggingUtilsOps *logging_ops;
 
 static int keyboard1_module_init(void);
 static void keyboard1_module_destroy(void);
@@ -60,8 +61,10 @@ static struct KeyboardOps *keyboard_ops = NULL;
  ******************************************************************************/
 int keyboard1_module_init(void) {
   input_ops = get_input_ops();
-  input_ops->register_module(&input_keyboard1_reg);
   keyboard_ops = get_keyboard_ops();
+  logging_ops = get_logging_utils_ops();
+
+  input_ops->register_module(&input_keyboard1_reg);
 
   return 0;
 }
@@ -73,15 +76,15 @@ int keyboard1_start(void) {
 
   err = keyboard_ops->initialize();
   if (err) {
-    logging_utils_ops.log_err(module_id,
-                              "Unable to initialize keyboard1 module");
+    /* logging_ops->log_err(module_id, "Unable to initialize keyboard1 module");
+     */
     return err;
   }
 
   err = keyboard_ops->register_callback(keyboard1_callback);
   if (err) {
-    logging_utils_ops.log_err(
-        module_id, "Unable to register callback for keyboard1 module");
+    /* logging_ops->log_err(module_id, */
+    /* "Unable to register callback for keyboard1 module"); */
 
     return err;
   }
@@ -99,7 +102,7 @@ int keyboard1_callback(size_t n, char buffer[n]) {
   int err;
 
   if (input_keyboard1_reg.callback == NULL) {
-    logging_utils_ops.log_err(module_id, "No callback set up for keyboard1");
+    /* logging_ops->log_err(module_id, "No callback set up for keyboard1"); */
     return EINVAL;
   }
 
@@ -135,7 +138,7 @@ int keyboard1_callback(size_t n, char buffer[n]) {
 
   err = input_keyboard1_reg.callback(input_event);
   if (err != 0) {
-    logging_utils_ops.log_err(module_id, "Callback failed: %s", strerror(err));
+    /* logging_ops->log_err(module_id, "Callback failed: %s", strerror(err)); */
     return err;
   }
 

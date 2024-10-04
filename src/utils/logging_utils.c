@@ -11,6 +11,7 @@
  ******************************************************************************/
 // C standard library
 #include <errno.h>
+#include <pthread.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -34,6 +35,7 @@
 
 #define LOGGING_MODULE_ID "logging_subsystem"
 
+pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 static struct stumpless_target *loggers[] = {NULL};
 
 static size_t loggers_no = sizeof(loggers) / sizeof(struct stumpless_target *);
@@ -82,11 +84,12 @@ static struct InitRegistrationData init_logging_reg = {
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct LoggingUtilsOps logging_utils_ops = {.init_loggers = init_loggers,
-                                            .destroy_loggers = destroy_loggers,
-                                            .log_info = log_info,
-                                            .log_err = log_err,
-                                            .private = &logging_utils_priv_ops};
+static struct LoggingUtilsOps logging_utils_ops = {
+    .init_loggers = init_loggers,
+    .destroy_loggers = destroy_loggers,
+    .log_info = log_info,
+    .log_err = log_err,
+    .private = &logging_utils_priv_ops};
 struct LoggingUtilsOps *get_logging_utils_ops(void) {
   return &logging_utils_ops;
 }
@@ -97,25 +100,34 @@ struct LoggingUtilsOps *get_logging_utils_ops(void) {
 int init_loggers(void) {
   errno = 0;
 
-  loggers[0] = stumpless_open_stdout_target("console logger");
+  pthread_mutex_lock(&log_mutex);
 
-  if (loggers[0] == NULL) {
+  if (loggers[0] == NULL)
+    loggers[0] = stumpless_open_stdout_target("console logger");
+
+  if (loggers[0] == NULL)
     logging_utils_priv_ops.print_error("Unable to open console logger");
 
-    return errno;
-  }
+  pthread_mutex_unlock(&log_mutex);
 
-  return 0;
+  return errno;
 }
 
 void destroy_loggers(void) {
   size_t i;
 
+  pthread_mutex_lock(&log_mutex);
+
   for (i = 0; i < loggers_no; i++) {
+    if (loggers[i] == NULL)
+      continue;
+
     stumpless_close_target(loggers[i]);
   }
 
   stumpless_free_all();
+
+  pthread_mutex_unlock(&log_mutex);
 }
 
 void log_info(const char *msg_id, char *fmt, ...) {
@@ -144,6 +156,8 @@ void log_msg(char *msg, const char *msg_id, enum stumpless_severity severity) {
   struct stumpless_entry *entry = NULL;
   int err;
 
+  pthread_mutex_lock(&log_mutex);
+
   err = logging_utils_priv_ops.create_log_entry(msg, msg_id, &entry, severity);
 
   if (err) {
@@ -162,6 +176,8 @@ FREE:
   stumpless_destroy_entry_and_contents(entry);
 
 OUT:
+  pthread_mutex_unlock(&log_mutex);
+
   return;
 }
 
@@ -182,6 +198,9 @@ int emmit_log_entry(struct stumpless_entry *entry) {
   size_t i;
 
   for (i = 0; i < loggers_no; i++) {
+    if (loggers[i] == NULL)
+      continue;
+
     err = stumpless_add_entry(loggers[i], entry);
 
     if (err < 0) {

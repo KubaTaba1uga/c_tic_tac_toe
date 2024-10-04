@@ -7,13 +7,15 @@
 enum InputEvents input_event;
 int mockup_callback_counter;
 static int mock_keyboard1_callback(enum InputEvents local_input_event);
+struct LoggingUtilsOps *logging_ops_;
 
 void setUp() {
-  logging_utils_ops.init_loggers();
+  logging_ops_ = get_logging_utils_ops();
+  logging_ops_->init_loggers();
   mockup_callback_counter = 0;
 }
 
-void tearDown() { logging_utils_ops.destroy_loggers(); }
+void tearDown() { logging_ops_->destroy_loggers(); }
 
 void test_keyboard1_logic_up() {
   char test_str[] = "kjhkoow";
@@ -100,8 +102,8 @@ void test_keyboard1_logic_quit() {
 }
 
 int mock_keyboard1_callback(enum InputEvents local_input_event) {
-  logging_utils_ops.log_info("mock_keyboard1_callback", "executed %i",
-                             local_input_event);
+  logging_ops_->log_info("mock_keyboard1_callback", "executed %i",
+                         local_input_event);
   mockup_callback_counter++;
   input_event = local_input_event;
   return 0;

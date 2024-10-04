@@ -21,7 +21,8 @@ variables.
 #include <string.h>
 
 // App's internal libs
-#include "config.h"
+#include "config/config.h"
+#include "init/init.h"
 #include "utils/logging_utils.h"
 #include "utils/std_lib_utils.h"
 
@@ -35,13 +36,23 @@ struct ConfigSubsystem {
   size_t count;
 };
 
+static struct LoggingUtilsOps *logging_ops;
 static const char module_id[] = "config_subsystem";
-
 static struct ConfigSubsystem config_subsystem = {.count = 0};
 
+static int config_init(void);
 static int config_register_variable(
     struct ConfigRegistrationData config_registration_data);
 static char *config_get_variable(char *var_name);
+
+/*******************************************************************************
+ *    INIT BOILERCODE
+ ******************************************************************************/
+static struct InitRegistrationData init_config_reg = {
+    .id = module_id,
+    .init_func = config_init,
+    .destroy_func = NULL,
+};
 
 /*******************************************************************************
  *    PUBLIC API
@@ -53,18 +64,24 @@ struct ConfigOps *get_config_ops(void) { return &config_ops; }
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
+int config_init(void) {
+  logging_ops = get_logging_utils_ops();
+  return 0;
+}
+
 int config_register_variable(
     struct ConfigRegistrationData config_registration_data) {
+
   if (config_subsystem.count < MAX_CONFIG_REGISTRATIONS) {
     config_subsystem.registrations[config_subsystem.count++] =
         config_registration_data;
     return 0;
   }
 
-  logging_utils_ops.log_err(module_id,
-                            "Unable to register %s in config, "
-                            "no enough space in `registrations` array.",
-                            config_registration_data.var_name);
+  logging_ops->log_err(module_id,
+                       "Unable to register %s in config, "
+                       "no enough space in `registrations` array.",
+                       config_registration_data.var_name);
   return EINVAL;
 }
 
@@ -84,10 +101,12 @@ char *config_get_variable(char *var_name) {
     }
   }
 
-  logging_utils_ops.log_err(module_id,
-                            "Unable to retreive var from config."
-                            "%s not registered.",
-                            var_name);
+  logging_ops->log_err(module_id,
+                       "Unable to retreive var from config."
+                       "%s not registered.",
+                       var_name);
 
   return NULL;
 }
+
+INIT_REGISTER_SUBSYSTEM(&init_config_reg, INIT_MODULE_ORDER_CONFIG);

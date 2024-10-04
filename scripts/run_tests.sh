@@ -10,9 +10,10 @@ fi
 
 meson test $test_name -C $builddir
 
-if [ $? -ne 0 ]
+exit_code=$?
+if [ $exit_code -ne 0 ]
 then
-    exit 1
+    exit $exit_code
 fi
 
 cat $builddir/meson-logs/testlog.txt
