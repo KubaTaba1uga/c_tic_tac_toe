@@ -25,22 +25,22 @@ int mock_next_state(struct GameStateMachineInput input,
 void setUp() {
   char *disabled_modules_ids[] = {"game"};
   struct InitOps *init_ops;
+
   init_ops = get_init_ops();
-  /* game_sm_subsystem_init(); */
-  logging_ops_ = get_logging_utils_ops();
 
   init_ops->initialize_system_with_disabled_modules(
       sizeof(disabled_modules_ids) / sizeof(char *), disabled_modules_ids);
 
-  /* logging_ops_->init_loggers(); */
+  logging_ops_ = get_logging_utils_ops();
+
   game_sm_subsystem.count = 0;
 }
 
 void tearDown() {
   // Cleanup code if needed
-  /* logging_ops_->destroy_loggers(); */
   struct InitOps *init_ops;
   init_ops = get_init_ops();
+
   init_ops->destroy_system();
 }
 

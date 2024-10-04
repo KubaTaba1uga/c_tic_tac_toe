@@ -145,8 +145,13 @@ int keyboard_initialize(void) {
 void keyboard_destroy(void) {
   // Send killing signal to the thread
   is_keyboard_initialized = false;
-  pthread_kill(keyboard_subsystem.thread, SIGUSR1);
-  pthread_join(keyboard_subsystem.thread, NULL);
+
+  if (keyboard_subsystem.thread) {
+    pthread_kill(keyboard_subsystem.thread, SIGUSR1);
+    pthread_join(keyboard_subsystem.thread, NULL);
+    // Cleanup thread
+    keyboard_subsystem.thread = 0;
+  }
 }
 
 void keyboard_wait(void) { pthread_join(keyboard_subsystem.thread, NULL); }

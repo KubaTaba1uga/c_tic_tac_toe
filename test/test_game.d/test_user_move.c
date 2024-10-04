@@ -13,12 +13,23 @@
 struct LoggingUtilsOps *logging_ops_;
 
 void setUp() {
+  char *disabled_modules_ids[] = {"game"};
+  struct InitOps *init_ops;
+
+  init_ops = get_init_ops();
   logging_ops_ = get_logging_utils_ops();
-  logging_ops_->init_loggers();
+
+  init_ops->initialize_system_with_disabled_modules(
+      sizeof(disabled_modules_ids) / sizeof(char *), disabled_modules_ids);
+
   user_move_priv_ops.set_default_state();
 }
 
-void tearDown() { logging_ops_->destroy_loggers(); }
+void tearDown() {
+  struct InitOps *init_ops;
+  init_ops = get_init_ops();
+  init_ops->destroy_system();
+}
 
 void test_user_move_reset_state() {
   // Reset state using set_default_state

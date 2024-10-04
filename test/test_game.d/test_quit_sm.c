@@ -14,15 +14,27 @@ static void mock_input_ops_destroy();
 static struct LoggingUtilsOps *logging_ops_;
 
 void setUp() {
-  struct InputOps *input_ops = get_input_ops();
+  char *disabled_modules_ids[] = {"game"};
+  struct InputOps *input_ops;
+  struct InitOps *init_ops;
+
+  init_ops = get_init_ops();
   logging_ops_ = get_logging_utils_ops();
-  logging_ops_->init_loggers();
-  game_sm_init();
+  input_ops = get_input_ops();
+
+  init_ops->initialize_system_with_disabled_modules(
+      sizeof(disabled_modules_ids) / sizeof(char *), disabled_modules_ids);
+
   input_ops->destroy = mock_input_ops_destroy;
+
   destroy_counter = 0;
 }
 
-void tearDown() { logging_ops_->destroy_loggers(); }
+void tearDown() {
+  struct InitOps *init_ops;
+  init_ops = get_init_ops();
+  init_ops->destroy_system();
+}
 
 void test_quit_sm_get_quitting_state() {
   struct UserMove current_move = {

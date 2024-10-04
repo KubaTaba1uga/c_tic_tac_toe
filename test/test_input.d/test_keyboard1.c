@@ -10,12 +10,16 @@ static int mock_keyboard1_callback(enum InputEvents local_input_event);
 struct LoggingUtilsOps *logging_ops_;
 
 void setUp() {
+  struct InitOps *init_ops = get_init_ops();
+  init_ops->initialize_system();
   logging_ops_ = get_logging_utils_ops();
-  logging_ops_->init_loggers();
   mockup_callback_counter = 0;
 }
 
-void tearDown() { logging_ops_->destroy_loggers(); }
+void tearDown() {
+  struct InitOps *init_ops = get_init_ops();
+  init_ops->destroy_system();
+}
 
 void test_keyboard1_logic_up() {
   char test_str[] = "kjhkoow";
