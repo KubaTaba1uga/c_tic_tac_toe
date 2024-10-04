@@ -29,6 +29,10 @@ static bool are_strings_equal(char *str_a, char *str_b);
 struct StdLibUtilsOps std_lib_utils_ops = {.get_now = get_current_time,
                                            .are_str_eq = are_strings_equal};
 
+struct StdLibUtilsOps *get_std_lib_utils_ops(void) {
+  return &std_lib_utils_ops;
+};
+
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
@@ -43,5 +47,6 @@ unsigned long get_current_time(void) {
 }
 
 bool are_strings_equal(char *str_a, char *str_b) {
+  // Return True if A and B are equal, False otherwise.
   return strcmp(str_a, str_b) == 0;
 }

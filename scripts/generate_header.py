@@ -35,7 +35,7 @@ struct {base_name.capitalize()}Ops {{
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-    extern struct {base_name.capitalize()}Ops {base_name.lower()}_ops;
+struct {base_name.capitalize()}Ops *get_{base_name.lower()}_ops(void);
 
 #endif // {base_name.upper()}_H
 """

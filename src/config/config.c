@@ -37,6 +37,7 @@ struct ConfigSubsystem {
 };
 
 static struct LoggingUtilsOps *logging_ops;
+static struct StdLibUtilsOps *std_lib_ops;
 static const char module_id[] = "config_subsystem";
 static struct ConfigSubsystem config_subsystem = {.count = 0};
 
@@ -66,6 +67,8 @@ struct ConfigOps *get_config_ops(void) { return &config_ops; }
  ******************************************************************************/
 int config_init(void) {
   logging_ops = get_logging_utils_ops();
+  std_lib_ops = get_std_lib_utils_ops();
+
   return 0;
 }
 
@@ -90,7 +93,7 @@ char *config_get_variable(char *var_name) {
   size_t i;
 
   for (i = 0; i < config_subsystem.count; i++) {
-    if (std_lib_utils_ops.are_str_eq(
+    if (std_lib_ops->are_str_eq(
             var_name, (char *)config_subsystem.registrations[i].var_name)) {
       value = getenv(var_name);
 

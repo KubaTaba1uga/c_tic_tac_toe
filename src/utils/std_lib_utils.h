@@ -28,6 +28,6 @@ struct StdLibUtilsOps {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct StdLibUtilsOps std_lib_utils_ops;
+struct StdLibUtilsOps *get_std_lib_utils_ops(void);
 
 #endif // STD_LIB_UTILS_H

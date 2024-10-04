@@ -28,6 +28,7 @@ struct InputSubsystem {
 
 static struct InputSubsystem input_subsystem = {.count = 0};
 static struct LoggingUtilsOps *logging_ops;
+static struct StdLibUtilsOps *std_lib_ops;
 static struct termios old_termios;
 
 static int input_init(void);
@@ -87,8 +88,8 @@ int input_register_callback(char *id, input_callback_func_t callback) {
   size_t i;
 
   for (i = 0; i < input_subsystem.count; ++i) {
-    if (std_lib_utils_ops.are_str_eq(
-            id, (char *)input_subsystem.registrations[i]->id)) {
+    if (std_lib_ops->are_str_eq(id,
+                                (char *)input_subsystem.registrations[i]->id)) {
       input_subsystem.registrations[i]->callback = callback;
       return 0;
     }
@@ -138,6 +139,7 @@ void input_wait(void) {
 
 int input_init(void) {
   logging_ops = get_logging_utils_ops();
+  std_lib_ops = get_std_lib_utils_ops();
 
   // Disable canonical mode and echo, to receive input without pressing enter.
   input_disable_canonical_mode(&old_termios);

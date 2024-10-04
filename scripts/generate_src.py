@@ -32,6 +32,9 @@ def generate_source(header_file_path):
  ******************************************************************************/
 struct {base_name.capitalize()}Ops {base_name}_ops = {{ NULL }};
 
+struct {base_name.capitalize()}Ops *get_{base_name.lower()}_ops(void){
+    return &{base_name}_ops;
+};    
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/

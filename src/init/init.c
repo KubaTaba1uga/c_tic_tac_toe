@@ -109,12 +109,15 @@ int init_initialize_system(void) {
 
 int init_initialize_system_with_disabled_modules(size_t n,
                                                  char *modules_ids[n]) {
+  static struct StdLibUtilsOps *std_lib_ops;
   size_t i, j;
+
+  std_lib_ops = get_std_lib_utils_ops();
 
   for (i = 0; i < init_subsystem.count; ++i) {
     for (j = 0; j < n; ++j) {
-      if (std_lib_utils_ops.are_str_eq(
-              (char *)init_subsystem.registrations[i]->id, modules_ids[j])) {
+      if (std_lib_ops->are_str_eq((char *)init_subsystem.registrations[i]->id,
+                                  modules_ids[j])) {
         init_subsystem.registrations[i]->init_func = NULL;
         init_subsystem.registrations[i]->destroy_func = NULL;
         break;
