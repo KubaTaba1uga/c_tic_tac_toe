@@ -40,7 +40,7 @@ void tearDown() {
   /* struct InitOps *init_ops = get_init_ops(); */
   /* init_ops->destroy_system(); */
   restore_orig_stdin();
-  /* logging_ops_->destroy_loggers();   */
+  logging_ops_->destroy_loggers();
 }
 
 void test_process_single_stdin() {
@@ -101,7 +101,7 @@ void restore_orig_stdin() {
 }
 
 int mock_keyboard_callback(size_t n, char buffer[n]) {
-  logging_ops_->log_info("mock_keyboard_callback", "executed");
+  /* logging_ops_->log_info("mock_keyboard_callback", "executed"); */
   mockup_callback_counter++;
   return 0;
 }

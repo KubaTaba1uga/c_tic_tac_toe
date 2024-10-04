@@ -100,15 +100,11 @@ struct LoggingUtilsOps *get_logging_utils_ops(void) {
 int init_loggers(void) {
   errno = 0;
 
-  pthread_mutex_lock(&log_mutex);
-
   if (loggers[0] == NULL)
     loggers[0] = stumpless_open_stdout_target("console logger");
 
   if (loggers[0] == NULL)
     logging_utils_priv_ops.print_error("Unable to open console logger");
-
-  pthread_mutex_unlock(&log_mutex);
 
   return errno;
 }
@@ -116,18 +112,16 @@ int init_loggers(void) {
 void destroy_loggers(void) {
   size_t i;
 
-  pthread_mutex_lock(&log_mutex);
-
   for (i = 0; i < loggers_no; i++) {
     if (loggers[i] == NULL)
       continue;
 
     stumpless_close_target(loggers[i]);
+
+    loggers[i] = NULL;
   }
 
   stumpless_free_all();
-
-  pthread_mutex_unlock(&log_mutex);
 }
 
 void log_info(const char *msg_id, char *fmt, ...) {
@@ -156,8 +150,6 @@ void log_msg(char *msg, const char *msg_id, enum stumpless_severity severity) {
   struct stumpless_entry *entry = NULL;
   int err;
 
-  pthread_mutex_lock(&log_mutex);
-
   err = logging_utils_priv_ops.create_log_entry(msg, msg_id, &entry, severity);
 
   if (err) {
@@ -176,7 +168,6 @@ FREE:
   stumpless_destroy_entry_and_contents(entry);
 
 OUT:
-  pthread_mutex_unlock(&log_mutex);
 
   return;
 }

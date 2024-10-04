@@ -13,6 +13,7 @@ meson test --wrap='valgrind --leak-check=full --show-leak-kinds=all --error-exit
 exit_code=$?
 if [ $exit_code -ne 0 ]
 then
+    echo "Failed valgrind test with exit code: $exit_code"
     exit $exit_code
 fi
 
