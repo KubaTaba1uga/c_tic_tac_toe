@@ -48,7 +48,7 @@ insert_registration(int start, struct GameSmSubsystemRegistrationData *new_reg);
 
 static struct GameSmSubsystem game_sm_subsystem = {.count = 0};
 static struct LoggingUtilsOps *logging_ops;
-static char module_id[] = "game_logic_sm";
+static char module_id[] = "game_sm_subsystem";
 
 /*******************************************************************************
  *    INIT BOILERCODE

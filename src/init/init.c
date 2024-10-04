@@ -21,6 +21,7 @@
 // App's internal libs
 #include "init/init.h"
 #include "utils/logging_utils.h"
+#include "utils/std_lib_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
@@ -40,6 +41,8 @@ init_register_subsystem(struct InitRegistrationData *init_registration_data);
 static void init_register_child_subsystem(struct InitRegistrationData *child,
                                           struct InitRegistrationData *parent);
 static int init_initialize_system(void);
+static int init_initialize_system_with_disabled_modules(size_t n,
+                                                        char *modules_ids[n]);
 static void init_destroy_system(void);
 static int init_initialize_subsystem(struct InitRegistrationData *subsystem);
 static void init_destroy_subsystem(struct InitRegistrationData *subsystem);
@@ -51,6 +54,8 @@ struct InitOps init_ops = {.register_module = init_register_subsystem,
                            .register_child_module =
                                init_register_child_subsystem,
                            .initialize_system = init_initialize_system,
+                           .initialize_system_with_disabled_modules =
+                               init_initialize_system_with_disabled_modules,
                            .destroy_system = init_destroy_system};
 struct InitOps *get_init_ops(void) { return &init_ops; }
 
@@ -90,9 +95,6 @@ int init_initialize_system(void) {
   size_t i;
 
   for (i = 0; i < init_subsystem.count; ++i) {
-    if (init_subsystem.registrations[i]->init_func == NULL)
-      continue;
-
     err = init_initialize_subsystem(init_subsystem.registrations[i]);
     if (err) {
       logging_ops->log_err(module_id, "Unable to initialize %s\n",
@@ -105,13 +107,28 @@ int init_initialize_system(void) {
   return 0;
 }
 
+int init_initialize_system_with_disabled_modules(size_t n,
+                                                 char *modules_ids[n]) {
+  size_t i, j;
+
+  for (i = 0; i < init_subsystem.count; ++i) {
+    for (j = 0; j < n; ++j) {
+      if (std_lib_utils_ops.are_str_eq(
+              (char *)init_subsystem.registrations[i]->id, modules_ids[j])) {
+        init_subsystem.registrations[i]->init_func = NULL;
+        init_subsystem.registrations[i]->destroy_func = NULL;
+        break;
+      }
+    }
+  }
+
+  return init_initialize_system();
+}
+
 void init_destroy_system() {
   int i;
 
   for (i = init_subsystem.count - 1; i >= 0; --i) {
-    if (init_subsystem.registrations[i]->destroy_func == NULL)
-      continue;
-
     init_destroy_subsystem(init_subsystem.registrations[i]);
   }
 }

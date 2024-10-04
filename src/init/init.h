@@ -47,6 +47,8 @@ struct InitOps {
   void (*register_child_module)(struct InitRegistrationData *child,
                                 struct InitRegistrationData *parent);
   int (*initialize_system)(void);
+  int (*initialize_system_with_disabled_modules)(size_t n,
+                                                 char *modules_ids[n]);
   void (*destroy_system)(void);
 };
 
