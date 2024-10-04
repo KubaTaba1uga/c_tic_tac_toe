@@ -73,19 +73,21 @@ int game_process(enum InputEvents input_event) {
 
 int game_init(void) {
   struct ConfigRegistrationData user1_input, user2_input;
-  struct InputOps *input_ops;
+  struct LoggingUtilsOps *logging_ops;
   struct ConfigOps *config_ops;
+  struct InputOps *input_ops;
   int err;
 
-  input_ops = get_input_ops();
+  logging_ops = get_logging_utils_ops();
   config_ops = get_config_ops();
+  input_ops = get_input_ops();
 
   user1_input.var_name = "user1_input";
   user1_input.default_value = "keyboard1";
   err = config_ops->register_var(user1_input);
   if (err) {
-    logging_utils_ops.log_err(module_id,
-                              "Unable to register input device for user 1.");
+    logging_ops->log_err(module_id,
+                         "Unable to register input device for user 1.");
     return err;
   }
 
@@ -93,8 +95,8 @@ int game_init(void) {
   user2_input.default_value = "keyboard1";
   err = config_ops->register_var(user2_input);
   if (err) {
-    logging_utils_ops.log_err(module_id,
-                              "Unable to register input device for user 2.");
+    logging_ops->log_err(module_id,
+                         "Unable to register input device for user 2.");
 
     return err;
   }
@@ -106,7 +108,7 @@ int game_init(void) {
     err = input_ops->register_callback(config_ops->get_var("user1_input"),
                                        game_priv_ops.logic);
     if (err) {
-      logging_utils_ops.log_err(
+      logging_ops->log_err(
           module_id,
           "Unable to register callback for input device for both users.");
       return err;
@@ -117,7 +119,7 @@ int game_init(void) {
     err = input_ops->register_callback(config_ops->get_var("user1_input"),
                                        game_priv_ops.user1_logic);
     if (err) {
-      logging_utils_ops.log_err(
+      logging_ops->log_err(
           module_id,
           "Unable to register callback for input device for user 1.");
 
@@ -127,7 +129,7 @@ int game_init(void) {
     err = input_ops->register_callback(config_ops->get_var("user2_input"),
                                        game_priv_ops.user2_logic);
     if (err) {
-      logging_utils_ops.log_err(
+      logging_ops->log_err(
           module_id,
           "Unable to register callback for input device for user 2.");
 
@@ -138,7 +140,7 @@ int game_init(void) {
   err = input_ops->start();
 
   if (err) {
-    logging_utils_ops.log_err(module_id, "Unable to start input devices.");
+    logging_ops->log_err(module_id, "Unable to start input devices.");
 
     return err;
   }

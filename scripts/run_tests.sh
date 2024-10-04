@@ -8,5 +8,11 @@ then
     builddir="build"
 fi
 
-meson test $test_name -C $builddir || \
+meson test $test_name -C $builddir
+
+if [ $? -ne 0 ]
+then
+    exit 1
+fi
+
 cat $builddir/meson-logs/testlog.txt

@@ -14,8 +14,10 @@
 #include <string.h>
 
 // App's internal libs
+#include "game/game.h"
 #include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
+#include "init/init.h"
 #include "utils/logging_utils.h"
 
 /*******************************************************************************
@@ -29,6 +31,7 @@ struct GameSmSubsystem {
       *registrations[MAX_GAME_SM_SUBSYSTEM_REGISTRATIONS];
 };
 
+static int game_sm_subsystem_init(void);
 static void register_state_machine(
     struct GameSmSubsystemRegistrationData *registration_data);
 static int get_next_state(struct GameStateMachineInput input,
@@ -43,8 +46,18 @@ priority_handle_no_value(struct GameSmSubsystemRegistrationData *new_reg);
 static void
 insert_registration(int start, struct GameSmSubsystemRegistrationData *new_reg);
 
-static char module_id[] = "game_logic_sm";
 static struct GameSmSubsystem game_sm_subsystem = {.count = 0};
+static struct LoggingUtilsOps *logging_ops;
+static char module_id[] = "game_logic_sm";
+
+/*******************************************************************************
+ *    INIT BOILERCODE
+ ******************************************************************************/
+static struct InitRegistrationData init_game_sm_sub_reg = {
+    .id = module_id,
+    .init_func = game_sm_subsystem_init,
+    .destroy_func = NULL,
+};
 
 /*******************************************************************************
  *    PUBLIC API
@@ -56,37 +69,42 @@ struct GameSmSubsystemOps game_sm_subsystem_ops = {.next_state = get_next_state,
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
+int game_sm_subsystem_init(void) {
+  logging_ops = get_logging_utils_ops();
+  return 0;
+}
+
 void register_state_machine(
     struct GameSmSubsystemRegistrationData *registration_data) {
   if (game_sm_subsystem.count < MAX_GAME_SM_SUBSYSTEM_REGISTRATIONS) {
     game_sm_subsystem.registrations[game_sm_subsystem.count++] =
         registration_data;
   } else {
-    logging_utils_ops.log_err(module_id,
-                              "Unable to register %s in game logic SM, "
-                              "no enough space in `registrations` array.",
-                              registration_data->id);
+    logging_ops->log_err(module_id,
+                         "Unable to register %s in game logic SM, "
+                         "no enough space in `registrations` array.",
+                         registration_data->id);
     return;
   }
 
   priority_handle_new_registration();
 }
 
-static int get_next_state(struct GameStateMachineInput input,
-                          struct GameStateMachineState *data) {
+int get_next_state(struct GameStateMachineInput input,
+                   struct GameStateMachineState *data) {
   size_t i;
   int err;
 
   for (i = 0; i < game_sm_subsystem.count; i++) {
-    logging_utils_ops.log_info(module_id, "Processing %s",
-                               game_sm_subsystem.registrations[i]->id);
+    logging_ops->log_info(module_id, "Processing %s",
+                          game_sm_subsystem.registrations[i]->id);
 
     err = game_sm_subsystem.registrations[i]->next_state(input, data);
 
     if (err) {
-      logging_utils_ops.log_err(module_id, "Unable to process %s: %s",
-                                game_sm_subsystem.registrations[i]->id,
-                                strerror(err));
+      logging_ops->log_err(module_id, "Unable to process %s: %s",
+                           game_sm_subsystem.registrations[i]->id,
+                           strerror(err));
       return err;
     }
   }
@@ -175,3 +193,5 @@ void insert_registration(int start,
 
   game_sm_subsystem.registrations[start] = new_reg;
 }
+
+INIT_REGISTER_SUBSYSTEM_CHILD(&init_game_sm_sub_reg, init_game_reg_p);
