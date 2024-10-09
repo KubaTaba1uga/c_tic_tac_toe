@@ -84,8 +84,6 @@ void test_process_multiple_stdin() {
   keyboard_ops_->initialize();
   keyboard_ops_->register_callback(mock_keyboard_callback);
 
-  printf("Whatever 000\n");
-
   // Write something to the pipe to simulate stdin input
   write(pipefd[1], "test \n", strlen("test \n"));
 

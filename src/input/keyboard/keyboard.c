@@ -202,16 +202,14 @@ void *keyboard_process_stdin(void *_) {
 void keyboard_read_stdin(void) {
   ssize_t bytes_read;
 
-  logging_ops->log_info(INPUT_KEYBOARD_ID, "Reading from stdin.");
-
   // Clear the stdin buffer count
   keyboard_subsystem.stdin_buffer_count = 0;
 
   // Read input from stdin into the buffer
   bytes_read = read(STDIN_FILENO, keyboard_subsystem.stdin_buffer,
-                    KEYBOARD_STDIN_BUFFER_MAX - 1); // TO-DO fix hang here
+                    KEYBOARD_STDIN_BUFFER_MAX - 1);
 
-  logging_ops->log_info(INPUT_KEYBOARD_ID, "%zd bytes read from stdin\n",
+  logging_ops->log_info(INPUT_KEYBOARD_ID, "%zd bytes read from stdin",
                         bytes_read);
 
   if (bytes_read < 0) {
