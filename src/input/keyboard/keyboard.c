@@ -63,17 +63,20 @@ static int keyboard_register_callback(keyboard_callback_func_t callback);
 static void keyboard_execute_callbacks(void);
 static void keyboard_signal_handler(int sig);
 static void keyboard_wait(void);
+static void keyboard_print_revents(short revents);
 
 struct KeyboardPrivateOps {
   void *(*process_stdin)(void *);
   void (*read_stdin)(void);
   void (*execute_callbacks)(void);
+  void (*print_revents)(short revents);
 };
 
 static struct KeyboardPrivateOps keyboard_private_ops = {
     .process_stdin = keyboard_process_stdin,
     .read_stdin = keyboard_read_stdin,
-    .execute_callbacks = keyboard_execute_callbacks};
+    .execute_callbacks = keyboard_execute_callbacks,
+    .print_revents = keyboard_print_revents};
 
 /*******************************************************************************
  *    INIT BOILERCODE
@@ -93,6 +96,7 @@ static struct KeyboardOps keyboard_ops = {
     .destroy = keyboard_destroy,
     .wait = keyboard_wait,
     .register_callback = keyboard_register_callback,
+    .private_ops = (void *)&keyboard_private_ops,
 };
 struct KeyboardOps *get_keyboard_ops(void) { return &keyboard_ops; };
 
@@ -114,8 +118,7 @@ int keyboard_module_init(void) {
  */
 int keyboard_initialize(void) {
   if (is_keyboard_initialized) {
-    /* logging_ops->log_info(INPUT_KEYBOARD_ID, "Keyboard is already
-     * initialized"); */
+    logging_ops->log_info(INPUT_KEYBOARD_ID, "Keyboard is already initialized");
     return 0;
   }
 
@@ -176,12 +179,8 @@ void *keyboard_process_stdin(void *_) {
   fds[0].events = POLLIN;
 
   while (is_keyboard_initialized) {
-    logging_ops->log_err(INPUT_KEYBOARD_ID, "Waiting for stdin.");
-
     // Wait for input on stdin
     err = poll(fds, 1, -1);
-
-    logging_ops->log_err(INPUT_KEYBOARD_ID, "Stdin triggered.");
 
     if (err == -1) {
       logging_ops->log_err(INPUT_KEYBOARD_ID, "Unable to wait for stdin: %s",
@@ -193,7 +192,7 @@ void *keyboard_process_stdin(void *_) {
       keyboard_private_ops.read_stdin();
       keyboard_private_ops.execute_callbacks();
     } else {
-      logging_ops->log_info(INPUT_KEYBOARD_ID, "Skipping invalid events.");
+      keyboard_private_ops.print_revents(fds[0].revents);
     }
   }
 
@@ -227,8 +226,6 @@ void keyboard_read_stdin(void) {
 
 void keyboard_execute_callbacks(void) {
   size_t i;
-
-  logging_ops->log_info(INPUT_KEYBOARD_ID, "Executing callbacks.");
 
   for (i = 0; i < keyboard_subsystem.callback_count; ++i) {
     if (keyboard_subsystem.callbacks[i]) {
@@ -276,6 +273,35 @@ void keyboard_signal_handler(int sig) {
                           "Thread received signal SIGUSR1. Exiting.");
 
     pthread_exit(NULL);
+  }
+}
+
+void keyboard_print_revents(short revents) {
+  logging_ops->log_err(INPUT_KEYBOARD_ID, "Invalid input event:");
+
+  if (revents & POLLIN) {
+    logging_ops->log_err(INPUT_KEYBOARD_ID, "Data to read (POLLIN)");
+  }
+  if (revents & POLLOUT) {
+    logging_ops->log_err(INPUT_KEYBOARD_ID, "Writing is possible (POLLOUT)");
+  }
+  if (revents & POLLERR) {
+    logging_ops->log_err(INPUT_KEYBOARD_ID, "Error occurred (POLLERR)");
+  }
+  if (revents & POLLHUP) {
+    logging_ops->log_err(INPUT_KEYBOARD_ID, "Hang up (POLLHUP)");
+  }
+  if (revents & POLLNVAL) {
+    logging_ops->log_err(INPUT_KEYBOARD_ID, "Invalid request (POLLNVAL)");
+  }
+  if (revents & POLLPRI) {
+    logging_ops->log_err(INPUT_KEYBOARD_ID, "Urgent data to read (POLLPRI)");
+  }
+
+  // If no recognized events:
+  if (!(revents &
+        (POLLIN | POLLOUT | POLLERR | POLLHUP | POLLNVAL | POLLPRI))) {
+    logging_ops->log_err(INPUT_KEYBOARD_ID, "No recognized events.");
   }
 }
 

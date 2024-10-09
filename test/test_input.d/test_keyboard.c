@@ -1,4 +1,5 @@
 // TO-DO test if destruction and init are working properly.
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,10 +12,12 @@
 #include "input/input.h"
 #include "input/keyboard/keyboard.h"
 #include "utils/logging_utils.h"
+#include "utils/std_lib_utils.h"
 
 int stdin_backup;
 int mockup_callback_counter;
 int pipefd[2];
+void *print_revents_backup_ptr;
 struct KeyboardOps *keyboard_ops_;
 struct LoggingUtilsOps *logging_ops_;
 
@@ -23,20 +26,36 @@ struct timespec ts = {.tv_sec = 0, .tv_nsec = 50000000};
 static void restore_orig_stdin();
 static void mock_stdin();
 static int mock_keyboard_callback(size_t n, char buffer[n]);
+static void mock_keyboard_print_revents(short revents);
+struct KeyboardPrivateOpsCopy {
+  void *(*process_stdin)(void *);
+  void (*read_stdin)(void);
+  void (*execute_callbacks)(void);
+  void (*print_revents)(short revents);
+};
 
 void setUp() {
   struct InitOps *init_ops = get_init_ops();
-  init_ops->initialize_system();
-  mock_stdin();
-
   logging_ops_ = get_logging_utils_ops();
   keyboard_ops_ = get_keyboard_ops();
+
+  // This is how mock static functions without including c file.
+  struct KeyboardPrivateOpsCopy *keyboard_priv_ops = keyboard_ops_->private_ops;
+  print_revents_backup_ptr = keyboard_priv_ops->print_revents;
+  keyboard_priv_ops->print_revents = mock_keyboard_print_revents;
+
+  init_ops->initialize_system();
+
+  mock_stdin();
 
   mockup_callback_counter = 0;
 }
 
 void tearDown() {
   struct InitOps *init_ops = get_init_ops();
+
+  struct KeyboardPrivateOpsCopy *keyboard_priv_ops = keyboard_ops_->private_ops;
+  keyboard_priv_ops->print_revents = print_revents_backup_ptr;
 
   restore_orig_stdin();
 
@@ -65,6 +84,8 @@ void test_process_multiple_stdin() {
   keyboard_ops_->initialize();
   keyboard_ops_->register_callback(mock_keyboard_callback);
 
+  printf("Whatever 000\n");
+
   // Write something to the pipe to simulate stdin input
   write(pipefd[1], "test \n", strlen("test \n"));
 
@@ -76,8 +97,6 @@ void test_process_multiple_stdin() {
   close(pipefd[1]);
 
   thrd_sleep(&ts, NULL);
-
-  printf("Whatever \n");
 
   keyboard_ops_->destroy();
 
@@ -105,3 +124,5 @@ int mock_keyboard_callback(size_t n, char buffer[n]) {
   mockup_callback_counter++;
   return 0;
 }
+
+static void mock_keyboard_print_revents(short revents) {}

@@ -27,6 +27,7 @@ struct KeyboardOps {
   void (*destroy)(void);
   void (*wait)(void);
   int (*register_callback)(keyboard_callback_func_t);
+  void *(private_ops);
 };
 
 /*******************************************************************************
