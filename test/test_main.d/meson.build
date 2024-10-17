@@ -6,7 +6,12 @@ input = join_paths(src, 'input')
 
 test_main_name = 'test_main.c'
 
-test_main_src = files([test_main_name, src / 'main.c', utils / 'std_lib_utils.c', utils / 'logging_utils.c', init / 'init.c', input / 'input.c'])
+test_main_src = files([test_main_name, 
+			   src / 'main.c', 
+			   utils / 'std_lib_utils.c', 
+			   utils / 'logging_utils.c', 
+			   init / 'init.c', 
+			   input / 'input.c'])
 
 test_main_exe = executable('test_main',
   sources: [
