@@ -58,6 +58,7 @@ static void user_move_state_machine_handle_select_event(
     struct GameStateMachineState *data);
 
 static struct LoggingUtilsOps *logging_ops;
+static struct GameSmSubsystemOps *gsm_sub_ops;
 static char module_id[] = "user_move_sm_module";
 static struct UserMoveStateMachine user_move_state_machine;
 struct UserMovePrivateOps user_move_priv_ops = {.set_default_state =
@@ -67,6 +68,10 @@ static struct GameSmSubsystemRegistrationData gsm_registration_data = {
     .id = module_id,
     .priority = 1 // Always perform first
 };
+
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
 
 /*******************************************************************************
  *    INIT BOILERCODE
@@ -86,10 +91,11 @@ static struct InitRegistrationData init_user_move_reg = {
  ******************************************************************************/
 int user_move_init(void) {
   logging_ops = get_logging_utils_ops();
+  gsm_sub_ops = get_game_sm_subsystem_ops();
 
   user_move_priv_ops.set_default_state();
 
-  game_sm_subsystem_ops.register_state_machine(&gsm_registration_data);
+  gsm_sub_ops->register_state_machine(&gsm_registration_data);
 
   return 0;
 }

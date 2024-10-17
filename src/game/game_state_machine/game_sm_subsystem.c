@@ -31,30 +31,74 @@ struct GameSmSubsystem {
       *registrations[MAX_GAME_SM_SUBSYSTEM_REGISTRATIONS];
 };
 
-static int game_sm_subsystem_init(void);
-static void register_state_machine(
-    struct GameSmSubsystemRegistrationData *registration_data);
-static int get_next_state(struct GameStateMachineInput input,
-                          struct GameStateMachineState *state);
-static void priority_handle_new_registration(void);
-static void
-priority_handle_positive_value(struct GameSmSubsystemRegistrationData *new_reg);
-static void
-priority_handle_negative_value(struct GameSmSubsystemRegistrationData *new_reg);
-static void
-priority_handle_no_value(struct GameSmSubsystemRegistrationData *new_reg);
-static void
-insert_registration(int start, struct GameSmSubsystemRegistrationData *new_reg);
-
+static char game_sm_subsystem_module_id[] = "game_sm_subsystem";
 static struct GameSmSubsystem game_sm_subsystem = {.count = 0};
 static struct LoggingUtilsOps *logging_ops;
-static char module_id[] = "game_sm_subsystem";
+
+/* -------------------------------------------------------------------------- */
+
+static int game_sm_subsystem_init(void);
+static void game_sm_subsystem_register_state_machine(
+    struct GameSmSubsystemRegistrationData *registration_data);
+static int
+game_sm_subsystem_get_next_state(struct GameStateMachineInput input,
+                                 struct GameStateMachineState *state);
+static void game_sm_subsystem_priority_handle_new_registration(void);
+static void game_sm_subsystem_priority_handle_positive_value(
+    struct GameSmSubsystemRegistrationData *new_reg);
+static void game_sm_subsystem_priority_handle_negative_value(
+    struct GameSmSubsystemRegistrationData *new_reg);
+static void game_sm_subsystem_priority_handle_no_value(
+    struct GameSmSubsystemRegistrationData *new_reg);
+static void game_sm_subsystem_insert_registration(
+    int start, struct GameSmSubsystemRegistrationData *new_reg);
+static size_t *game_sm_subsystem_get_counter(void);
+static struct GameSmSubsystemRegistrationData **
+game_sm_subsystem_get_registrations(void);
+
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
+struct GameSmSubsystemPrivateOps {
+  void (*priority_handle_new_registration)(void);
+  void (*priority_handle_positive_value)(
+      struct GameSmSubsystemRegistrationData *new_reg);
+  void (*priority_handle_negative_value)(
+      struct GameSmSubsystemRegistrationData *new_reg);
+  void (*priority_handle_no_value)(
+      struct GameSmSubsystemRegistrationData *new_reg);
+  void (*insert_registration)(int start,
+                              struct GameSmSubsystemRegistrationData *new_reg);
+  size_t *(*get_counter)(void);
+  struct GameSmSubsystemRegistrationData **(*get_registrations)(void);
+};
+
+static struct GameSmSubsystemPrivateOps priv_ops = {
+    .priority_handle_new_registration =
+        game_sm_subsystem_priority_handle_new_registration,
+    .priority_handle_positive_value =
+        game_sm_subsystem_priority_handle_positive_value,
+    .priority_handle_negative_value =
+        game_sm_subsystem_priority_handle_negative_value,
+    .priority_handle_no_value = game_sm_subsystem_priority_handle_no_value,
+    .insert_registration = game_sm_subsystem_insert_registration,
+    .get_counter = game_sm_subsystem_get_counter,
+    .get_registrations = game_sm_subsystem_get_registrations};
+
+struct GameSmSubsystemOps game_sm_subsystem_ops = {
+    .next_state = game_sm_subsystem_get_next_state,
+    .register_state_machine = game_sm_subsystem_register_state_machine,
+    .private_ops = &priv_ops};
+
+struct GameSmSubsystemOps *get_game_sm_subsystem_ops(void) {
+  return &game_sm_subsystem_ops;
+};
 
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
 static struct InitRegistrationData init_game_sm_sub_reg = {
-    .id = module_id,
+    .id = game_sm_subsystem_module_id,
     .init_func = game_sm_subsystem_init,
     .destroy_func = NULL,
 };
@@ -62,49 +106,43 @@ static struct InitRegistrationData init_game_sm_sub_reg = {
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct GameSmSubsystemOps game_sm_subsystem_ops = {.next_state = get_next_state,
-                                                   .register_state_machine =
-                                                       register_state_machine};
-
-/*******************************************************************************
- *    PRIVATE API
- ******************************************************************************/
-int game_sm_subsystem_init(void) {
-  logging_ops = get_logging_utils_ops();
-  return 0;
-}
-
-void register_state_machine(
+void game_sm_subsystem_register_state_machine(
     struct GameSmSubsystemRegistrationData *registration_data) {
-  if (game_sm_subsystem.count < MAX_GAME_SM_SUBSYSTEM_REGISTRATIONS) {
-    game_sm_subsystem.registrations[game_sm_subsystem.count++] =
-        registration_data;
+  struct GameSmSubsystemRegistrationData **registrations =
+      priv_ops.get_registrations();
+  size_t *counter = priv_ops.get_counter();
+
+  if (*counter < MAX_GAME_SM_SUBSYSTEM_REGISTRATIONS) {
+    registrations[(*counter)++] = registration_data;
   } else {
-    logging_ops->log_err(module_id,
+    logging_ops->log_err(game_sm_subsystem_module_id,
                          "Unable to register %s in game logic SM, "
                          "no enough space in `registrations` array.",
                          registration_data->id);
     return;
   }
 
-  priority_handle_new_registration();
+  priv_ops.priority_handle_new_registration();
 }
 
-int get_next_state(struct GameStateMachineInput input,
-                   struct GameStateMachineState *data) {
+int game_sm_subsystem_get_next_state(struct GameStateMachineInput input,
+                                     struct GameStateMachineState *data) {
+  size_t counter;
   size_t i;
   int err;
 
-  for (i = 0; i < game_sm_subsystem.count; i++) {
-    logging_ops->log_info(module_id, "Processing %s",
+  counter = *priv_ops.get_counter();
+
+  for (i = 0; i < counter; i++) {
+    logging_ops->log_info(game_sm_subsystem_module_id, "Processing %s",
                           game_sm_subsystem.registrations[i]->id);
 
     err = game_sm_subsystem.registrations[i]->next_state(input, data);
 
     if (err) {
-      logging_ops->log_err(module_id, "Unable to process %s: %s",
-                           game_sm_subsystem.registrations[i]->id,
-                           strerror(err));
+      logging_ops->log_err(
+          game_sm_subsystem_module_id, "Unable to process %s: %s",
+          game_sm_subsystem.registrations[i]->id, strerror(err));
       return err;
     }
   }
@@ -112,24 +150,37 @@ int get_next_state(struct GameStateMachineInput input,
   return 0;
 };
 
-void priority_handle_new_registration(void) {
-  struct GameSmSubsystemRegistrationData *new_reg =
-      game_sm_subsystem.registrations[game_sm_subsystem.count - 1];
+/*******************************************************************************
+ *    PRIVATE API
+ ******************************************************************************/
+int game_sm_subsystem_init(void) {
+  logging_ops = get_logging_utils_ops();
 
-  if (new_reg->priority > 0)
-    priority_handle_positive_value(new_reg);
-  else if (new_reg->priority < 0)
-    priority_handle_negative_value(new_reg);
-  else // if (new_reg->priority == 0)
-    priority_handle_no_value(new_reg);
+  return 0;
 }
 
-void priority_handle_positive_value(
+void game_sm_subsystem_priority_handle_new_registration(void) {
+  size_t counter = *priv_ops.get_counter();
+  struct GameSmSubsystemRegistrationData *new_reg =
+      game_sm_subsystem.registrations[counter - 1];
+
+  if (new_reg->priority > 0)
+    priv_ops.priority_handle_positive_value(new_reg);
+  else if (new_reg->priority < 0)
+    priv_ops.priority_handle_negative_value(new_reg);
+  else // if (new_reg->priority == 0)
+    priv_ops.priority_handle_no_value(new_reg);
+}
+
+void game_sm_subsystem_priority_handle_positive_value(
     struct GameSmSubsystemRegistrationData *new_reg) {
   struct GameSmSubsystemRegistrationData *tmp_reg;
+  size_t counter;
   size_t i;
 
-  for (i = 0; i < game_sm_subsystem.count; i++) {
+  counter = *priv_ops.get_counter();
+
+  for (i = 0; i < counter; i++) {
     tmp_reg = game_sm_subsystem.registrations[i];
 
     // If positive priority 1 is biggest value. The bigger
@@ -140,16 +191,16 @@ void priority_handle_positive_value(
         // If comparing to positive priority with smaller number,
         //  write before tmp_reg.
         (new_reg->priority < tmp_reg->priority)) {
-      insert_registration(i, new_reg);
+      priv_ops.insert_registration(i, new_reg);
       break;
     }
   }
 }
 
-void priority_handle_negative_value(
+void game_sm_subsystem_priority_handle_negative_value(
     struct GameSmSubsystemRegistrationData *new_reg) {
   struct GameSmSubsystemRegistrationData *tmp_reg;
-  size_t i = game_sm_subsystem.count;
+  size_t i = *priv_ops.get_counter();
 
   while (i-- > 0) {
     tmp_reg = game_sm_subsystem.registrations[i];
@@ -162,29 +213,30 @@ void priority_handle_negative_value(
         // If comparing to negative priority with bigger number,
         //  write after tmp_reg.
         (new_reg->priority > tmp_reg->priority)) {
-      insert_registration(i + 1, new_reg);
+      priv_ops.insert_registration(i + 1, new_reg);
       break;
     }
   }
 }
 
-void priority_handle_no_value(struct GameSmSubsystemRegistrationData *new_reg) {
+void game_sm_subsystem_priority_handle_no_value(
+    struct GameSmSubsystemRegistrationData *new_reg) {
   struct GameSmSubsystemRegistrationData *tmp_reg;
-  size_t i;
+  size_t i = *priv_ops.get_counter();
 
   for (i = 0; i < game_sm_subsystem.count; i++) {
     tmp_reg = game_sm_subsystem.registrations[i];
 
     if (new_reg->priority > tmp_reg->priority) {
-      insert_registration(i, new_reg);
+      priv_ops.insert_registration(i, new_reg);
       break;
     }
   }
 }
 
-void insert_registration(int start,
-                         struct GameSmSubsystemRegistrationData *new_reg) {
-  size_t i = game_sm_subsystem.count;
+void game_sm_subsystem_insert_registration(
+    int start, struct GameSmSubsystemRegistrationData *new_reg) {
+  size_t i = *priv_ops.get_counter();
 
   // Move registrations by 1 right.
   while (i-- > start) {
@@ -193,5 +245,14 @@ void insert_registration(int start,
 
   game_sm_subsystem.registrations[start] = new_reg;
 }
+
+size_t *game_sm_subsystem_get_counter(void) {
+  return &game_sm_subsystem.count;
+};
+
+static struct GameSmSubsystemRegistrationData **
+game_sm_subsystem_get_registrations(void) {
+  return game_sm_subsystem.registrations;
+};
 
 INIT_REGISTER_SUBSYSTEM_CHILD(&init_game_sm_sub_reg, init_game_reg_p);

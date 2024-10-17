@@ -41,6 +41,10 @@ static struct GamePrivateOps game_priv_ops = {.user1_logic = game_process_user1,
                                               .logic = game_process};
 
 /*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
+
+/*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
 static struct InitRegistrationData init_game_reg = {
@@ -53,7 +57,7 @@ struct InitRegistrationData *init_game_reg_p = &init_game_reg;
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct GameOps game_ops = {};
+struct GameOps game_ops = {.private_ops = &game_priv_ops};
 struct GameOps *get_game_ops(void) { return &game_ops; }
 
 /*******************************************************************************

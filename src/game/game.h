@@ -26,7 +26,9 @@ enum Users {
   UserMax,
 };
 
-struct GameOps {};
+struct GameOps {
+  void *private_ops;
+};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE

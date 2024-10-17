@@ -48,6 +48,14 @@ static int init_initialize_subsystem(struct InitRegistrationData *subsystem);
 static void init_destroy_subsystem(struct InitRegistrationData *subsystem);
 
 /*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
+
+/*******************************************************************************
+ *    INIT BOILERCODE
+ ******************************************************************************/
+
+/*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
 struct InitOps init_ops = {.register_module = init_register_subsystem,

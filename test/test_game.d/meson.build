@@ -61,7 +61,7 @@ test_gsm_subsystem_exe = executable('test_gsm_subsystem',
     test_gsm_subsystem_src,
     cmock_gen_runner.process(test_gsm_subsystem_name),
   ],
-  include_directories: [src],
+  include_directories: [src, test_includes],
   dependencies: test_dependencies,
   c_args:['-DTEST'],
   link_args: [

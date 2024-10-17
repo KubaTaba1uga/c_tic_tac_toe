@@ -26,7 +26,6 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-
 static int quit_state_machine_init(void);
 static int quit_state_machine_next_state(struct GameStateMachineInput input,
                                          struct GameStateMachineState *state);
@@ -36,6 +35,10 @@ static struct GameSmSubsystemRegistrationData gsm_registration_data = {
     .id = gsm_quit_module_id,
     .priority = 0 // No priority
 };
+
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
 
 /*******************************************************************************
  *    INIT BOILERCODE
@@ -85,7 +88,10 @@ int quit_state_machine_next_state(struct GameStateMachineInput input,
 };
 
 int quit_state_machine_init(void) {
-  game_sm_subsystem_ops.register_state_machine(&gsm_registration_data);
+  struct GameSmSubsystemOps *gsm_sub_ops = get_game_sm_subsystem_ops();
+
+  gsm_sub_ops->register_state_machine(&gsm_registration_data);
+
   return 0;
 }
 

@@ -79,6 +79,10 @@ static struct KeyboardPrivateOps keyboard_private_ops = {
     .print_revents = keyboard_print_revents};
 
 /*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
+
+/*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
 static struct InitRegistrationData init_keyboard_reg = {

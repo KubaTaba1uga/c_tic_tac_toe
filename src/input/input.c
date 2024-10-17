@@ -43,6 +43,10 @@ static void input_disable_canonical_mode(struct termios *old_termios);
 static void input_restore_terminal_mode(const struct termios *old_termios);
 
 /*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
+
+/*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
 static struct InitRegistrationData init_input_reg = {.id = INPUT_MODULE_ID,

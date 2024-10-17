@@ -1,19 +1,21 @@
-
+#include <stddef.h>
 #include <unity.h>
 
-#include "game/game_state_machine/game_sm_subsystem.c"
-
+#include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
+#include "game_state_machine_subsystem_wrapper.h"
 
 #include "init/init.h"
 #include "utils/logging_utils.h"
 
 struct LoggingUtilsOps *logging_ops_;
+struct GameSmSubsystemOps *gsm_sub_ops;
 
 // Mock data for testing
 struct GameStateMachineState mock_state = {.current_state = 0};
 struct GameStateMachineState mock_new_state = {.current_state = 1};
 struct GameStateMachineInput mock_input = {};
+size_t mock_counter;
 
 // Mock next_state function
 int mock_next_state(struct GameStateMachineInput input,
@@ -21,11 +23,15 @@ int mock_next_state(struct GameStateMachineInput input,
   return 0;
 }
 
+// Mock next_state function
+size_t *mock_get_counter(void) { return &mock_counter; }
+
 // Test initialization
 void setUp() {
   char *disabled_modules_ids[] = {"game"};
   struct InitOps *init_ops;
 
+  gsm_sub_ops = get_game_sm_subsystem_ops();
   init_ops = get_init_ops();
 
   init_ops->initialize_system_with_disabled_modules(
@@ -33,7 +39,7 @@ void setUp() {
 
   logging_ops_ = get_logging_utils_ops();
 
-  game_sm_subsystem.count = 0;
+  mock_counter = 0;
 }
 
 void tearDown() {
@@ -50,22 +56,20 @@ void test_register_new_state_machine() {
   struct GameSmSubsystemRegistrationData mock_registration_data_1 = {
       .id = "TestSM1", .priority = 1, .next_state = mock_next_state};
 
-  register_state_machine(&mock_registration_data_1);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_1);
   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_1,
                         game_sm_subsystem.registrations[0]);
-  TEST_ASSERT_EQUAL_INT(1, game_sm_subsystem.count);
+  TEST_ASSERT_EQUAL_INT(1, mock_counter);
 
   // Test if subsystem respects the max registration limit
   for (size_t i = 1; i < MAX_GAME_SM_SUBSYSTEM_REGISTRATIONS; i++) {
-    register_state_machine(&mock_registration_data_1);
+    gsm_sub_ops->register_state_machine(&mock_registration_data_1);
   }
-  TEST_ASSERT_EQUAL_INT(MAX_GAME_SM_SUBSYSTEM_REGISTRATIONS,
-                        game_sm_subsystem.count);
+  TEST_ASSERT_EQUAL_INT(MAX_GAME_SM_SUBSYSTEM_REGISTRATIONS, mock_counter);
 
   // Try registering beyond the limit
-  register_state_machine(&mock_registration_data_1);
-  TEST_ASSERT_EQUAL_INT(MAX_GAME_SM_SUBSYSTEM_REGISTRATIONS,
-                        game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_1);
+  TEST_ASSERT_EQUAL_INT(MAX_GAME_SM_SUBSYSTEM_REGISTRATIONS, mock_counter);
 }
 
 void test_register_positive_prioritized_state_machine() {
@@ -82,26 +86,26 @@ void test_register_positive_prioritized_state_machine() {
   struct GameSmSubsystemRegistrationData mock_registration_data_5 = {
       .id = "TestSM5", .priority = 5, .next_state = mock_next_state};
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(1, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(1, mock_counter);
 
-  register_state_machine(&mock_registration_data_3);
-  TEST_ASSERT_EQUAL_INT(2, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_3);
+  TEST_ASSERT_EQUAL_INT(2, mock_counter);
 
-  register_state_machine(&mock_registration_data_1);
-  TEST_ASSERT_EQUAL_INT(3, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_1);
+  TEST_ASSERT_EQUAL_INT(3, mock_counter);
 
-  register_state_machine(&mock_registration_data_4);
-  TEST_ASSERT_EQUAL_INT(4, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_4);
+  TEST_ASSERT_EQUAL_INT(4, mock_counter);
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(5, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(5, mock_counter);
 
-  register_state_machine(&mock_registration_data_2);
-  TEST_ASSERT_EQUAL_INT(6, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_2);
+  TEST_ASSERT_EQUAL_INT(6, mock_counter);
 
-  register_state_machine(&mock_registration_data_5);
-  TEST_ASSERT_EQUAL_INT(7, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_5);
+  TEST_ASSERT_EQUAL_INT(7, mock_counter);
 
   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_1,
                         game_sm_subsystem.registrations[0]);
@@ -133,26 +137,26 @@ void test_register_negative_prioritized_state_machine() {
   struct GameSmSubsystemRegistrationData mock_registration_data_5 = {
       .id = "TestSM5", .priority = -5, .next_state = mock_next_state};
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(1, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(1, mock_counter);
 
-  register_state_machine(&mock_registration_data_3);
-  TEST_ASSERT_EQUAL_INT(2, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_3);
+  TEST_ASSERT_EQUAL_INT(2, mock_counter);
 
-  register_state_machine(&mock_registration_data_1);
-  TEST_ASSERT_EQUAL_INT(3, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_1);
+  TEST_ASSERT_EQUAL_INT(3, mock_counter);
 
-  register_state_machine(&mock_registration_data_4);
-  TEST_ASSERT_EQUAL_INT(4, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_4);
+  TEST_ASSERT_EQUAL_INT(4, mock_counter);
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(5, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(5, mock_counter);
 
-  register_state_machine(&mock_registration_data_2);
-  TEST_ASSERT_EQUAL_INT(6, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_2);
+  TEST_ASSERT_EQUAL_INT(6, mock_counter);
 
-  register_state_machine(&mock_registration_data_5);
-  TEST_ASSERT_EQUAL_INT(7, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_5);
+  TEST_ASSERT_EQUAL_INT(7, mock_counter);
 
   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
                         game_sm_subsystem.registrations[0]);
@@ -182,26 +186,26 @@ void test_register_all_prioritized_state_machine_small() {
   struct GameSmSubsystemRegistrationData mock_registration_data_4 = {
       .id = "TestSM-1", .priority = -1, .next_state = mock_next_state};
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(1, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(1, mock_counter);
 
-  register_state_machine(&mock_registration_data_3);
-  TEST_ASSERT_EQUAL_INT(2, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_3);
+  TEST_ASSERT_EQUAL_INT(2, mock_counter);
 
-  register_state_machine(&mock_registration_data_1);
-  TEST_ASSERT_EQUAL_INT(3, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_1);
+  TEST_ASSERT_EQUAL_INT(3, mock_counter);
 
-  register_state_machine(&mock_registration_data_4);
-  TEST_ASSERT_EQUAL_INT(4, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_4);
+  TEST_ASSERT_EQUAL_INT(4, mock_counter);
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(5, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(5, mock_counter);
 
-  register_state_machine(&mock_registration_data_2);
-  TEST_ASSERT_EQUAL_INT(6, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_2);
+  TEST_ASSERT_EQUAL_INT(6, mock_counter);
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(7, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(7, mock_counter);
 
   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_1,
                         game_sm_subsystem.registrations[0]);
@@ -239,61 +243,61 @@ void test_register_all_prioritized_state_machine_big() {
   struct GameSmSubsystemRegistrationData mock_registration_data_8 = {
       .id = "TestSM-1", .priority = -1, .next_state = mock_next_state};
 
-  register_state_machine(&mock_registration_data_4);
-  TEST_ASSERT_EQUAL_INT(1, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_4);
+  TEST_ASSERT_EQUAL_INT(1, mock_counter);
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(2, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(2, mock_counter);
 
-  register_state_machine(&mock_registration_data_8);
-  TEST_ASSERT_EQUAL_INT(3, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_8);
+  TEST_ASSERT_EQUAL_INT(3, mock_counter);
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(4, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(4, mock_counter);
 
-  register_state_machine(&mock_registration_data_3);
-  TEST_ASSERT_EQUAL_INT(5, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_3);
+  TEST_ASSERT_EQUAL_INT(5, mock_counter);
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(6, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(6, mock_counter);
 
-  register_state_machine(&mock_registration_data_7);
-  TEST_ASSERT_EQUAL_INT(7, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_7);
+  TEST_ASSERT_EQUAL_INT(7, mock_counter);
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(8, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(8, mock_counter);
 
-  register_state_machine(&mock_registration_data_2);
-  TEST_ASSERT_EQUAL_INT(9, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_2);
+  TEST_ASSERT_EQUAL_INT(9, mock_counter);
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(10, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(10, mock_counter);
 
-  register_state_machine(&mock_registration_data_6);
-  TEST_ASSERT_EQUAL_INT(11, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_6);
+  TEST_ASSERT_EQUAL_INT(11, mock_counter);
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(12, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(12, mock_counter);
 
-  register_state_machine(&mock_registration_data_1);
-  TEST_ASSERT_EQUAL_INT(13, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_1);
+  TEST_ASSERT_EQUAL_INT(13, mock_counter);
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(14, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(14, mock_counter);
 
-  register_state_machine(&mock_registration_data_5);
-  TEST_ASSERT_EQUAL_INT(15, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_5);
+  TEST_ASSERT_EQUAL_INT(15, mock_counter);
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(16, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(16, mock_counter);
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(17, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(17, mock_counter);
 
-  register_state_machine(&mock_registration_data_0);
-  TEST_ASSERT_EQUAL_INT(18, game_sm_subsystem.count);
+  gsm_sub_ops->register_state_machine(&mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(18, mock_counter);
 
-  /* for (size_t i = 0; i < game_sm_subsystem.count; i++) { */
+  /* for (size_t i = 0; i < mock_counter; i++) { */
   /*   logging_ops_->log_info("test", */
   /*                              (char
    * *)game_sm_subsystem.registrations[i]->id); */

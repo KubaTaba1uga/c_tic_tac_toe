@@ -21,26 +21,24 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-typedef int (*gsm_subsystem_next_state_function_t)(
-    struct GameStateMachineInput input, struct GameStateMachineState *state);
-
 struct GameSmSubsystemRegistrationData {
+  int (*next_state)(struct GameStateMachineInput input,
+                    struct GameStateMachineState *state);
   const char *id;
-  gsm_subsystem_next_state_function_t next_state;
   int priority;
-};
-
-typedef void (*gsm_subsystem_register_state_machine_function_t)(
-    struct GameSmSubsystemRegistrationData *registration_data);
-
-struct GameSmSubsystemOps {
-  gsm_subsystem_next_state_function_t next_state;
-  gsm_subsystem_register_state_machine_function_t register_state_machine;
 };
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct GameSmSubsystemOps game_sm_subsystem_ops;
+struct GameSmSubsystemOps {
+  int (*next_state)(struct GameStateMachineInput input,
+                    struct GameStateMachineState *state);
+  void (*register_state_machine)(
+      struct GameSmSubsystemRegistrationData *registration_data);
+  void *private_ops;
+};
+
+struct GameSmSubsystemOps *get_game_sm_subsystem_ops(void);
 
 #endif // GAME_SM_SUBSYSTEM_H
