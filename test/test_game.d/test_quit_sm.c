@@ -58,7 +58,6 @@ void test_quit_sm_get_quitting_state() {
                                         .users_moves_data = {current_move}};
   int err;
 
-  // TO-DO: modularize quit_sm
   err = quit_sm_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);

@@ -40,5 +40,10 @@ struct UserMove {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
+struct GameSmUserMoveModuleOps {
+  void *private_ops;
+};
+
+struct GameSmUserMoveModuleOps *get_game_sm_user_move_module_ops(void);
 
 #endif // USER_MOVE_H

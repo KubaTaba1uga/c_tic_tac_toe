@@ -5,24 +5,34 @@
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/game_states.h"
 #include "game/game_state_machine/sub_state_machines/common.h"
-#include "game/game_state_machine/sub_state_machines/user_move_sm_module.c"
 #include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
+#include "game_sm_user_move_wrapper.h"
+#include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
 
-struct LoggingUtilsOps *logging_ops_;
+static struct LoggingUtilsOps *logging_ops;
+static struct GameSmUserMoveModulePrivateOps *user_move_priv_ops;
+static struct UserMoveStateMachineState user_move_sm;
+
+static struct UserMoveStateMachineState *
+mock_user_move_state_machine_get_state(void) {
+  return &user_move_sm;
+};
 
 void setUp() {
   char *disabled_modules_ids[] = {"game"};
   struct InitOps *init_ops;
 
   init_ops = get_init_ops();
-  logging_ops_ = get_logging_utils_ops();
+  logging_ops = get_logging_utils_ops();
+  user_move_priv_ops = get_game_sm_user_move_module_ops()->private_ops;
 
   init_ops->initialize_system_with_disabled_modules(
       sizeof(disabled_modules_ids) / sizeof(char *), disabled_modules_ids);
 
-  user_move_priv_ops.set_default_state();
+  user_move_priv_ops->get_state = mock_user_move_state_machine_get_state;
+  user_move_priv_ops->set_default_state();
 }
 
 void tearDown() {
@@ -33,11 +43,12 @@ void tearDown() {
 
 void test_user_move_reset_state() {
   // Reset state using set_default_state
-  user_move_priv_ops.set_default_state();
+
+  user_move_priv_ops->set_default_state();
 
   // Validate state reset
-  TEST_ASSERT_EQUAL_INT(1, user_move_state_machine.state.width);
-  TEST_ASSERT_EQUAL_INT(1, user_move_state_machine.state.height);
+  TEST_ASSERT_EQUAL_INT(1, user_move_sm.coordinates.width);
+  TEST_ASSERT_EQUAL_INT(1, user_move_sm.coordinates.height);
 }
 
 void test_user_move_create_up_higlith() {
@@ -51,7 +62,7 @@ void test_user_move_create_up_higlith() {
   struct UserMove *new_user_move;
   int err;
 
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -62,7 +73,7 @@ void test_user_move_create_up_higlith() {
   TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
   TEST_ASSERT_EQUAL_INT(2, new_user_move->coordinates[1]);
 
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -73,7 +84,7 @@ void test_user_move_create_up_higlith() {
   TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
   TEST_ASSERT_EQUAL_INT(0, new_user_move->coordinates[1]);
 
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -95,7 +106,7 @@ void test_user_move_create_down_higlith() {
   struct UserMove *new_user_move;
   int err;
 
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -106,7 +117,7 @@ void test_user_move_create_down_higlith() {
   TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
   TEST_ASSERT_EQUAL_INT(0, new_user_move->coordinates[1]);
 
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -117,7 +128,7 @@ void test_user_move_create_down_higlith() {
   TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[0]);
   TEST_ASSERT_EQUAL_INT(2, new_user_move->coordinates[1]);
 
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -139,7 +150,7 @@ void test_user_move_create_left_higlith() {
   struct UserMove *new_user_move;
   int err;
 
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -150,7 +161,7 @@ void test_user_move_create_left_higlith() {
   TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[1]);
   TEST_ASSERT_EQUAL_INT(0, new_user_move->coordinates[0]);
 
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -161,7 +172,7 @@ void test_user_move_create_left_higlith() {
   TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[1]);
   TEST_ASSERT_EQUAL_INT(2, new_user_move->coordinates[0]);
 
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -183,7 +194,7 @@ void test_user_move_create_right_higlith() {
   struct UserMove *new_user_move;
   int err;
 
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -194,7 +205,7 @@ void test_user_move_create_right_higlith() {
   TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[1]);
   TEST_ASSERT_EQUAL_INT(2, new_user_move->coordinates[0]);
 
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -205,7 +216,7 @@ void test_user_move_create_right_higlith() {
   TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[1]);
   TEST_ASSERT_EQUAL_INT(0, new_user_move->coordinates[0]);
 
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -235,7 +246,7 @@ void test_user_move_create_select() {
   struct UserMove *new_user_move;
   int err;
 
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -247,7 +258,7 @@ void test_user_move_create_select() {
   TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates[1]);
 
   input.input_event = INPUT_EVENT_DOWN; // Move to 1, 0
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -259,7 +270,7 @@ void test_user_move_create_select() {
   TEST_ASSERT_EQUAL_INT(0, new_user_move->coordinates[1]);
 
   input.input_event = INPUT_EVENT_SELECT;
-  err = user_move_state_machine_next_state(input, &state);
+  err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
 

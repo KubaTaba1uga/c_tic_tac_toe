@@ -29,16 +29,14 @@ struct UserMoveCoordinates {
   int height;
 };
 
-struct UserMoveStateMachine {
-  struct UserMoveCoordinates state;
+struct UserMoveStateMachineState {
+  struct UserMoveCoordinates coordinates;
 };
 
-struct UserMovePrivateOps {
-  void (*set_default_state)(void);
-};
-
-static int user_move_init(void);
-static void set_default_state(void);
+static int user_move_state_machine_init(void);
+static void user_move_state_machine_set_default_state(void);
+static struct UserMoveStateMachineState *
+user_move_state_machine_get_state(void);
 static int
 user_move_state_machine_next_state(struct GameStateMachineInput input,
                                    struct GameStateMachineState *state);
@@ -60,9 +58,7 @@ static void user_move_state_machine_handle_select_event(
 static struct LoggingUtilsOps *logging_ops;
 static struct GameSmSubsystemOps *gsm_sub_ops;
 static char module_id[] = "user_move_sm_module";
-static struct UserMoveStateMachine user_move_state_machine;
-struct UserMovePrivateOps user_move_priv_ops = {.set_default_state =
-                                                    set_default_state};
+static struct UserMoveStateMachineState user_move_state_machine;
 static struct GameSmSubsystemRegistrationData gsm_registration_data = {
     .next_state = user_move_state_machine_next_state,
     .id = module_id,
@@ -72,13 +68,52 @@ static struct GameSmSubsystemRegistrationData gsm_registration_data = {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
+struct GameSmUserMoveModulePrivateOps {
+  int (*init)(void);
+  struct UserMoveStateMachineState *(*get_state)(void);
+  int (*next_state)(struct GameStateMachineInput input,
+                    struct GameStateMachineState *state);
+  void (*set_default_state)(void);
+  void (*handle_up_event)(struct UserMoveCoordinates *coordinates,
+                          struct UserMove *new_user_move);
+  void (*handle_down_event)(struct UserMoveCoordinates *coordinates,
+                            struct UserMove *new_user_move);
+  void (*handle_left_event)(struct UserMoveCoordinates *coordinates,
+                            struct UserMove *new_user_move);
+  void (*handle_right_event)(struct UserMoveCoordinates *coordinates,
+                             struct UserMove *new_user_move);
+  void (*handle_exit_event)(struct UserMoveCoordinates *coordinates,
+                            struct UserMove *new_user_move);
+  void (*handle_select_event)(struct UserMoveCoordinates *coordinates,
+                              struct UserMove *new_user_move,
+                              struct GameStateMachineState *data);
+};
+
+struct GameSmUserMoveModulePrivateOps user_move_priv_ops = {
+    .init = user_move_state_machine_init,
+    .next_state = user_move_state_machine_next_state,
+    .get_state = user_move_state_machine_get_state,
+    .set_default_state = user_move_state_machine_set_default_state,
+    .handle_up_event = user_move_state_machine_handle_up_event,
+    .handle_down_event = user_move_state_machine_handle_down_event,
+    .handle_left_event = user_move_state_machine_handle_left_event,
+    .handle_right_event = user_move_state_machine_handle_right_event,
+    .handle_exit_event = user_move_state_machine_handle_exit_event,
+    .handle_select_event = user_move_state_machine_handle_select_event};
+
+static struct GameSmUserMoveModuleOps game_sm_user_move_ops = {
+    .private_ops = &user_move_priv_ops};
+
+struct GameSmUserMoveModuleOps *get_game_sm_user_move_module_ops(void) {
+  return &game_sm_user_move_ops;
+}
 
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
 static struct InitRegistrationData init_user_move_reg = {
     .id = module_id,
-    .init_func = user_move_init,
+    .init_func = user_move_state_machine_init,
     .destroy_func = NULL,
 };
 
@@ -89,7 +124,7 @@ static struct InitRegistrationData init_user_move_reg = {
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
-int user_move_init(void) {
+int user_move_state_machine_init(void) {
   logging_ops = get_logging_utils_ops();
   gsm_sub_ops = get_game_sm_subsystem_ops();
 
@@ -100,38 +135,41 @@ int user_move_init(void) {
   return 0;
 }
 
+struct UserMoveStateMachineState *user_move_state_machine_get_state(void) {
+  return &user_move_state_machine;
+};
+
 int user_move_state_machine_next_state(struct GameStateMachineInput input,
                                        struct GameStateMachineState *state) {
   struct UserMoveCoordinates *coordinates;
   struct UserMove new_user_move;
 
-  coordinates = &user_move_state_machine.state;
+  coordinates = &user_move_priv_ops.get_state()->coordinates;
   new_user_move.user = input.input_user;
 
   switch (input.input_event) {
   case INPUT_EVENT_UP:
-    user_move_state_machine_handle_up_event(coordinates, &new_user_move);
+    user_move_priv_ops.handle_up_event(coordinates, &new_user_move);
     break;
 
   case INPUT_EVENT_DOWN:
-    user_move_state_machine_handle_down_event(coordinates, &new_user_move);
+    user_move_priv_ops.handle_down_event(coordinates, &new_user_move);
     break;
 
   case INPUT_EVENT_RIGHT:
-    user_move_state_machine_handle_right_event(coordinates, &new_user_move);
+    user_move_priv_ops.handle_right_event(coordinates, &new_user_move);
     break;
 
   case INPUT_EVENT_LEFT:
-    user_move_state_machine_handle_left_event(coordinates, &new_user_move);
+    user_move_priv_ops.handle_left_event(coordinates, &new_user_move);
     break;
 
   case INPUT_EVENT_EXIT:
-    user_move_state_machine_handle_exit_event(coordinates, &new_user_move);
+    user_move_priv_ops.handle_exit_event(coordinates, &new_user_move);
     break;
 
   case INPUT_EVENT_SELECT:
-    user_move_state_machine_handle_select_event(coordinates, &new_user_move,
-                                                state);
+    user_move_priv_ops.handle_select_event(coordinates, &new_user_move, state);
     break;
 
   default:
@@ -194,9 +232,9 @@ void user_move_state_machine_handle_select_event(
   }
 }
 
-void set_default_state(void) {
-  user_move_state_machine.state.height = 1;
-  user_move_state_machine.state.width = 1;
+void user_move_state_machine_set_default_state(void) {
+  user_move_priv_ops.get_state()->coordinates.height = 1;
+  user_move_priv_ops.get_state()->coordinates.width = 1;
 }
 
 INIT_REGISTER_SUBSYSTEM_CHILD(&init_user_move_reg, init_game_reg_p);

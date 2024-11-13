@@ -10,38 +10,6 @@ game_sub_sms = join_paths(game_state_machine, 'sub_state_machines')
 user_move = join_paths(game_state_machine, 'user_move')
 
 ############################################################################
-#                   User Move Tests                                        #
-############################################################################
-test_user_move_name = 'test_user_move.c'
-
-test_user_move_src = [test_user_move_name,
-		   game_sub_sms / 'user_move_sm_module.c',
-		   game_sub_sms / 'common.c',		   
-		   game_state_machine / 'game_state_machine.c',
-		   game_state_machine / 'game_sm_subsystem.c',
-		   game / 'game.c', utils / 'logging_utils.c',
-		   utils / 'std_lib_utils.c',
-		   input / 'input.c',
-		   init / 'init.c',
-		   config / 'config.c']
-
-test_user_move_exe = executable('test_user_move',
-  sources: [
-    test_user_move_src,
-    cmock_gen_runner.process(test_user_move_name),
-  ],
-  include_directories: [src],
-  dependencies: test_dependencies,
-  c_args:['-DTEST'],
-  link_args: [
-    # allow static functions testing
-    '-zmuldefs',
-  ]
-)
-
-test('test_user_move', test_user_move_exe)
-
-############################################################################
 #                   Game State Machine Subsystem Tests                     #
 ############################################################################
 test_gsm_subsystem_name = 'test_game_state_machine_subsystem.c'
@@ -74,7 +42,39 @@ test('test_gsm_subsystem', test_gsm_subsystem_exe)
 
 
 ############################################################################
-#                   Quit State Machine Tests                               #
+#                   User Move State Machine Module Tests                   #
+############################################################################
+test_user_move_name = 'test_user_move.c'
+
+test_user_move_src = [test_user_move_name,
+		   game_sub_sms / 'user_move_sm_module.c',
+		   game_sub_sms / 'common.c',		   
+		   game_state_machine / 'game_state_machine.c',
+		   game_state_machine / 'game_sm_subsystem.c',
+		   game / 'game.c', utils / 'logging_utils.c',
+		   utils / 'std_lib_utils.c',
+		   input / 'input.c',
+		   init / 'init.c',
+		   config / 'config.c']
+
+test_user_move_exe = executable('test_user_move',
+  sources: [
+    test_user_move_src,
+    cmock_gen_runner.process(test_user_move_name),
+  ],
+  include_directories: [src, test_includes],
+  dependencies: test_dependencies,
+  c_args:['-DTEST'],
+  link_args: [
+    # allow static functions testing
+    '-zmuldefs',
+  ]
+)
+
+test('test_user_move', test_user_move_exe)
+
+############################################################################
+#                   Quit State Machine Module Tests                        #
 ############################################################################
 test_quit_sm_name = 'test_quit_sm.c'
 
