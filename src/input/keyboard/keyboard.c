@@ -65,6 +65,9 @@ static void keyboard_signal_handler(int sig);
 static void keyboard_wait(void);
 static void keyboard_print_revents(short revents);
 
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
 struct KeyboardPrivateOps {
   void *(*process_stdin)(void *);
   void (*read_stdin)(void);
@@ -78,9 +81,14 @@ static struct KeyboardPrivateOps keyboard_private_ops = {
     .execute_callbacks = keyboard_execute_callbacks,
     .print_revents = keyboard_print_revents};
 
-/*******************************************************************************
- *    MODULARITY BOILERCODE
- ******************************************************************************/
+static struct KeyboardOps keyboard_ops = {
+    .initialize = keyboard_initialize,
+    .destroy = keyboard_destroy,
+    .wait = keyboard_wait,
+    .register_callback = keyboard_register_callback,
+    .private_ops = (void *)&keyboard_private_ops,
+};
+struct KeyboardOps *get_keyboard_ops(void) { return &keyboard_ops; };
 
 /*******************************************************************************
  *    INIT BOILERCODE
@@ -93,19 +101,7 @@ static struct InitRegistrationData init_keyboard_reg = {
 struct InitRegistrationData *init_keyboard_reg_p = &init_keyboard_reg;
 
 /*******************************************************************************
- *    PUBLIC API
- ******************************************************************************/
-static struct KeyboardOps keyboard_ops = {
-    .initialize = keyboard_initialize,
-    .destroy = keyboard_destroy,
-    .wait = keyboard_wait,
-    .register_callback = keyboard_register_callback,
-    .private_ops = (void *)&keyboard_private_ops,
-};
-struct KeyboardOps *get_keyboard_ops(void) { return &keyboard_ops; };
-
-/*******************************************************************************
- *    PRIVATE API
+ *    API
  ******************************************************************************/
 int keyboard_module_init(void) {
   logging_ops = get_logging_utils_ops();

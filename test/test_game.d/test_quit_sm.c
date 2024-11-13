@@ -11,10 +11,12 @@
 #include "game/game_state_machine/game_states.h"
 #include "game/game_state_machine/sub_state_machines/quit_sm_module.h"
 #include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
-#include "game_sm_quit_wrapper.h"
 #include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
+
+// Mocks requirement
+#include "game_sm_quit_wrapper.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
@@ -47,6 +49,9 @@ void setUp() {
 
 void tearDown() { init_ops->destroy_system(); }
 
+/*******************************************************************************
+ *    TESTS
+ ******************************************************************************/
 void test_quit_sm_get_quitting_state() {
   struct UserMove current_move = {
       .user = User1, .coordinates = {0, 0}, .type = USER_MOVE_TYPE_QUIT};

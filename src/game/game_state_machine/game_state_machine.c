@@ -33,8 +33,6 @@ static struct GameStateMachineState game_sm;
 static struct LoggingUtilsOps *logging_ops;
 static struct InputOps *input_ops;
 
-/* -------------------------------------------------------------------------- */
-
 static int game_sm_init(void);
 static int validate_input_user(enum Users input_user);
 static int validate_input_event(enum InputEvents input_event);
@@ -54,6 +52,9 @@ static struct GameStateMachinePrivOps game_sm_priv_ops = {
     .is_input_user_valid = validate_input_user,
 };
 
+struct GameStateMachineOps game_sm_ops = {.step = game_sm_step,
+                                          .quit = game_sm_quit};
+
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
@@ -64,13 +65,7 @@ static struct InitRegistrationData init_game_sm_reg = {
 };
 
 /*******************************************************************************
- *    PUBLIC API
- ******************************************************************************/
-struct GameStateMachineOps game_sm_ops = {.step = game_sm_step,
-                                          .quit = game_sm_quit};
-
-/*******************************************************************************
- *    PRIVATE API
+ *    API
  ******************************************************************************/
 int game_sm_init(void) {
   gsm_sub_ops = get_game_sm_subsystem_ops();

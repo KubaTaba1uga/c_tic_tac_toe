@@ -45,20 +45,6 @@ static void input_restore_terminal_mode(const struct termios *old_termios);
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-
-/*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-static struct InitRegistrationData init_input_reg = {.id = INPUT_MODULE_ID,
-                                                     .init_func = input_init,
-                                                     .destroy_func =
-                                                         input_destroy,
-                                                     .child_count = 0};
-struct InitRegistrationData *init_input_reg_p = &init_input_reg;
-
-/*******************************************************************************
- *    PUBLIC API
- ******************************************************************************/
 struct InputOps input_ops = {
     .initialize = input_init,
     .destroy = input_destroy,
@@ -71,7 +57,17 @@ struct InputOps input_ops = {
 struct InputOps *get_input_ops(void) { return &input_ops; };
 
 /*******************************************************************************
- *    PRIVATE API
+ *    INIT BOILERCODE
+ ******************************************************************************/
+static struct InitRegistrationData init_input_reg = {.id = INPUT_MODULE_ID,
+                                                     .init_func = input_init,
+                                                     .destroy_func =
+                                                         input_destroy,
+                                                     .child_count = 0};
+struct InitRegistrationData *init_input_reg_p = &init_input_reg;
+
+/*******************************************************************************
+ *    API
  ******************************************************************************/
 void input_register_module(
     struct InputRegistrationData *input_registration_data) {

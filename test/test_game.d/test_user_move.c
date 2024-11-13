@@ -1,16 +1,26 @@
+/*******************************************************************************
+ *    IMPORTS
+ ******************************************************************************/
+// Tests framework
 #include <string.h>
 #include <unity.h>
 
+// App's internal libs
 #include "game/game.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/game_states.h"
 #include "game/game_state_machine/sub_state_machines/common.h"
 #include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
-#include "game_sm_user_move_wrapper.h"
 #include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
 
+// Mocks requirement
+#include "game_sm_user_move_wrapper.h"
+
+/*******************************************************************************
+ *    PRIVATE DECLARATIONS & DEFINITIONS
+ ******************************************************************************/
 static struct LoggingUtilsOps *logging_ops;
 static struct GameSmUserMoveModulePrivateOps *user_move_priv_ops;
 static struct UserMoveStateMachineState user_move_sm;
@@ -20,6 +30,9 @@ mock_user_move_state_machine_get_state(void) {
   return &user_move_sm;
 };
 
+/*******************************************************************************
+ *    TESTS FRAMEWORK BOILERCODE
+ ******************************************************************************/
 void setUp() {
   char *disabled_modules_ids[] = {"game"};
   struct InitOps *init_ops;
@@ -41,9 +54,10 @@ void tearDown() {
   init_ops->destroy_system();
 }
 
+/*******************************************************************************
+ *    TESTS
+ ******************************************************************************/
 void test_user_move_reset_state() {
-  // Reset state using set_default_state
-
   user_move_priv_ops->set_default_state();
 
   // Validate state reset

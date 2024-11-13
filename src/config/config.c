@@ -49,6 +49,9 @@ static char *config_get_variable(char *var_name);
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
+static struct ConfigOps config_ops = {.register_var = config_register_variable,
+                                      .get_var = config_get_variable};
+struct ConfigOps *get_config_ops(void) { return &config_ops; }
 
 /*******************************************************************************
  *    INIT BOILERCODE
@@ -60,14 +63,7 @@ static struct InitRegistrationData init_config_reg = {
 };
 
 /*******************************************************************************
- *    PUBLIC API
- ******************************************************************************/
-static struct ConfigOps config_ops = {.register_var = config_register_variable,
-                                      .get_var = config_get_variable};
-struct ConfigOps *get_config_ops(void) { return &config_ops; }
-
-/*******************************************************************************
- *    PRIVATE API
+ *    API
  ******************************************************************************/
 int config_init(void) {
   logging_ops = get_logging_utils_ops();

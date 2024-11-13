@@ -69,11 +69,7 @@ static struct InitRegistrationData init_quit_state_machine_reg = {
 };
 
 /*******************************************************************************
- *    PUBLIC API
- ******************************************************************************/
-
-/*******************************************************************************
- *    PRIVATE API
+ *    API
  ******************************************************************************/
 int quit_state_machine_next_state(struct GameStateMachineInput input,
                                   struct GameStateMachineState *state) {

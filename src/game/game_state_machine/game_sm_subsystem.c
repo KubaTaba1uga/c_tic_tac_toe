@@ -55,8 +55,6 @@ static char game_sm_subsystem_module_id[] = "game_sm_subsystem";
 static struct GameSmSubsystem game_sm_subsystem = {.count = 0};
 static struct LoggingUtilsOps *logging_ops;
 
-/* -------------------------------------------------------------------------- */
-
 static int game_sm_subsystem_init(void);
 static void game_sm_subsystem_register_state_machine(
     struct GameSmSubsystemRegistrationData *registration_data);

@@ -24,25 +24,28 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-struct GamePrivateOps {
-  int (*user1_logic)(enum InputEvents input_event);
-  int (*user2_logic)(enum InputEvents input_event);
-  int (*logic)(enum InputEvents input_event);
-};
-
 static int game_init(void);
 static int game_process_user1(enum InputEvents input_event);
 static int game_process_user2(enum InputEvents input_event);
 static int game_process(enum InputEvents input_event);
 
 static char module_id[] = "game";
-static struct GamePrivateOps game_priv_ops = {.user1_logic = game_process_user1,
-                                              .user2_logic = game_process_user2,
-                                              .logic = game_process};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
+struct GamePrivateOps {
+  int (*user1_logic)(enum InputEvents input_event);
+  int (*user2_logic)(enum InputEvents input_event);
+  int (*logic)(enum InputEvents input_event);
+};
+
+static struct GamePrivateOps game_priv_ops = {.user1_logic = game_process_user1,
+                                              .user2_logic = game_process_user2,
+                                              .logic = game_process};
+
+static struct GameOps game_ops = {.private_ops = &game_priv_ops};
+struct GameOps *get_game_ops(void) { return &game_ops; }
 
 /*******************************************************************************
  *    INIT BOILERCODE
@@ -55,13 +58,7 @@ static struct InitRegistrationData init_game_reg = {
 struct InitRegistrationData *init_game_reg_p = &init_game_reg;
 
 /*******************************************************************************
- *    PUBLIC API
- ******************************************************************************/
-static struct GameOps game_ops = {.private_ops = &game_priv_ops};
-struct GameOps *get_game_ops(void) { return &game_ops; }
-
-/*******************************************************************************
- *    PRIVATE API
+ *    API
  ******************************************************************************/
 int game_process_user1(enum InputEvents input_event) {
   return game_sm_ops.step(input_event, User1);

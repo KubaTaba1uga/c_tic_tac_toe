@@ -27,7 +27,6 @@
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
 static const char *module_id = INPUT_KEYBOARD1_ID;
-static struct LoggingUtilsOps *logging_ops;
 
 static int keyboard1_module_init(void);
 static void keyboard1_module_destroy(void);
@@ -36,6 +35,44 @@ static void keyboard1_wait(void);
 static int keyboard1_callback(size_t n, char buffer[n]);
 static void keyboard1_destroy(void);
 
+static struct InputRegistrationData input_keyboard1_reg = {
+    .start = keyboard1_start,
+    .id = INPUT_KEYBOARD1_ID,
+    .wait = keyboard1_wait,
+    .destroy = keyboard1_destroy};
+
+static struct InputOps *input_ops;
+static struct KeyboardOps *keyboard_ops;
+static struct LoggingUtilsOps *logging_ops;
+
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
+struct Keyboard1PrivateOps {
+  int (*init)(void);
+  void (*destroy)(void);
+  int (*start)(void);
+  void (*wait)(void);
+  int (*callback)(size_t n, char buffer[n]);
+};
+
+static struct Keyboard1PrivateOps keyboard1_private_ops = {
+    .init = keyboard1_module_init,
+    .destroy = keyboard1_module_destroy,
+    .start = keyboard1_start,
+    .wait = keyboard1_wait,
+    .callback = keyboard1_callback,
+
+};
+
+static struct Keyboard1Ops keyboard1_ops = {.private_ops =
+                                                &keyboard1_private_ops};
+
+struct Keyboard1Ops *get_keyboard1_ops(void) { return &keyboard1_ops; };
+
+/*******************************************************************************
+ *    INIT BOILERCODE
+ ******************************************************************************/
 static struct InitRegistrationData init_keyboard1_reg = {
     .id = INPUT_KEYBOARD1_ID,
     .init_func = keyboard1_module_init,
@@ -43,29 +80,8 @@ static struct InitRegistrationData init_keyboard1_reg = {
 };
 struct InitRegistrationData *init_keyboard1_reg_p = &init_keyboard1_reg;
 
-static struct InputRegistrationData input_keyboard1_reg = {
-    .start = keyboard1_start,
-    .id = INPUT_KEYBOARD1_ID,
-    .wait = keyboard1_wait,
-    .destroy = keyboard1_destroy};
-
-static struct InputOps *input_ops = NULL;
-static struct KeyboardOps *keyboard_ops = NULL;
-
 /*******************************************************************************
- *    MODULARITY BOILERCODE
- ******************************************************************************/
-
-/*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-
-/*******************************************************************************
- *    PUBLIC API
- ******************************************************************************/
-
-/*******************************************************************************
- *    PRIVATE API
+ *    API
  ******************************************************************************/
 int keyboard1_module_init(void) {
   input_ops = get_input_ops();
