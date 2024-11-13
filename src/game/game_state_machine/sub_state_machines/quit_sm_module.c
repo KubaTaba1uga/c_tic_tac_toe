@@ -18,6 +18,7 @@
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/game_states.h"
 #include "game/game_state_machine/sub_state_machines/common.h"
+#include "game/game_state_machine/sub_state_machines/quit_sm_module.h"
 #include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
 #include "init/init.h"
 #include "input/input.h"
@@ -39,6 +40,24 @@ static struct GameSmSubsystemRegistrationData gsm_registration_data = {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
+struct GameSmQuitModulePrivateOps {
+  int (*init)(void);
+  int (*next_state)(struct GameStateMachineInput input,
+                    struct GameStateMachineState *state);
+};
+
+struct GameSmQuitModulePrivateOps private_ops = {
+    .init = quit_state_machine_init,
+    .next_state = quit_state_machine_next_state,
+
+};
+
+static struct GameSmQuitModuleOps game_sm_quit_ops = {.private_ops =
+                                                          &private_ops};
+
+struct GameSmQuitModuleOps *get_game_sm_quit_module_ops(void) {
+  return &game_sm_quit_ops;
+}
 
 /*******************************************************************************
  *    INIT BOILERCODE

@@ -35,7 +35,6 @@
 
 #define LOGGING_MODULE_ID "logging_subsystem"
 
-pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 static struct stumpless_target *loggers[] = {NULL};
 
 static size_t loggers_no = sizeof(loggers) / sizeof(struct stumpless_target *);
@@ -53,6 +52,9 @@ static int emmit_log_entry(struct stumpless_entry *entry);
 static void print_errno(void);
 static void print_error(char *error);
 
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
 struct LoggingUtilsPrivateOps {
   void (*log_msg)(char *msg, const char *msg_id,
                   enum stumpless_severity severity);
@@ -73,10 +75,6 @@ static struct LoggingUtilsPrivateOps logging_utils_priv_ops = {
 };
 
 /*******************************************************************************
- *    MODULARITY BOILERCODE
- ******************************************************************************/
-
-/*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
 static struct InitRegistrationData init_logging_reg = {
@@ -94,6 +92,7 @@ static struct LoggingUtilsOps logging_utils_ops = {
     .log_info = log_info,
     .log_err = log_err,
     .private = &logging_utils_priv_ops};
+
 struct LoggingUtilsOps *get_logging_utils_ops(void) {
   return &logging_utils_ops;
 }

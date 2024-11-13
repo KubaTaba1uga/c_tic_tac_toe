@@ -57,7 +57,7 @@ struct InitRegistrationData *init_game_reg_p = &init_game_reg;
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct GameOps game_ops = {.private_ops = &game_priv_ops};
+static struct GameOps game_ops = {.private_ops = &game_priv_ops};
 struct GameOps *get_game_ops(void) { return &game_ops; }
 
 /*******************************************************************************

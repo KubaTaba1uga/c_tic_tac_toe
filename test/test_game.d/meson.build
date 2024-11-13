@@ -95,7 +95,7 @@ test_quit_sm_exe = executable('test_quit_sm',
     test_quit_sm_src,
     cmock_gen_runner.process(test_quit_sm_name),
   ],
-  include_directories: [src],
+  include_directories: [src, test_includes],
   dependencies: test_dependencies,
   c_args:['-DTEST'],
   link_args: [

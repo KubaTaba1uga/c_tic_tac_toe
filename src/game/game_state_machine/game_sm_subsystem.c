@@ -108,7 +108,7 @@ static struct GameSmSubsystemPrivateOps priv_ops = {
     .get_counter_copy = game_sm_subsystem_get_counter_copy,
     .get_registrations = game_sm_subsystem_get_registrations};
 
-struct GameSmSubsystemOps game_sm_subsystem_ops = {
+static struct GameSmSubsystemOps game_sm_subsystem_ops = {
     .next_state = game_sm_subsystem_get_next_state,
     .register_state_machine = game_sm_subsystem_register_state_machine,
     .private_ops = &priv_ops};

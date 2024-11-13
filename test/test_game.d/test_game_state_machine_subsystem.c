@@ -4,6 +4,8 @@
 // C standard library
 #include <stddef.h>
 #include <string.h>
+
+// Tests framework
 #include <unity.h>
 
 // App's internal libs
@@ -41,7 +43,7 @@ static size_t *mock_get_counter(void);
 static void mock_functions(void);
 
 /*******************************************************************************
- *    SETUP BOILERCODE
+ *    TESTS FRAMEWORK BOILERCODE
  ******************************************************************************/
 void setUp() {
   char *disabled_modules_ids[] = {"game"};

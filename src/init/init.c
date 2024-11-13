@@ -58,13 +58,13 @@ static void init_destroy_subsystem(struct InitRegistrationData *subsystem);
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct InitOps init_ops = {.register_module = init_register_subsystem,
-                           .register_child_module =
-                               init_register_child_subsystem,
-                           .initialize_system = init_initialize_system,
-                           .initialize_system_with_disabled_modules =
-                               init_initialize_system_with_disabled_modules,
-                           .destroy_system = init_destroy_system};
+static struct InitOps init_ops = {
+    .register_module = init_register_subsystem,
+    .register_child_module = init_register_child_subsystem,
+    .initialize_system = init_initialize_system,
+    .initialize_system_with_disabled_modules =
+        init_initialize_system_with_disabled_modules,
+    .destroy_system = init_destroy_system};
 struct InitOps *get_init_ops(void) { return &init_ops; }
 
 /*******************************************************************************
@@ -128,7 +128,6 @@ int init_initialize_system_with_disabled_modules(size_t n,
                                   modules_ids[j])) {
         init_subsystem.registrations[i]->init_func = NULL;
         init_subsystem.registrations[i]->destroy_func = NULL;
-        break;
       }
     }
   }

@@ -1,26 +1,41 @@
+/*******************************************************************************
+ *    IMPORTS
+ ******************************************************************************/
+// Tests framework
 #include <unity.h>
 
+// App's internal libs
 #include "game/game.h"
 #include "game/game_state_machine/game_sm_subsystem.h"
-#include "game/game_state_machine/game_state_machine.c"
+#include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/game_states.h"
-#include "game/game_state_machine/sub_state_machines/quit_sm_module.c"
+#include "game/game_state_machine/sub_state_machines/quit_sm_module.h"
 #include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
+#include "game_sm_quit_wrapper.h"
+#include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
 
+/*******************************************************************************
+ *    PRIVATE DECLARATIONS & DEFINITIONS
+ ******************************************************************************/
 static int destroy_counter;
 static void mock_input_ops_destroy();
-static struct LoggingUtilsOps *logging_ops_;
+static struct LoggingUtilsOps *logging_ops;
+struct GameSmQuitModulePrivateOps *quit_sm_ops;
+struct InputOps *input_ops;
+struct InitOps *init_ops;
 
+/*******************************************************************************
+ *    TESTS FRAMEWORK BOILERCODE
+ ******************************************************************************/
 void setUp() {
   char *disabled_modules_ids[] = {"game"};
-  struct InputOps *input_ops;
-  struct InitOps *init_ops;
 
-  init_ops = get_init_ops();
-  logging_ops_ = get_logging_utils_ops();
+  quit_sm_ops = get_game_sm_quit_module_ops()->private_ops;
+  logging_ops = get_logging_utils_ops();
   input_ops = get_input_ops();
+  init_ops = get_init_ops();
 
   init_ops->initialize_system_with_disabled_modules(
       sizeof(disabled_modules_ids) / sizeof(char *), disabled_modules_ids);
@@ -30,11 +45,7 @@ void setUp() {
   destroy_counter = 0;
 }
 
-void tearDown() {
-  struct InitOps *init_ops;
-  init_ops = get_init_ops();
-  init_ops->destroy_system();
-}
+void tearDown() { init_ops->destroy_system(); }
 
 void test_quit_sm_get_quitting_state() {
   struct UserMove current_move = {
@@ -47,7 +58,8 @@ void test_quit_sm_get_quitting_state() {
                                         .users_moves_data = {current_move}};
   int err;
 
-  err = quit_state_machine_next_state(input, &state);
+  // TO-DO: modularize quit_sm
+  err = quit_sm_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_EQUAL_INT(GameStateQuitting, state.current_state);
@@ -64,7 +76,7 @@ void test_quit_sm_get_quit_state() {
                                         .users_moves_count = 1,
                                         .users_moves_data = {current_move}};
   int err;
-  err = quit_state_machine_next_state(input, &state);
+  err = quit_sm_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_EQUAL_INT(GameStateQuit, state.current_state);
@@ -82,7 +94,7 @@ void test_quit_sm_get_play_state() {
                                         .users_moves_count = 1,
                                         .users_moves_data = {current_move}};
   int err;
-  err = quit_state_machine_next_state(input, &state);
+  err = quit_sm_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_EQUAL_INT(GameStatePlay, state.current_state);

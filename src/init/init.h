@@ -13,6 +13,7 @@
  *    IMPORTS
  ******************************************************************************/
 #include <stddef.h>
+#include <stdio.h>
 
 /*******************************************************************************
  *    PRIVATE API
@@ -63,6 +64,12 @@ struct InitOps {
       __attribute__((constructor(101 + _priority)));                           \
   static void UNIQUE_NAME(_init_register)() {                                  \
     struct InitOps *init_ops = get_init_ops();                                 \
+    if (!init_ops) {                                                           \
+      fprintf(stderr, "Failed to get init_ops\n");                             \
+    }                                                                          \
+    if (!init_ops->register_module) {                                          \
+      fprintf(stderr, "register_module function is not set\n");                \
+    }                                                                          \
     init_ops->register_module(_init_registration_data);                        \
   }
 
