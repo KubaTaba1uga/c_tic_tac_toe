@@ -17,10 +17,9 @@
   struct ConfigRegistrationData val_def = {.var_name = "existing_var_321",     \
                                            .default_value = "super value"}
 
-struct LoggingUtilsOps *logging_utils_ops;
-struct ConfigOps *config_ops;
-struct ConfigPrivateOps *config_priv_ops;
-struct ConfigSubsystem config_subsystem;
+static struct ConfigOps *config_ops;
+static struct ConfigPrivateOps *config_priv_ops;
+static struct ConfigSubsystem config_subsystem;
 struct ConfigSubsystem *mock_config_get_subsystem(void) {
   return &config_subsystem;
 };

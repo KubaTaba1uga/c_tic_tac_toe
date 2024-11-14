@@ -45,7 +45,7 @@ static void input_restore_terminal_mode(const struct termios *old_termios);
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-struct InputOps input_ops = {
+static struct InputOps input_ops = {
     .initialize = input_init,
     .destroy = input_destroy,
     .start = input_start_non_blocking,

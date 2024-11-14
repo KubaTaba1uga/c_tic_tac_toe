@@ -35,15 +35,15 @@ static void keyboard1_wait(void);
 static int keyboard1_callback(size_t n, char buffer[n]);
 static void keyboard1_destroy(void);
 
-static struct InputRegistrationData input_keyboard1_reg = {
-    .start = keyboard1_start,
-    .id = INPUT_KEYBOARD1_ID,
-    .wait = keyboard1_wait,
-    .destroy = keyboard1_destroy};
-
 static struct InputOps *input_ops;
 static struct KeyboardOps *keyboard_ops;
 static struct LoggingUtilsOps *logging_ops;
+struct InputRegistrationData input_keyboard1_reg = {
+    .destroy = keyboard1_destroy,
+    .start = keyboard1_start,
+    .wait = keyboard1_wait,
+    .id = INPUT_KEYBOARD1_ID,
+};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
@@ -57,12 +57,10 @@ struct Keyboard1PrivateOps {
 };
 
 static struct Keyboard1PrivateOps keyboard1_private_ops = {
-    .init = keyboard1_module_init,
-    .destroy = keyboard1_module_destroy,
+    .destroy = keyboard1_destroy,
     .start = keyboard1_start,
     .wait = keyboard1_wait,
     .callback = keyboard1_callback,
-
 };
 
 static struct Keyboard1Ops keyboard1_ops = {.private_ops =
@@ -104,7 +102,9 @@ int keyboard1_start(void) {
     return err;
   }
 
-  err = keyboard_ops->register_callback(keyboard1_callback);
+  // Keyboard callback is set to start gathering and processing input by
+  // keyboard.
+  err = keyboard_ops->register_callback(keyboard1_private_ops.callback);
   if (err) {
     logging_ops->log_err(module_id,
                          "Unable to register callback for keyboard1 module");
@@ -126,6 +126,7 @@ int keyboard1_callback(size_t n, char buffer[n]) {
   size_t i;
   int err;
 
+  // Input callback is set by a game, once user choose it's input device.
   if (input_keyboard1_reg.callback == NULL) {
     logging_ops->log_err(module_id, "No callback set up for keyboard1");
     return EINVAL;

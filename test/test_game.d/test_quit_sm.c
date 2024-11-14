@@ -24,9 +24,9 @@
 static int destroy_counter;
 static void mock_input_ops_destroy();
 static struct LoggingUtilsOps *logging_ops;
-struct GameSmQuitModulePrivateOps *quit_sm_ops;
-struct InputOps *input_ops;
-struct InitOps *init_ops;
+static struct GameSmQuitModulePrivateOps *quit_sm_ops;
+static struct InputOps *input_ops;
+static struct InitOps *init_ops;
 
 /*******************************************************************************
  *    TESTS FRAMEWORK BOILERCODE

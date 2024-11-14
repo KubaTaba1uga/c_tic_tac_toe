@@ -52,7 +52,7 @@ test_keyboard1_exe = executable('test_keyboard1',
     test_keyboard1_src,
     cmock_gen_runner.process(test_keyboard1_name),
   ],
-  include_directories: [src],
+  include_directories: [src, test_includes],
   dependencies: test_dependencies,
   c_args:['-DTEST'],
   link_args: [
