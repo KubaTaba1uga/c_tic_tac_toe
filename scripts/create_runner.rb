@@ -12,7 +12,7 @@ if $0 == __FILE__
     exit 1
   end
 
-  require "../subprojects/cmock/vendor/unity/auto/generate_test_runner"
+  require "../subprojects/unity/auto/generate_test_runner"
 
   test = ARGV[0]
   runner = ARGV[1]

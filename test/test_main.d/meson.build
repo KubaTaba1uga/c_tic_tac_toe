@@ -16,7 +16,7 @@ test_main_src = files([test_main_name,
 test_main_exe = executable('test_main',
   sources: [
     test_main_src,
-    cmock_gen_runner.process(test_main_name),
+    unity_gen_runner.process(test_main_name),
   ],
   include_directories: [src],
   dependencies: test_dependencies,

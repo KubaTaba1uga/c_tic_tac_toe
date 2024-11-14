@@ -13,7 +13,7 @@ test_logging_utils_src = files([test_logging_utils_name,
 test_logging_utils_exe = executable('test_logging_utils',
   sources: [
     test_logging_utils_src,
-    cmock_gen_runner.process(test_logging_utils_name),
+    unity_gen_runner.process(test_logging_utils_name),
   ],
   include_directories: [src, test_includes],
   dependencies: test_dependencies,
