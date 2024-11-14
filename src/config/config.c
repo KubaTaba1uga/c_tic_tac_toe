@@ -45,12 +45,23 @@ static int config_init(void);
 static int config_register_variable(
     struct ConfigRegistrationData config_registration_data);
 static char *config_get_variable(char *var_name);
+struct ConfigSubsystem *config_get_subsystem(void);
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
+struct ConfigPrivateOps {
+  struct ConfigSubsystem *(*get_subsystem)(void);
+};
+
+static struct ConfigPrivateOps config_priv_ops = {
+    .get_subsystem = config_get_subsystem,
+};
+
 static struct ConfigOps config_ops = {.register_var = config_register_variable,
-                                      .get_var = config_get_variable};
+                                      .get_var = config_get_variable,
+                                      .private_ops = &config_priv_ops};
+
 struct ConfigOps *get_config_ops(void) { return &config_ops; }
 
 /*******************************************************************************
@@ -75,9 +86,10 @@ int config_init(void) {
 int config_register_variable(
     struct ConfigRegistrationData config_registration_data) {
 
-  if (config_subsystem.count < MAX_CONFIG_REGISTRATIONS) {
-    config_subsystem.registrations[config_subsystem.count++] =
-        config_registration_data;
+  struct ConfigSubsystem *subsystem = config_priv_ops.get_subsystem();
+
+  if (subsystem->count < MAX_CONFIG_REGISTRATIONS) {
+    subsystem->registrations[subsystem->count++] = config_registration_data;
     return 0;
   }
 
@@ -92,13 +104,15 @@ char *config_get_variable(char *var_name) {
   char *value;
   size_t i;
 
-  for (i = 0; i < config_subsystem.count; i++) {
-    if (std_lib_ops->are_str_eq(
-            var_name, (char *)config_subsystem.registrations[i].var_name)) {
+  struct ConfigSubsystem *subsystem = config_priv_ops.get_subsystem();
+
+  for (i = 0; i < subsystem->count; i++) {
+    if (std_lib_ops->are_str_eq(var_name,
+                                (char *)subsystem->registrations[i].var_name)) {
       value = getenv(var_name);
 
       if (value == NULL)
-        value = (char *)config_subsystem.registrations[i].default_value;
+        value = (char *)subsystem->registrations[i].default_value;
 
       return value;
     }
@@ -111,5 +125,7 @@ char *config_get_variable(char *var_name) {
 
   return NULL;
 }
+
+struct ConfigSubsystem *config_get_subsystem(void) { return &config_subsystem; }
 
 INIT_REGISTER_SUBSYSTEM(&init_config_reg, INIT_MODULE_ORDER_CONFIG);

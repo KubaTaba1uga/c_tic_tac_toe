@@ -17,7 +17,7 @@ test_config_exe = executable('test_config',
     test_config_src,
     cmock_gen_runner.process(test_config_name),
   ],
-  include_directories: [src],
+  include_directories: [src, test_includes],
   dependencies: test_dependencies,
   c_args:['-DTEST'],
   link_args: [
