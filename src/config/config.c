@@ -32,20 +32,20 @@ variables.
 #define MAX_CONFIG_REGISTRATIONS 100
 
 struct ConfigSubsystem {
-  struct ConfigRegistrationData registrations[MAX_CONFIG_REGISTRATIONS];
   size_t count;
+  struct ConfigRegistrationData registrations[MAX_CONFIG_REGISTRATIONS];
 };
 
-static struct LoggingUtilsOps *logging_ops;
 static struct StdLibUtilsOps *std_lib_ops;
+static struct LoggingUtilsOps *logging_ops;
 static const char module_id[] = "config_subsystem";
 static struct ConfigSubsystem config_subsystem = {.count = 0};
 
 static int config_init(void);
-static int config_register_variable(
-    struct ConfigRegistrationData config_registration_data);
 static char *config_get_variable(char *var_name);
 struct ConfigSubsystem *config_get_subsystem(void);
+static int config_register_variable(
+    struct ConfigRegistrationData config_registration_data);
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
@@ -87,6 +87,9 @@ int config_register_variable(
     struct ConfigRegistrationData config_registration_data) {
 
   struct ConfigSubsystem *subsystem = config_priv_ops.get_subsystem();
+
+  logging_ops->log_err(module_id, "Space in `registrations` array: %i",
+                       subsystem->count);
 
   if (subsystem->count < MAX_CONFIG_REGISTRATIONS) {
     subsystem->registrations[subsystem->count++] = config_registration_data;

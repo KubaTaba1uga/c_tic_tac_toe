@@ -27,17 +27,17 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-static char gsm_module_id[] = "game_state_machine";
-static struct GameSmSubsystemOps *gsm_sub_ops;
-static struct GameStateMachineState game_sm;
-static struct LoggingUtilsOps *logging_ops;
 static struct InputOps *input_ops;
+static struct LoggingUtilsOps *logging_ops;
+static struct GameStateMachineState game_sm;
+static struct GameSmSubsystemOps *gsm_sub_ops;
+static char gsm_module_id[] = "game_state_machine";
 
 static int game_sm_init(void);
+static void game_sm_quit(void);
 static int validate_input_user(enum Users input_user);
 static int validate_input_event(enum InputEvents input_event);
 static int game_sm_step(enum InputEvents input_event, enum Users input_user);
-static void game_sm_quit(void);
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE

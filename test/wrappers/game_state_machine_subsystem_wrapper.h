@@ -10,7 +10,5 @@ struct GameSmSubsystemPrivateOps {
       struct GameSmSubsystemRegistrationData *new_reg);
   void (*insert_registration)(int start,
                               struct GameSmSubsystemRegistrationData *new_reg);
-  size_t *(*get_counter)(void);
-  size_t (*get_counter_copy)(void);
-  struct GameSmSubsystemRegistrationData **(*get_registrations)(void);
+  struct GameSmSubsystem *(*get_subsystem)(void);
 };

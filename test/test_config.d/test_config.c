@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
 #include <unity.h>
 
@@ -29,8 +30,8 @@ void setUp() {
   config_ops = get_config_ops();
   config_priv_ops = config_ops->private_ops;
 
-  config_priv_ops->get_subsystem = mock_config_get_subsystem;
   init_ops->initialize_system();
+  config_priv_ops->get_subsystem = mock_config_get_subsystem;
 
   config_subsystem.count = 0;
   memset(config_subsystem.registrations, 0,
@@ -60,7 +61,7 @@ void test_config_register_var_failure(void) {
   int err;
   NULL_DEF();
 
-  config_subsystem.count = MAX_CONFIG_REGISTRATIONS + 1;
+  config_subsystem.count = MAX_CONFIG_TEST_REGISTRATIONS + 1;
   err = config_ops->register_var(null_def);
 
   TEST_ASSERT_EQUAL_INT(EINVAL, err);
