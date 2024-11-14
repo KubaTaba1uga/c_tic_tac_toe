@@ -1,6 +1,8 @@
 #include <unity.h>
 
-#include "utils/logging_utils.c"
+#include "utils/logging_utils.h"
+
+#include "logging_utils_wrapper.h"
 
 struct test_data {
   int create_log_entry_err;
@@ -8,6 +10,8 @@ struct test_data {
 };
 
 struct test_data test_data;
+static struct LoggingUtilsPrivateOps *logging_priv_ops;
+static struct LoggingUtilsOps *logging_ops;
 
 int (*create_log_entry_orig)(char *msg, const char *msg_id,
                              struct stumpless_entry **entry,
@@ -34,13 +38,13 @@ void test_create_log_entry_no_variadic_function(void) {
   test_data.create_log_entry_counter = 0;
 
   // Perform test
-  logging_utils_ops.log_info(msg_id, msg);
+  logging_ops->log_info(msg_id, msg);
 
   // Assert test results
   TEST_ASSERT_EQUAL_INT(1, test_data.create_log_entry_counter);
 
   if (test_data.create_log_entry_err != 0) {
-    logging_utils_priv_ops.print_errno();
+    logging_priv_ops->print_errno();
     TEST_FAIL_MESSAGE("Log entry creation failed.");
   }
 }
@@ -55,24 +59,28 @@ void test_create_log_entry_variadic_function(void) {
   test_data.create_log_entry_counter = 0;
 
   // Perform test
-  logging_utils_ops.log_info(msg_id, msg, "pandas");
+  logging_ops->log_info(msg_id, msg, "pandas");
 
   // Assert test results
   TEST_ASSERT_EQUAL_INT(1, test_data.create_log_entry_counter);
 
   if (test_data.create_log_entry_err != 0) {
-    logging_utils_priv_ops.print_errno();
+    logging_priv_ops->print_errno();
     TEST_FAIL_MESSAGE("Log entry creation failed.");
   }
 }
 
 void setUp(void) {
-  logging_utils_ops.init_loggers();
-  create_log_entry_orig = logging_utils_priv_ops.create_log_entry;
-  logging_utils_priv_ops.create_log_entry = create_log_entry_mock;
+  logging_ops = get_logging_utils_ops();
+  logging_priv_ops = logging_ops->private;
+
+  logging_ops->init_loggers();
+
+  create_log_entry_orig = logging_priv_ops->create_log_entry;
+  logging_priv_ops->create_log_entry = create_log_entry_mock;
 }
 
 void tearDown(void) {
-  logging_utils_ops.destroy_loggers();
-  logging_utils_priv_ops.create_log_entry = create_log_entry_orig;
+  logging_ops->destroy_loggers();
+  logging_priv_ops->create_log_entry = create_log_entry_orig;
 }
