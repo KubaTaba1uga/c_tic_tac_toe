@@ -185,10 +185,9 @@ void game_sm_subsystem_priority_handle_new_registration(void) {
 
 void game_sm_subsystem_priority_handle_positive_value(
     struct GameSmSubsystemRegistrationData *new_reg) {
+  struct GameSmSubsystem *subsystem = priv_ops.get_subsystem();
   struct GameSmSubsystemRegistrationData *tmp_reg;
   size_t i;
-
-  struct GameSmSubsystem *subsystem = priv_ops.get_subsystem();
 
   for (i = 0; i < subsystem->counter; i++) {
     tmp_reg = subsystem->registrations[i];
@@ -207,12 +206,12 @@ void game_sm_subsystem_priority_handle_positive_value(
 
 void game_sm_subsystem_priority_handle_negative_value(
     struct GameSmSubsystemRegistrationData *new_reg) {
-  struct GameSmSubsystemRegistrationData *tmp_reg;
-
   struct GameSmSubsystem *subsystem = priv_ops.get_subsystem();
+  struct GameSmSubsystemRegistrationData *tmp_reg;
+  size_t counter_cp = subsystem->counter;
 
-  while (subsystem->counter-- > 0) {
-    tmp_reg = subsystem->registrations[subsystem->counter];
+  while (counter_cp-- > 0) {
+    tmp_reg = subsystem->registrations[counter_cp];
 
     if (
         // If comparing vs positive/no priority, write after.
@@ -220,7 +219,7 @@ void game_sm_subsystem_priority_handle_negative_value(
         // If comparing to negative priority with bigger number,
         //  write after tmp_reg.
         (new_reg->priority > tmp_reg->priority)) {
-      priv_ops.insert_registration(subsystem->counter + 1, new_reg);
+      priv_ops.insert_registration(counter_cp + 1, new_reg);
       break;
     }
   }
@@ -245,11 +244,12 @@ void game_sm_subsystem_priority_handle_no_value(
 void game_sm_subsystem_insert_registration(
     int start, struct GameSmSubsystemRegistrationData *new_reg) {
   struct GameSmSubsystem *subsystem = priv_ops.get_subsystem();
+  size_t counter_cp = subsystem->counter;
 
   // Move registrations by 1 right.
-  while (subsystem->counter-- > start) {
-    subsystem->registrations[subsystem->counter + 1] =
-        subsystem->registrations[subsystem->counter];
+  while (counter_cp-- > start) {
+    subsystem->registrations[counter_cp + 1] =
+        subsystem->registrations[counter_cp];
   }
 
   subsystem->registrations[start] = new_reg;

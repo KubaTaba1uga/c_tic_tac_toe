@@ -24,9 +24,9 @@
 #define MAX_GAME_SM_SUBSYSTEM_TEST_REGISTRATIONS 100
 
 struct GameSmSubsystem {
+  size_t counter;
   struct GameSmSubsystemRegistrationData
       *registrations[MAX_GAME_SM_SUBSYSTEM_TEST_REGISTRATIONS];
-  size_t counter;
 };
 static struct GameSmSubsystem test_data;
 static int mock_state;
