@@ -38,6 +38,7 @@ static void game_sm_quit(void);
 static int validate_input_user(enum Users input_user);
 static int validate_input_event(enum InputEvents input_event);
 static int game_sm_step(enum InputEvents input_event, enum Users input_user);
+static int game_sm_get_data_to_display(void);
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
@@ -53,7 +54,9 @@ static struct GameStateMachinePrivOps game_sm_priv_ops = {
 };
 
 struct GameStateMachineOps game_sm_ops = {.step = game_sm_step,
-                                          .quit = game_sm_quit};
+                                          .quit = game_sm_quit,
+                                          .get_data_to_display =
+                                              game_sm_get_data_to_display};
 
 /*******************************************************************************
  *    INIT BOILERCODE
@@ -108,6 +111,10 @@ int game_sm_step(enum InputEvents input_event, enum Users input_user) {
 }
 
 void game_sm_quit(void) { input_ops->destroy(); }
+
+int game_sm_get_data_to_display(void){
+
+};
 
 int validate_input_user(enum Users input_user) {
   enum Users valid_values[] = {game_sm.current_user, UserNone};

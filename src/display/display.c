@@ -1,7 +1,5 @@
-#ifndef GAME_STATE_MACHINE_H
-#define GAME_STATE_MACHINE_H
 /*******************************************************************************
- * @file game_state_machine.h
+ * @file display.c
  * @brief TO-DO
  *
  * TO-DO
@@ -11,40 +9,31 @@
 /*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
-#include "game/game_state_machine/game_states.h"
-#include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
-#include "input/input.h"
+// C standard library
+
+// App's internal libs
+#include "display.h"
 
 /*******************************************************************************
- *    PRIVATE API
+ *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
+static int display_display(struct DataToDisplay *data);
+static void
+display_register_module(struct InputRegistrationData *input_registration_data);
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-#define MAX_USERS_MOVES 100
+struct DisplayOps display_ops = {.display = display_display,
+                                 .register_module = display_register_module};
 
-struct GameStateMachineInput {
-  enum InputEvents input_event;
-  enum Users input_user;
-};
-
-struct GameStateMachineState {
-  struct UserMove users_moves_data[MAX_USERS_MOVES];
-  enum GameStates current_state;
-  size_t users_moves_count;
-  enum Users current_user;
-};
-
-struct GameStateMachineOps {
-  int (*step)(enum InputEvents input_event, enum Users input_user);
-  int (*get_data_to_display)();
-  void (*quit)(void);
-};
-
+struct DisplayOps *get_display_ops(void) { return &display_ops; };
 /*******************************************************************************
- *    MODULARITY BOILERCODE
+ *    PRIVATE API
  ******************************************************************************/
-extern struct GameStateMachineOps game_sm_ops;
+static int display_display(struct DataToDisplay *data) { return 0; };
 
-#endif // GAME_STATE_MACHINE_H
+static void
+display_register_module(struct InputRegistrationData *input_registration_data) {
+  return;
+};
