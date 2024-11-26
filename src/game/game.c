@@ -11,10 +11,12 @@
  ******************************************************************************/
 // C standard library
 #include "string.h"
+#include <asm-generic/errno-base.h>
 #include <unistd.h>
 
 // App's internal libs
 #include "config/config.h"
+#include "display/display.h"
 #include "game/game.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "init/init.h"
@@ -70,6 +72,50 @@ int game_process_user2(enum InputEvents input_event) {
 
 int game_process(enum InputEvents input_event) {
   return game_sm_ops.step(input_event, UserNone);
+}
+
+int game_process_and_display(enum InputEvents input_event,
+                             enum Users input_user) {
+  struct GameStateMachineState *game_state_machine;
+  struct LoggingUtilsOps *logging_ops;
+  struct DataToDisplay display_data;
+  struct DisplayOps *display_ops;
+
+  int err;
+
+  logging_ops = get_logging_utils_ops();
+  display_ops = get_display_ops();
+
+  err = game_sm_ops.step(input_event, input_user);
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to perform step for user %i.",
+                         input_user);
+
+    return err;
+  }
+
+  game_state_machine = game_sm_ops.get_state_machine();
+  if (!game_state_machine) {
+    logging_ops->log_err(module_id, "No state machine.");
+
+    return EINVAL;
+  }
+
+  display_data.user = game_state_machine->current_user;
+  display_data.state = game_state_machine->current_state;
+  display_data.moves_counter = game_state_machine->users_moves_count;
+  memcpy(display_data.moves, game_state_machine->users_moves_data,
+         sizeof(game_state_machine->users_moves_data));
+
+  err = display_ops->display(&display_data);
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to display game for user %i.",
+                         input_user);
+
+    return err;
+  }
+
+  return 0;
 }
 
 int game_init(void) {

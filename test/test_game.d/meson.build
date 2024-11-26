@@ -4,6 +4,7 @@ utils = join_paths(src, 'utils')
 input = join_paths(src, 'input')
 init = join_paths(src, 'init')
 config = join_paths(src, 'config')
+display = join_paths(src, 'display')
 game = join_paths(src, 'game')
 game_state_machine = join_paths(game, 'game_state_machine')
 game_sub_sms = join_paths(game_state_machine, 'sub_state_machines')
@@ -22,7 +23,8 @@ test_gsm_subsystem_src = [test_gsm_subsystem_name,
 		 utils / 'std_lib_utils.c',
 		 input / 'input.c',
 		 init / 'init.c',
-		 config / 'config.c']
+		 config / 'config.c',
+		 display / 'display.c']
 
 test_gsm_subsystem_exe = executable('test_gsm_subsystem',
   sources: [
@@ -55,7 +57,8 @@ test_user_move_src = [test_user_move_name,
 		   utils / 'std_lib_utils.c',
 		   input / 'input.c',
 		   init / 'init.c',
-		   config / 'config.c']
+		   config / 'config.c',
+		   display / 'display.c']
 
 test_user_move_exe = executable('test_user_move',
   sources: [
@@ -88,7 +91,8 @@ test_quit_sm_src = [test_quit_sm_name,
 		 utils / 'std_lib_utils.c',
 		 input / 'input.c',
 		 init / 'init.c',
-		 config / 'config.c']
+		 config / 'config.c',
+		 display / 'display.c']
 
 test_quit_sm_exe = executable('test_quit_sm',
   sources: [

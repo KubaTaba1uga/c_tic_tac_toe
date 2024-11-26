@@ -38,7 +38,7 @@ struct GameStateMachineState {
 
 struct GameStateMachineOps {
   int (*step)(enum InputEvents input_event, enum Users input_user);
-  int (*get_data_to_display)();
+  struct GameStateMachineState *(*get_state_machine)(void);
   void (*quit)(void);
 };
 

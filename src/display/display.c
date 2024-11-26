@@ -10,12 +10,15 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <errno.h>
+#include <stddef.h>
 
 // App's internal libs
-#include "display/display.h"
 #include "config/config.h"
+#include "display/display.h"
 #include "init/init.h"
 #include "utils/logging_utils.h"
+#include "utils/std_lib_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
@@ -60,7 +63,7 @@ static struct InitRegistrationData init_display_reg = {
     .init_func = display_init,
     .destroy_func = NULL,
 };
-struct InitRegistrationData *init_game_reg_p = &init_display_reg;
+struct InitRegistrationData *init_disp_reg_p = &init_display_reg;
 
 /*******************************************************************************
  *    API
@@ -87,7 +90,32 @@ static int display_init(void) {
   return 0;
 };
 
-static int display_display(struct DataToDisplay *data) { return 0; };
+static int display_display(struct DataToDisplay *data) {
+  struct LoggingUtilsOps *logging_ops;
+  struct DisplaySubsystem *subsystem;
+  struct StdLibUtilsOps *std_lib_ops;
+  struct ConfigOps *config_ops;
+  char *display_env;
+
+  subsystem = display_private_ops.get_subsystem();
+  logging_ops = get_logging_utils_ops();
+  std_lib_ops = get_std_lib_utils_ops();
+  config_ops = get_config_ops();
+
+  display_env = config_ops->get_var("display");
+
+  for (size_t i = 0; i < subsystem->count; i++) {
+    if (std_lib_ops->are_str_eq((char *)subsystem->registrations[i]->id,
+                                display_env)) {
+      return subsystem->registrations[i]->display();
+    }
+  }
+
+  logging_ops->log_err(module_id, "Unable to find matching display for %s.",
+                       display_env);
+
+  return EINVAL;
+};
 
 static void
 display_register_module(struct DisplayRegistrationData *registration_data) {
@@ -108,4 +136,4 @@ struct DisplaySubsystem *display_get_subsystem(void) {
   return &display_subsystem;
 };
 
-INIT_REGISTER_SUBSYSTEM(&init_display_reg, INIT_MODULE_ORDER_DISPLAY);
+INIT_REGISTER_SUBSYSTEM(init_disp_reg_p, INIT_MODULE_ORDER_DISPLAY);
