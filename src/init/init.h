@@ -30,6 +30,7 @@ enum InitModuleOrderNumber {
   INIT_MODULE_ORDER_CONFIG,
   INIT_MODULE_ORDER_INPUT,
   INIT_MODULE_ORDER_GAME,
+  INIT_MODULE_ORDER_DISPLAY,
 };
 
 typedef int (*init_function_t)(void);

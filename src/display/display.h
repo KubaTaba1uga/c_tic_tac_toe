@@ -23,6 +23,7 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
+#define DISPLAY_CLI_NAME "cli"
 #define DISPLAY_MAX_USERS_MOVES 100
 
 struct DataToDisplay {
@@ -40,8 +41,8 @@ struct DisplayRegistrationData {
 
 struct DisplayOps {
   int (*display)(struct DataToDisplay *data);
-  void (*register_module)(
-      struct InputRegistrationData *input_registration_data);
+  void (*register_module)(struct DisplayRegistrationData *registration_data);
+  void *(private_ops);
 };
 
 /*******************************************************************************
