@@ -35,7 +35,7 @@ struct DataToDisplay {
   size_t moves_counter;
 };
 
-typedef int (*display_display_func_t)(void);
+typedef int (*display_display_func_t)(struct DataToDisplay *data);
 
 struct DisplayRegistrationData {
   display_display_func_t display;
@@ -43,7 +43,7 @@ struct DisplayRegistrationData {
 };
 
 struct DisplayOps {
-  int (*display)(struct DataToDisplay *data);
+  display_display_func_t display;
   void (*register_module)(struct DisplayRegistrationData *registration_data);
   void *(private_ops);
 };
