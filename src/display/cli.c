@@ -21,6 +21,7 @@
 
 // App's internal libs
 #include "display/display.h"
+#include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
 #include "utils/logging_utils.h"
 
 /*******************************************************************************
@@ -34,6 +35,10 @@ struct CliDisplay {
 static char module_id[] = "display_cli";
 static int cli_display(struct DataToDisplay *data);
 static int cli_get_terminal_size(struct CliDisplay *data);
+static int cli_format_game_row(struct CliDisplay *display,
+                               struct DataToDisplay *data, size_t row_no,
+                               size_t buffer_size, char buffer[buffer_size]);
+static void cli_sort_user_moves(int n, struct UserMove user_moves[n]);
 
 /*******************************************************************************
  *    PUBLIC API
@@ -67,6 +72,11 @@ int cli_display(struct DataToDisplay *data) {
   }
 
   for (size_t i = 0; i < 3; i++) {
+    err = cli_format_game_row(&display, data, i, buffer_size, buffer);
+    if (err) {
+      logging_ops->log_err(module_id, "Unable to format (%i) cli row.", i);
+      return err;
+    }
   }
 
   return 0;
@@ -87,25 +97,6 @@ int cli_init_display(struct CliDisplay *data) {
   return 0;
 }
 
-int cli_format_row(struct CliDisplay *display, struct DataToDisplay *data,
-                   size_t row_no, size_t buffer_size,
-                   char buffer[buffer_size]) {
-
-  return 0;
-}
-
-int cli_print_row(struct CliDisplay *display, struct DataToDisplay *data,
-                  size_t row_no) {
-  size_t buffer_size = 1024;
-  char buffer[buffer_size];
-
-  for (size_t i = 0; i < data->moves_counter; i++) {
-    if (data->moves->coordinates[1] == row_no)
-  }
-
-  return 0;
-}
-
 int cli_get_terminal_size(struct CliDisplay *data) {
   struct winsize w;
 
@@ -120,3 +111,57 @@ int cli_get_terminal_size(struct CliDisplay *data) {
 
   return 0;
 }
+
+int cli_format_game_row(struct CliDisplay *display, struct DataToDisplay *data,
+                        size_t row_no, size_t buffer_size,
+                        char buffer[buffer_size]) {
+
+  struct UserMove row_user_moves[100];
+  size_t row_moves_counter = 0;
+  size_t i;
+
+  // Find moves matching the row
+  for (i = 0; i < data->moves_counter; i++) {
+    if (row_no == data->moves[i].coordinates[1]) {
+      row_user_moves[row_moves_counter++] = data->moves[i];
+    }
+  }
+
+  cli_sort_user_moves(row_moves_counter, row_user_moves);
+
+  // Now moves are prepared to be formated
+
+  return 0;
+}
+
+void cli_sort_user_moves(int n, struct UserMove user_moves[n]) {
+  // Sort row moves according to column
+  size_t sorted_moves_counter = 0;
+  struct UserMove tmp_user_move;
+  size_t i;
+
+  do {
+    for (i = sorted_moves_counter; i < n; i++) {
+      if (user_moves[sorted_moves_counter].coordinates[0] <
+          user_moves[i].coordinates[0]) {
+        tmp_user_move = user_moves[sorted_moves_counter];
+        user_moves[sorted_moves_counter] = user_moves[i];
+        user_moves[i] = tmp_user_move;
+        break;
+      }
+    }
+
+  } while (sorted_moves_counter++ < n);
+}
+
+/* int cli_print_row(struct CliDisplay *display, struct DataToDisplay *data, */
+/*                   size_t row_no) { */
+/*   size_t buffer_size = 1024; */
+/*   char buffer[buffer_size]; */
+
+/*   for (size_t i = 0; i < data->moves_counter; i++) { */
+/*     if (data->moves->coordinates[1] == row_no) */
+/*   } */
+
+/*   return 0; */
+/* } */

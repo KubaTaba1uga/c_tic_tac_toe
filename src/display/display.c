@@ -107,7 +107,7 @@ static int display_display(struct DataToDisplay *data) {
   for (size_t i = 0; i < subsystem->count; i++) {
     if (std_lib_ops->are_str_eq((char *)subsystem->registrations[i]->id,
                                 display_env)) {
-      return subsystem->registrations[i]->display();
+      return subsystem->registrations[i]->display(data);
     }
   }
 
