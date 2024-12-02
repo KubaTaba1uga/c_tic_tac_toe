@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 // App's internal libs
+#include "display/cli.h"
 #include "display/display.h"
 #include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
 #include "utils/logging_utils.h"
@@ -47,11 +48,21 @@ struct CliDisplayPrivateOps {
   display_display_func_t display;
   int (*init_display)(struct CliDisplay *data);
   int (*get_terminal_size)(struct CliDisplay *data);
+  void (*sort_user_moves)(int n, struct UserMove user_moves[n]);
+  int (*format_game_row)(struct CliDisplay *display, struct DataToDisplay *data,
+                         size_t row_no, size_t buffer_size,
+                         char buffer[buffer_size]);
 };
-struct CliDisplayPrivateOps priv_ops = {
-    .display = cli_display,
-    .get_terminal_size = cli_get_terminal_size,
-};
+
+struct CliDisplayPrivateOps priv_ops = {.display = cli_display,
+                                        .get_terminal_size =
+                                            cli_get_terminal_size,
+                                        .format_game_row = cli_format_game_row,
+                                        .sort_user_moves = cli_sort_user_moves};
+
+static struct DisplayCliOps cli_display_ops = {.private_ops = &priv_ops};
+
+struct DisplayCliOps *get_display_cli_ops(void) { return &cli_display_ops; }
 
 /*******************************************************************************
  *    PRIVATE API
@@ -142,8 +153,8 @@ void cli_sort_user_moves(int n, struct UserMove user_moves[n]) {
 
   do {
     for (i = sorted_moves_counter; i < n; i++) {
-      if (user_moves[sorted_moves_counter].coordinates[0] <
-          user_moves[i].coordinates[0]) {
+      if (user_moves[i].coordinates[0] <
+          user_moves[sorted_moves_counter].coordinates[0]) {
         tmp_user_move = user_moves[sorted_moves_counter];
         user_moves[sorted_moves_counter] = user_moves[i];
         user_moves[i] = tmp_user_move;
