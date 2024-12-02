@@ -63,7 +63,7 @@ static struct InitRegistrationData init_display_reg = {
     .init_func = display_init,
     .destroy_func = NULL,
 };
-struct InitRegistrationData *init_disp_reg_p = &init_display_reg;
+struct InitRegistrationData *init_display_reg_p = &init_display_reg;
 
 /*******************************************************************************
  *    API
@@ -105,6 +105,7 @@ static int display_display(struct DataToDisplay *data) {
   display_env = config_ops->get_var("display");
 
   for (size_t i = 0; i < subsystem->count; i++) {
+
     if (std_lib_ops->are_str_eq((char *)subsystem->registrations[i]->id,
                                 display_env)) {
       return subsystem->registrations[i]->display(data);
@@ -136,4 +137,4 @@ struct DisplaySubsystem *display_get_subsystem(void) {
   return &display_subsystem;
 };
 
-INIT_REGISTER_SUBSYSTEM(init_disp_reg_p, INIT_MODULE_ORDER_DISPLAY);
+INIT_REGISTER_SUBSYSTEM(init_display_reg_p, INIT_MODULE_ORDER_DISPLAY);

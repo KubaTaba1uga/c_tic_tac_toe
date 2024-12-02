@@ -82,6 +82,90 @@ int game_sm_init(void) {
   return 0;
 }
 
+#include <stdio.h>
+
+void display_game_state(const struct GameStateMachineState *state) {
+  if (!state) {
+    printf("Invalid state pointer!\n");
+    return;
+  }
+
+  // Display current state
+  printf("Current State: ");
+  switch (state->current_state) {
+  case GameStatePlay:
+    printf("Play\n");
+    break;
+  case GameStateQuitting:
+    printf("Quitting\n");
+    break;
+  case GameStateQuit:
+    printf("Quit\n");
+    break;
+  case GameStateWin:
+    printf("Win\n");
+    break;
+  default:
+    printf("Unknown State\n");
+    break;
+  }
+
+  // Display current user
+  printf("Current User: ");
+  switch (state->current_user) {
+  case UserNone:
+    printf("None\n");
+    break;
+  case User1:
+    printf("User 1 (X)\n");
+    break;
+  case User2:
+    printf("User 2 (O)\n");
+    break;
+  default:
+    printf("Unknown User\n");
+    break;
+  }
+
+  // Display user moves
+  printf("Total Moves: %zu\n", state->users_moves_count);
+  for (size_t i = 0; i < state->users_moves_count; i++) {
+    printf("Move %zu: User ", i + 1);
+    switch (state->users_moves_data[i].user) {
+    case User1:
+      printf("1 (X)");
+      break;
+    case User2:
+      printf("2 (O)");
+      break;
+    default:
+      printf("Unknown");
+      break;
+    }
+    printf(", Type: ");
+    switch (state->users_moves_data[i].type) {
+    case USER_MOVE_TYPE_HIGHLIGHT:
+      printf("Highlight");
+      break;
+    case USER_MOVE_TYPE_SELECT_VALID:
+      printf("Select Valid");
+      break;
+    case USER_MOVE_TYPE_SELECT_INVALID:
+      printf("Select Invalid");
+      break;
+    case USER_MOVE_TYPE_QUIT:
+      printf("Quit");
+      break;
+    default:
+      printf("Unknown");
+      break;
+    }
+    printf(", Coordinates: (%d, %d)\n",
+           state->users_moves_data[i].coordinates[0],
+           state->users_moves_data[i].coordinates[1]);
+  }
+}
+
 int game_sm_step(enum InputEvents input_event, enum Users input_user) {
   struct GameStateMachineInput data;
   int err;
@@ -106,6 +190,7 @@ int game_sm_step(enum InputEvents input_event, enum Users input_user) {
 
     return err;
   }
+  display_game_state(&game_sm);
 
   return 0;
 }

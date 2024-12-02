@@ -48,6 +48,8 @@ struct DisplayOps {
   void *private_ops;
 };
 
+extern struct InitRegistrationData *init_display_reg_p;
+
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/

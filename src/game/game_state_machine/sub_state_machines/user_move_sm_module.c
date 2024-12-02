@@ -62,7 +62,7 @@ static struct UserMoveStateMachineState user_move_state_machine;
 static struct GameSmSubsystemRegistrationData gsm_registration_data = {
     .next_state = user_move_state_machine_next_state,
     .id = module_id,
-    .priority = 1 // Always perform first
+    .priority = 2 // Always perform first
 };
 
 /*******************************************************************************

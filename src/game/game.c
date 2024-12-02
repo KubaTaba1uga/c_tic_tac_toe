@@ -30,6 +30,8 @@ static int game_init(void);
 static int game_process_user1(enum InputEvents input_event);
 static int game_process_user2(enum InputEvents input_event);
 static int game_process(enum InputEvents input_event);
+static int game_process_and_display(enum InputEvents input_event,
+                                    enum Users input_user);
 
 static char module_id[] = "game";
 
@@ -40,11 +42,16 @@ struct GamePrivateOps {
   int (*user1_logic)(enum InputEvents input_event);
   int (*user2_logic)(enum InputEvents input_event);
   int (*logic)(enum InputEvents input_event);
+  int (*logic_and_display)(enum InputEvents input_event, enum Users input_user);
 };
 
 static struct GamePrivateOps game_priv_ops = {.user1_logic = game_process_user1,
                                               .user2_logic = game_process_user2,
-                                              .logic = game_process};
+                                              .logic = game_process,
+                                              .logic_and_display =
+                                                  game_process_and_display
+
+};
 
 static struct GameOps game_ops = {.private_ops = &game_priv_ops};
 struct GameOps *get_game_ops(void) { return &game_ops; }
@@ -63,15 +70,15 @@ struct InitRegistrationData *init_game_reg_p = &init_game_reg;
  *    API
  ******************************************************************************/
 int game_process_user1(enum InputEvents input_event) {
-  return game_sm_ops.step(input_event, User1);
+  return game_priv_ops.logic_and_display(input_event, User1);
 }
 
 int game_process_user2(enum InputEvents input_event) {
-  return game_sm_ops.step(input_event, User2);
+  return game_priv_ops.logic_and_display(input_event, User2);
 }
 
 int game_process(enum InputEvents input_event) {
-  return game_sm_ops.step(input_event, UserNone);
+  return game_priv_ops.logic_and_display(input_event, UserNone);
 }
 
 int game_process_and_display(enum InputEvents input_event,
