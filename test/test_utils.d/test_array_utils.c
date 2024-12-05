@@ -8,8 +8,8 @@
 
 #include "array_utils_wrapper.h"
 
-struct ArrayPrivateOps *array_ops_;
-struct ArrayUtilsOps *array_ops;
+static struct ArrayPrivateOps *array_ops_;
+static struct ArrayUtilsOps *array_ops;
 
 static size_t test_array_size = 10;
 static array_t test_array;
