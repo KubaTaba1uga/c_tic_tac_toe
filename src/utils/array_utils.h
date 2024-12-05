@@ -20,10 +20,10 @@ typedef void *array_t;
 
 struct ArrayUtilsOps {
   int (*init)(array_t *, size_t);
+  void (*destroy)(array_t *);
   int (*append)(array_t, void *);
   size_t (*get_length)(array_t);
   void *(*get_element)(array_t, size_t);
-  void *priv_ops;
 };
 
 /*******************************************************************************
