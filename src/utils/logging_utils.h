@@ -27,6 +27,8 @@ struct LoggingUtilsOps {
   void *private;
 };
 
+extern struct InitRegistrationData init_logging_reg;
+
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/

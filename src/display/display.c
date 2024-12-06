@@ -58,12 +58,11 @@ struct DisplayOps *get_display_ops(void) { return &display_ops; };
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct InitRegistrationData init_display_reg = {
+struct InitRegistrationData init_display_reg = {
     .id = module_id,
-    .init_func = display_init,
-    .destroy_func = NULL,
+    .init = display_init,
+    .destroy = NULL,
 };
-struct InitRegistrationData *init_display_reg_p = &init_display_reg;
 
 /*******************************************************************************
  *    API

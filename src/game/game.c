@@ -59,12 +59,11 @@ struct GameOps *get_game_ops(void) { return &game_ops; }
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct InitRegistrationData init_game_reg = {
+struct InitRegistrationData init_game_reg = {
     .id = module_id,
-    .init_func = game_init,
-    .destroy_func = NULL,
+    .init = game_init,
+    .destroy = NULL,
 };
-struct InitRegistrationData *init_game_reg_p = &init_game_reg;
 
 /*******************************************************************************
  *    API

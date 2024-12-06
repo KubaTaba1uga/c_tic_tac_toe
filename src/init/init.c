@@ -14,6 +14,7 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -102,7 +103,7 @@ static int init_register(init_t init,
   return 0;
 }
 
-int init_initialize_registrations(init_t init) {
+static int init_initialize_registrations(init_t init) {
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   struct ArrayUtilsOps *array_ops = get_array_utils_ops();
   struct InitPrivateOps *init_ops = get_init_priv_ops();
@@ -124,7 +125,7 @@ int init_initialize_registrations(init_t init) {
   return 0;
 }
 
-void init_destroy_registrations(init_t init) {
+static void init_destroy_registrations(init_t init) {
   struct ArrayUtilsOps *array_ops = get_array_utils_ops();
   struct InitPrivateOps *init_ops = get_init_priv_ops();
   struct InitRegistrationData *registration_data;
@@ -137,7 +138,8 @@ void init_destroy_registrations(init_t init) {
   }
 }
 
-int init_initialize_registration(struct InitRegistrationData *registration) {
+static int
+init_initialize_registration(struct InitRegistrationData *registration) {
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   int err;
 
@@ -156,7 +158,8 @@ int init_initialize_registration(struct InitRegistrationData *registration) {
   return 0;
 }
 
-void init_destroy_registration(struct InitRegistrationData *registration) {
+static void
+init_destroy_registration(struct InitRegistrationData *registration) {
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
 
   if (!registration->destroy)
@@ -170,16 +173,16 @@ void init_destroy_registration(struct InitRegistrationData *registration) {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-static struct InitPrivateOps init_priv_ops = {
-    .init_registration = init_initialize_registration,
-    .destroy_registration = init_destroy_registration};
-
 static struct InitOps init_ops = {.init = init_init,
                                   .destroy = init_destroy,
                                   .register_module = init_register,
                                   .init_modules = init_initialize_registrations,
                                   .destroy_modules =
                                       init_destroy_registrations};
+
+static struct InitPrivateOps init_priv_ops = {
+    .init_registration = init_initialize_registration,
+    .destroy_registration = init_destroy_registration};
 
 struct InitOps *get_init_ops(void) { return &init_ops; }
 

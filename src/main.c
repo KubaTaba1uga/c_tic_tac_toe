@@ -17,16 +17,14 @@
 #include <unistd.h>
 
 // App's internal libs
+#include "config/config.h"
+#include "display/display.h"
 #include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
- ******************************************************************************/
-
-/*******************************************************************************
- *    MODULARITY BOILERCODE
  ******************************************************************************/
 
 /*******************************************************************************
@@ -38,7 +36,7 @@
  ******************************************************************************/
 
 /*******************************************************************************
- *    PRIVATE API
+ *    API
  ******************************************************************************/
 #ifdef TEST
 int main__(void)
@@ -46,9 +44,15 @@ int main__(void)
 int main(void)
 #endif
 {
+  static struct InitRegistrationData *inits[] = {
+      &init_logging_reg, &init_config_reg, &init_input_reg,
+      &init_display_reg, &init_game_reg,
+  };
+
   struct LoggingUtilsOps *logging_ops;
   struct InputOps *input_ops;
   struct InitOps *init_ops;
+  init_t init_subsystem;
   int err;
 
   logging_ops = get_logging_utils_ops();

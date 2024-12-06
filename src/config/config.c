@@ -67,10 +67,10 @@ struct ConfigOps *get_config_ops(void) { return &config_ops; }
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct InitRegistrationData init_config_reg = {
+struct InitRegistrationData init_config_reg = {
     .id = module_id,
-    .init_func = config_init,
-    .destroy_func = NULL,
+    .init = config_init,
+    .destroy = NULL,
 };
 
 /*******************************************************************************
@@ -130,5 +130,3 @@ char *config_get_variable(char *var_name) {
 }
 
 struct ConfigSubsystem *config_get_subsystem(void) { return &config_subsystem; }
-
-INIT_REGISTER_SUBSYSTEM(&init_config_reg, INIT_MODULE_ORDER_CONFIG);

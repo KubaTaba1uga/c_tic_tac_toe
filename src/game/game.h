@@ -38,6 +38,6 @@ struct GameOps *get_game_ops(void);
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-extern struct InitRegistrationData *init_game_reg_p;
+extern struct InitRegistrationData init_game_reg;
 
 #endif // GAME_H

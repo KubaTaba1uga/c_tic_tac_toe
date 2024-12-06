@@ -59,12 +59,11 @@ struct InputOps *get_input_ops(void) { return &input_ops; };
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct InitRegistrationData init_input_reg = {.id = INPUT_MODULE_ID,
-                                                     .init_func = input_init,
-                                                     .destroy_func =
-                                                         input_destroy,
-                                                     .child_count = 0};
-struct InitRegistrationData *init_input_reg_p = &init_input_reg;
+struct InitRegistrationData init_input_reg = {
+    .id = INPUT_MODULE_ID,
+    .init = input_init,
+    .destroy = input_destroy,
+};
 
 /*******************************************************************************
  *    API
@@ -182,5 +181,3 @@ void input_restore_terminal_mode(const struct termios *old_termios) {
   // Restore the original terminal settings
   tcsetattr(STDIN_FILENO, TCSANOW, old_termios);
 }
-
-INIT_REGISTER_SUBSYSTEM(init_input_reg_p, INIT_MODULE_ORDER_INPUT);

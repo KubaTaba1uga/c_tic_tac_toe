@@ -88,10 +88,10 @@ struct LoggingUtilsOps *get_logging_utils_ops(void) {
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct InitRegistrationData init_logging_reg = {
+struct InitRegistrationData init_logging_reg = {
     .id = LOGGING_MODULE_ID,
-    .init_func = init_loggers,
-    .destroy_func = destroy_loggers,
+    .init = init_loggers,
+    .destroy = destroy_loggers,
 };
 
 /*******************************************************************************

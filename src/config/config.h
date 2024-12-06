@@ -34,6 +34,8 @@ struct ConfigOps {
   void *private_ops;
 };
 
+extern struct InitRegistrationData init_config_reg;
+
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
