@@ -2,6 +2,7 @@
 
 #include <unity.h>
 
+#include "game/game.h"
 #include "init/init.h"
 #include "input/input.h"
 #include "input/keyboard/keyboard.h"
@@ -19,6 +20,9 @@ static struct LoggingUtilsOps *logging_ops_;
 
 void setUp() {
   struct InitOps *init_ops = get_init_ops();
+  // Disable game init and destroy
+  init_game_reg.init = NULL;
+  init_game_reg.destroy = NULL;
   init_ops->initialize_system();
   logging_ops_ = get_logging_utils_ops();
   input_ops = get_input_ops();

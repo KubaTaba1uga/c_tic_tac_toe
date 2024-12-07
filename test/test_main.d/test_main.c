@@ -1,5 +1,6 @@
 #include <unity.h>
 
+#include "game/game.h"
 #include "input/input.h"
 #include "main.c"
 
@@ -7,7 +8,9 @@ void input_wait_mock(void){};
 
 void setUp() {
   struct InputOps *input_ops = get_input_ops();
-
+  // Disable game init and destroy
+  init_game_reg.init = NULL;
+  init_game_reg.destroy = NULL;
   input_ops->wait = input_wait_mock;
 }
 

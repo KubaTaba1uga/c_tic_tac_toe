@@ -4,7 +4,9 @@
 #include <unity.h>
 
 #include "config/config.h"
+#include "game/game.h"
 #include "init/init.h"
+#include "input/input.h"
 #include "utils/logging_utils.h"
 
 // Mock requirement
@@ -30,7 +32,11 @@ void setUp() {
   config_ops = get_config_ops();
   config_priv_ops = config_ops->private_ops;
 
+  // Disable game init and destroy
+  init_game_reg.init = NULL;
+  init_game_reg.destroy = NULL;
   init_ops->initialize_system();
+
   config_priv_ops->get_subsystem = mock_config_get_subsystem;
 
   config_subsystem.count = 0;

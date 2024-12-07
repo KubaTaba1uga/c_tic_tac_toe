@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <unity.h>
 
+#include "game/game.h"
 #include "init/init.h"
 #include "input/input.h"
 #include "input/keyboard/keyboard.h"
@@ -44,6 +45,9 @@ void setUp() {
   print_revents_backup_ptr = keyboard_priv_ops->print_revents;
   keyboard_priv_ops->print_revents = mock_keyboard_print_revents;
 
+  // Disable game init and destroy
+  init_game_reg.init = NULL;
+  init_game_reg.destroy = NULL;
   init_ops->initialize_system();
 
   mock_stdin();
@@ -88,6 +92,9 @@ void test_process_multiple_stdin() {
   write(pipefd[1], "test \n", strlen("test \n"));
 
   thrd_sleep(&ts, NULL);
+
+  // Check if the callback was executed
+  TEST_ASSERT_EQUAL_INT(1, mockup_callback_counter);
 
   // Write something to the pipe to simulate stdin input
   write(pipefd[1], "test", strlen("test"));

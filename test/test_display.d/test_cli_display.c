@@ -10,6 +10,7 @@
 
 // App's internal libs
 #include "display/cli.h"
+#include "game/game.h"
 #include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
 #include "init/init.h"
 #include "utils/logging_utils.h"
@@ -27,6 +28,8 @@ struct CliDisplayPrivateOps *cli_display_ops;
  ******************************************************************************/
 void setUp() {
   struct InitOps *init_ops = get_init_ops();
+  init_game_reg.init = NULL;
+  init_game_reg.destroy = NULL;
   init_ops->initialize_system();
 
   cli_display_ops = get_display_cli_ops()->private_ops;
