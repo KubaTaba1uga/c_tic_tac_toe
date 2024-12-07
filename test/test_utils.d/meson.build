@@ -9,10 +9,7 @@ init = join_paths(src, 'init')
 ############################################################################
 test_logging_utils_name = 'test_logging_utils.c'
 
-test_logging_utils_src = files([test_logging_utils_name, 
-			   utils / 'logging_utils.c', 
-			   init / 'init.c', 
-			   utils / 'std_lib_utils.c'])
+test_logging_utils_src = files([test_logging_utils_name]) + sources
 
 test_logging_utils_exe = executable('test_logging_utils',
   sources: [

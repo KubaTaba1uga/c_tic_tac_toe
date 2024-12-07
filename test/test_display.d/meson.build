@@ -15,14 +15,7 @@ user_move = join_paths(game_state_machine, 'user_move')
 ############################################################################
 test_cli_display_name = 'test_cli_display.c'
 
-test_cli_display_src = [test_cli_display_name,
-		 utils / 'logging_utils.c',
-		 utils / 'std_lib_utils.c',
-		 input / 'input.c',
-		 init / 'init.c',
-		 config / 'config.c',
-		 display / 'display.c',
-		 display / 'cli.c']
+test_cli_display_src = files([test_cli_display_name]) + sources
 
 test_cli_display_exe = executable('test_cli_display',
   sources: [

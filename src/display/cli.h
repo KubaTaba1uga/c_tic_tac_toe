@@ -24,6 +24,8 @@ struct DisplayCliOps {
   void *private_ops;
 };
 
+extern struct InitRegistrationData init_cli_reg;
+
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/

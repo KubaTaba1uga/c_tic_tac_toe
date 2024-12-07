@@ -10,13 +10,7 @@ init = join_paths(src, 'init')
 
 test_keyboard_name = 'test_keyboard.c'
 
-test_keyboard_src = files([test_keyboard_name,
-			   keyboard / 'keyboard.c',
-			   keyboard / 'keyboard1.c', 
-			   utils / 'logging_utils.c', 
-			   utils / 'std_lib_utils.c', 
-			   input / 'input.c', 
-			   init / 'init.c'])
+test_keyboard_src = files([test_keyboard_name]) + sources
 
 test_keyboard_exe = executable('test_keyboard',
   sources: [
@@ -39,13 +33,7 @@ test('test_keyboard', test_keyboard_exe)
 ############################################################################
 test_keyboard1_name = 'test_keyboard1.c'
 
-test_keyboard1_src = files([test_keyboard1_name, 
-			   keyboard / 'keyboard1.c', 
-			   keyboard / 'keyboard.c', 
-			   utils / 'logging_utils.c', 
-			   utils / 'std_lib_utils.c', 
-			   input / 'input.c', 
-			   init / 'init.c'])
+test_keyboard1_src = files([test_keyboard1_name]) + sources
 
 test_keyboard1_exe = executable('test_keyboard1',
   sources: [

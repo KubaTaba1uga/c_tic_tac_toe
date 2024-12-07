@@ -9,6 +9,7 @@
 #include <unity.h>
 
 // App's internal libs
+#include "game/game.h"
 #include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/game_states.h"
@@ -44,14 +45,14 @@ static void mock_functions(void);
  *    TESTS FRAMEWORK BOILERCODE
  ******************************************************************************/
 void setUp() {
-  char *disabled_modules_ids[] = {"game"};
-
   gsm_sub_ops = get_game_sm_subsystem_ops();
   logging_ops = get_logging_utils_ops();
   init_ops = get_init_ops();
 
-  init_ops->initialize_system_with_disabled_modules(
-      sizeof(disabled_modules_ids) / sizeof(char *), disabled_modules_ids);
+  // Disable game init and destroy
+  init_game_reg.init = NULL;
+  init_game_reg.destroy = NULL;
+  init_ops->initialize_system();
 
   mock_functions();
 }

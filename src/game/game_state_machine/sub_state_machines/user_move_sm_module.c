@@ -111,10 +111,10 @@ struct GameSmUserMoveModuleOps *get_game_sm_user_move_module_ops(void) {
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct InitRegistrationData init_user_move_reg = {
+struct InitRegistrationData init_user_move_reg = {
     .id = module_id,
-    .init_func = user_move_state_machine_init,
-    .destroy_func = NULL,
+    .init = user_move_state_machine_init,
+    .destroy = NULL,
 };
 
 /*******************************************************************************
@@ -232,5 +232,3 @@ void user_move_state_machine_set_default_state(void) {
   user_move_priv_ops.get_state()->coordinates.height = 1;
   user_move_priv_ops.get_state()->coordinates.width = 1;
 }
-
-INIT_REGISTER_SUBSYSTEM_CHILD(&init_user_move_reg, init_game_reg_p);

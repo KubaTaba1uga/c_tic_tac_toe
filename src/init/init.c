@@ -14,6 +14,7 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -21,7 +22,16 @@
 #include <string.h>
 
 // App's internal libs
+#include "config/config.h"
+#include "display/display.h"
+#include "game/game_state_machine/game_sm_subsystem.h"
+#include "game/game_state_machine/game_state_machine.h"
+#include "game/game_state_machine/sub_state_machines/quit_sm_module.h"
+#include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
 #include "init/init.h"
+#include "input/input.h"
+#include "input/keyboard/keyboard.h"
+#include "input/keyboard/keyboard1.h"
 #include "utils/array_utils.h"
 #include "utils/logging_utils.h"
 #include "utils/std_lib_utils.h"
@@ -33,15 +43,80 @@ struct InitSubsystem {
   array_t registrations;
 };
 
+typedef struct InitSubsystem *init_t;
+
 struct InitPrivateOps {
+  int (*init)(init_t *);
+  void (*destroy)(init_t *);
+  int (*register_module)(struct InitSubsystem *, struct InitRegistrationData *);
+  int (*init_modules)(struct InitSubsystem *);
+  void (*destroy_modules)(struct InitSubsystem *);
   int (*init_registration)(struct InitRegistrationData *registration);
   void (*destroy_registration)(struct InitRegistrationData *registration);
 };
 
+static init_t init_subsystem;
 static const size_t max_registrations = 100;
 static const char module_id[] = "init_subsystem";
 
 static struct InitPrivateOps *get_init_priv_ops(void);
+
+/*******************************************************************************
+ *    PUBLIC API
+ ******************************************************************************/
+static int init_initialize_system(void) {
+  struct InitRegistrationData *init_modules[] = {
+      &init_logging_reg,   &init_config_reg,
+      &init_input_reg,     &init_keyboard1_reg,
+      &init_keyboard_reg,  &init_display_reg,
+      &init_game_sm_reg,   &init_game_sm_sub_reg,
+      &init_user_move_reg, &init_quit_state_machine_reg,
+      &init_game_reg,
+  };
+  struct InitRegistrationData *init_module;
+  struct LoggingUtilsOps *logging_ops;
+  struct InitPrivateOps *init_ops;
+  size_t i;
+  int err;
+
+  logging_ops = get_logging_utils_ops();
+  init_ops = get_init_priv_ops();
+
+  err = init_ops->init(&init_subsystem);
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to initialize init subsystem.");
+    return err;
+  }
+
+  for (i = 0; i < sizeof(init_modules) / sizeof(struct InitRegistrationData *);
+       i++) {
+    init_module = init_modules[i];
+    err = init_ops->register_module(init_subsystem, init_module);
+    if (err) {
+      logging_ops->log_err(module_id, "Unable to register init module %s.",
+                           init_module->id);
+      return err;
+    }
+
+    logging_ops->log_info(module_id, "Registered init module %s.",
+                          init_module->id);
+  }
+
+  err = init_ops->init_modules(init_subsystem);
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to init modules.", init_module->id);
+    return err;
+  }
+
+  return 0;
+};
+
+static void init_destroy_system(void) {
+  struct InitPrivateOps *init_ops;
+  init_ops = get_init_priv_ops();
+  init_ops->destroy_modules(init_subsystem);
+  init_ops->destroy(&init_subsystem);
+}
 
 /*******************************************************************************
  *    PRIVATE API
@@ -56,7 +131,7 @@ static int init_init(init_t *init) {
     return ENOMEM;
   }
 
-  err = array_ops->init(tmp_init->registrations, max_registrations);
+  err = array_ops->init(&tmp_init->registrations, max_registrations);
   if (err) {
     return err;
   }
@@ -70,21 +145,20 @@ static void init_destroy(init_t *init) {
   struct ArrayUtilsOps *array_ops = get_array_utils_ops();
   struct InitSubsystem *tmp_init = *init;
 
-  array_ops->destroy(tmp_init->registrations);
+  array_ops->destroy(&tmp_init->registrations);
   free(tmp_init);
 
   *init = NULL;
 }
 
-static int init_register(init_t init,
+static int init_register(struct InitSubsystem *init,
                          struct InitRegistrationData *registration_data) {
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   struct ArrayUtilsOps *array_ops = get_array_utils_ops();
-  struct InitSubsystem *tmp_init = init;
   int err;
 
-  if (array_ops->get_length(tmp_init->registrations) < max_registrations) {
-    err = array_ops->append(tmp_init->registrations, registration_data);
+  if (array_ops->get_length(init->registrations) < max_registrations) {
+    err = array_ops->append(init->registrations, registration_data);
     if (err) {
       logging_ops->log_err(module_id,
                            "Unable to register %s in init, "
@@ -103,37 +177,46 @@ static int init_register(init_t init,
   return 0;
 }
 
-static int init_initialize_registrations(init_t init) {
+static int init_initialize_registrations(struct InitSubsystem *init) {
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   struct ArrayUtilsOps *array_ops = get_array_utils_ops();
   struct InitPrivateOps *init_ops = get_init_priv_ops();
   struct InitRegistrationData *registration_data;
-  struct InitSubsystem *tmp_init = init;
   int err = 0;
   size_t i;
 
-  for (i = 0; i < array_ops->get_length(tmp_init->registrations); ++i) {
-    registration_data = array_ops->get_element(tmp_init->registrations, i);
+  for (i = 0; i < array_ops->get_length(init->registrations); ++i) {
+    registration_data = array_ops->get_element(init->registrations, i);
+    if (!registration_data) {
+      logging_ops->log_err(module_id, "No module data");
+      return EINVAL;
+    }
+
     err = init_ops->init_registration(registration_data);
     if (err) {
-      logging_ops->log_err(module_id, "Unable to initialize %s\n",
-                           registration_data->id);
       return err;
     }
   }
 
+  logging_ops->log_info(module_id, "Initialized all modules");
+
   return 0;
 }
 
-static void init_destroy_registrations(init_t init) {
+static void init_destroy_registrations(struct InitSubsystem *init) {
+  struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   struct ArrayUtilsOps *array_ops = get_array_utils_ops();
   struct InitPrivateOps *init_ops = get_init_priv_ops();
   struct InitRegistrationData *registration_data;
-  struct InitSubsystem *tmp_init = init;
-  int i = array_ops->get_length(init);
+  size_t i = array_ops->get_length(init->registrations);
 
-  while (i--) {
-    registration_data = array_ops->get_element(tmp_init->registrations, i);
+  while (--i) {
+    registration_data = array_ops->get_element(init->registrations, i);
+    if (!registration_data) {
+      logging_ops->log_err(module_id, "No module data");
+      return;
+    }
+
     init_ops->destroy_registration(registration_data);
   }
 }
@@ -173,14 +256,15 @@ init_destroy_registration(struct InitRegistrationData *registration) {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-static struct InitOps init_ops = {.init = init_init,
-                                  .destroy = init_destroy,
-                                  .register_module = init_register,
-                                  .init_modules = init_initialize_registrations,
-                                  .destroy_modules =
-                                      init_destroy_registrations};
+static struct InitOps init_ops = {.initialize_system = init_initialize_system,
+                                  .destroy_system = init_destroy_system};
 
 static struct InitPrivateOps init_priv_ops = {
+    .init = init_init,
+    .destroy = init_destroy,
+    .register_module = init_register,
+    .init_modules = init_initialize_registrations,
+    .destroy_modules = init_destroy_registrations,
     .init_registration = init_initialize_registration,
     .destroy_registration = init_destroy_registration};
 

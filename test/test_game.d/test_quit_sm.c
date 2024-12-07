@@ -32,15 +32,15 @@ static struct InitOps *init_ops;
  *    TESTS FRAMEWORK BOILERCODE
  ******************************************************************************/
 void setUp() {
-  char *disabled_modules_ids[] = {"game"};
-
   quit_sm_ops = get_game_sm_quit_module_ops()->private_ops;
   logging_ops = get_logging_utils_ops();
   input_ops = get_input_ops();
   init_ops = get_init_ops();
 
-  init_ops->initialize_system_with_disabled_modules(
-      sizeof(disabled_modules_ids) / sizeof(char *), disabled_modules_ids);
+  // Disable game init and destroy
+  init_game_reg.init = NULL;
+  init_game_reg.destroy = NULL;
+  init_ops->initialize_system();
 
   input_ops->destroy = mock_input_ops_destroy;
 

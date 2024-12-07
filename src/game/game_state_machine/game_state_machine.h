@@ -42,6 +42,8 @@ struct GameStateMachineOps {
   void (*quit)(void);
 };
 
+extern struct InitRegistrationData init_game_sm_reg;
+
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/

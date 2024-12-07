@@ -26,6 +26,8 @@ struct KeyboardOps {
   void *(private_ops);
 };
 
+extern struct InitRegistrationData init_keyboard_reg;
+
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/

@@ -12,8 +12,10 @@
  ******************************************************************************/
 // C standard library
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 // App's internal libs
@@ -26,6 +28,7 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
+static const char main_id[] = "main";
 
 /*******************************************************************************
  *    INIT BOILERCODE
@@ -44,15 +47,9 @@ int main__(void)
 int main(void)
 #endif
 {
-  static struct InitRegistrationData *inits[] = {
-      &init_logging_reg, &init_config_reg, &init_input_reg,
-      &init_display_reg, &init_game_reg,
-  };
-
   struct LoggingUtilsOps *logging_ops;
   struct InputOps *input_ops;
   struct InitOps *init_ops;
-  init_t init_subsystem;
   int err;
 
   logging_ops = get_logging_utils_ops();
@@ -61,17 +58,17 @@ int main(void)
 
   err = init_ops->initialize_system();
   if (err) {
+    logging_ops->log_err(main_id, "Unable to initialize game: %s.",
+                         strerror(err));
     return 1;
   }
-
-  logging_ops->log_info("main", "Game initialized");
 
   // Game logic is triggered by new input. That's why main
   //  game's thread is waiting until all input's are destroyed
   //  by user's decision to quit.
   input_ops->wait();
 
-  logging_ops->log_info("main", "Game finished");
+  logging_ops->log_info(main_id, "Game finished");
 
   init_ops->destroy_system();
 

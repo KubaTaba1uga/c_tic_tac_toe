@@ -77,10 +77,10 @@ struct DisplayCliOps *get_display_cli_ops(void) { return &cli_display_ops; }
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct InitRegistrationData init_cli_reg = {
+struct InitRegistrationData init_cli_reg = {
     .id = module_id,
-    .init_func = cli_module_init,
-    .destroy_func = cli_module_destroy,
+    .init = cli_module_init,
+    .destroy = cli_module_destroy,
 };
 
 /*******************************************************************************
@@ -272,5 +272,3 @@ void cli_sort_user_moves(int n, struct UserMove user_moves[n]) {
 
 /*   return 0; */
 /* } */
-
-INIT_REGISTER_SUBSYSTEM_CHILD(&init_cli_reg, init_display_reg_p);

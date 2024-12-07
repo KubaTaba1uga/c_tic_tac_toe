@@ -71,10 +71,10 @@ struct Keyboard1Ops *get_keyboard1_ops(void) { return &keyboard1_ops; };
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct InitRegistrationData init_keyboard1_reg = {
+struct InitRegistrationData init_keyboard1_reg = {
     .id = INPUT_KEYBOARD1_ID,
-    .init_func = keyboard1_module_init,
-    .destroy_func = keyboard1_module_destroy,
+    .init = keyboard1_module_init,
+    .destroy = keyboard1_module_destroy,
 };
 struct InitRegistrationData *init_keyboard1_reg_p = &init_keyboard1_reg;
 
@@ -170,6 +170,3 @@ int keyboard1_callback(size_t n, char buffer[n]) {
 
   return 0;
 }
-
-/* INIT_REGISTER_SUBSYSTEM_CHILD(&init_keyboard1_reg, init_keyboard_reg_p); */
-INIT_REGISTER_SUBSYSTEM_CHILD(&init_keyboard1_reg, init_input_reg_p);

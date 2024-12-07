@@ -112,10 +112,10 @@ struct GameSmSubsystemOps *get_game_sm_subsystem_ops(void) {
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct InitRegistrationData init_game_sm_sub_reg = {
+struct InitRegistrationData init_game_sm_sub_reg = {
     .id = game_sm_subsystem_module_id,
-    .init_func = game_sm_subsystem_init,
-    .destroy_func = NULL,
+    .init = game_sm_subsystem_init,
+    .destroy = NULL,
 };
 
 /*******************************************************************************
@@ -258,5 +258,3 @@ void game_sm_subsystem_insert_registration(
 struct GameSmSubsystem *game_sm_subsystem_get_subsystem(void) {
   return &game_sm_subsystem;
 };
-
-INIT_REGISTER_SUBSYSTEM_CHILD(&init_game_sm_sub_reg, init_game_reg_p);

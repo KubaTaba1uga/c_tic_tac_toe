@@ -208,5 +208,3 @@ void print_error(char *msg) {
 }
 
 void print_errno(void) { stumpless_perror("logging"); }
-
-INIT_REGISTER_SUBSYSTEM(&init_logging_reg, INIT_MODULE_ORDER_LOGGING);

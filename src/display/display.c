@@ -135,5 +135,3 @@ display_register_module(struct DisplayRegistrationData *registration_data) {
 struct DisplaySubsystem *display_get_subsystem(void) {
   return &display_subsystem;
 };
-
-INIT_REGISTER_SUBSYSTEM(init_display_reg_p, INIT_MODULE_ORDER_DISPLAY);

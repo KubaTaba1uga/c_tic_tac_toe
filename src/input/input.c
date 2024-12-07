@@ -148,6 +148,8 @@ int input_init(void) {
 
 void input_destroy(void) {
   size_t i;
+  input_restore_terminal_mode(&old_termios);
+
   for (i = 0; i < input_subsystem.count; ++i) {
     if (input_subsystem.registrations[i]->callback == NULL)
       continue;
@@ -155,8 +157,6 @@ void input_destroy(void) {
     input_subsystem.registrations[i]->destroy();
     input_subsystem.registrations[i]->callback = NULL;
   }
-
-  input_restore_terminal_mode(&old_termios);
 }
 
 // Function to disable canonical mode and echo

@@ -61,10 +61,10 @@ struct GameStateMachineOps game_sm_ops = {.step = game_sm_step,
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct InitRegistrationData init_game_sm_reg = {
+struct InitRegistrationData init_game_sm_reg = {
     .id = gsm_module_id,
-    .init_func = game_sm_init,
-    .destroy_func = NULL,
+    .init = game_sm_init,
+    .destroy = NULL,
 };
 
 /*******************************************************************************
@@ -174,7 +174,7 @@ int game_sm_step(enum InputEvents input_event, enum Users input_user) {
       game_sm_priv_ops.is_input_user_valid(input_user) != 0)
     return EINVAL;
 
-  logging_ops->log_info(gsm_module_id, "Event %i User %i.", input_event,
+  logging_ops->log_info(gsm_module_id, "Event %d User %d", input_event,
                         input_user);
 
   data.input_event = input_event;
@@ -214,5 +214,3 @@ int validate_input_user(enum Users input_user) {
 int validate_input_event(enum InputEvents input_event) {
   return (input_event <= INPUT_EVENT_NONE) || (input_event >= INPUT_EVENT_MAX);
 }
-
-INIT_REGISTER_SUBSYSTEM_CHILD(&init_game_sm_reg, init_game_reg_p);

@@ -93,10 +93,10 @@ struct KeyboardOps *get_keyboard_ops(void) { return &keyboard_ops; };
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct InitRegistrationData init_keyboard_reg = {
+struct InitRegistrationData init_keyboard_reg = {
     .id = INPUT_KEYBOARD_ID,
-    .init_func = keyboard_module_init,
-    .destroy_func = NULL,
+    .init = keyboard_module_init,
+    .destroy = NULL,
 };
 struct InitRegistrationData *init_keyboard_reg_p = &init_keyboard_reg;
 
@@ -302,6 +302,3 @@ void keyboard_print_revents(short revents) {
     logging_ops->log_err(INPUT_KEYBOARD_ID, "No recognized events.");
   }
 }
-
-/* INIT_REGISTER_SUBSYSTEM_CHILD(&init_keyboard_reg, init_input_reg_p); */
-INIT_REGISTER_SUBSYSTEM_CHILD(&init_keyboard_reg, init_keyboard1_reg_p);

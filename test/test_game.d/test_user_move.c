@@ -34,15 +34,16 @@ mock_user_move_state_machine_get_state(void) {
  *    TESTS FRAMEWORK BOILERCODE
  ******************************************************************************/
 void setUp() {
-  char *disabled_modules_ids[] = {"game"};
   struct InitOps *init_ops;
 
   init_ops = get_init_ops();
   logging_ops = get_logging_utils_ops();
   user_move_priv_ops = get_game_sm_user_move_module_ops()->private_ops;
 
-  init_ops->initialize_system_with_disabled_modules(
-      sizeof(disabled_modules_ids) / sizeof(char *), disabled_modules_ids);
+  // Disable game init and destroy
+  init_game_reg.init = NULL;
+  init_game_reg.destroy = NULL;
+  init_ops->initialize_system();
 
   user_move_priv_ops->get_state = mock_user_move_state_machine_get_state;
   user_move_priv_ops->set_default_state();

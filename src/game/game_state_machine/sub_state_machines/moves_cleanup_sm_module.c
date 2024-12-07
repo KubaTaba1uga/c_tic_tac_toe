@@ -62,10 +62,10 @@ get_game_sm_clean_last_move_module_ops(void) {
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-static struct InitRegistrationData init_clean_last_move_state_machine_reg = {
+struct InitRegistrationData init_clean_last_move_state_machine_reg = {
     .id = gsm_clean_last_move_module_id,
-    .init_func = clean_last_move_state_machine_init,
-    .destroy_func = NULL,
+    .init = clean_last_move_state_machine_init,
+    .destroy = NULL,
 };
 
 /*******************************************************************************
@@ -98,6 +98,3 @@ int clean_last_move_state_machine_init(void) {
 
   return 0;
 }
-
-INIT_REGISTER_SUBSYSTEM_CHILD(&init_clean_last_move_state_machine_reg,
-                              init_game_reg_p);

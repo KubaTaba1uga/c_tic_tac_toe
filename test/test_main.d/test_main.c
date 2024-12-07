@@ -1,6 +1,15 @@
 #include <unity.h>
 
+#include "input/input.h"
 #include "main.c"
+
+void input_wait_mock(void){};
+
+void setUp() {
+  struct InputOps *input_ops = get_input_ops();
+
+  input_ops->wait = input_wait_mock;
+}
 
 void test_main(void) {
   int result = main__();

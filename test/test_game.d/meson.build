@@ -15,16 +15,7 @@ user_move = join_paths(game_state_machine, 'user_move')
 ############################################################################
 test_gsm_subsystem_name = 'test_game_state_machine_subsystem.c'
 
-test_gsm_subsystem_src = [test_gsm_subsystem_name,
-		 game_state_machine / 'game_state_machine.c',
-		 game_state_machine / 'game_sm_subsystem.c',
-		 game / 'game.c',
-		 utils / 'logging_utils.c',
-		 utils / 'std_lib_utils.c',
-		 input / 'input.c',
-		 init / 'init.c',
-		 config / 'config.c',
-		 display / 'display.c']
+test_gsm_subsystem_src = files([test_gsm_subsystem_name]) + sources
 
 test_gsm_subsystem_exe = executable('test_gsm_subsystem',
   sources: [
@@ -48,17 +39,7 @@ test('test_gsm_subsystem', test_gsm_subsystem_exe)
 ############################################################################
 test_user_move_name = 'test_user_move.c'
 
-test_user_move_src = [test_user_move_name,
-		   game_sub_sms / 'user_move_sm_module.c',
-		   game_sub_sms / 'common.c',		   
-		   game_state_machine / 'game_state_machine.c',
-		   game_state_machine / 'game_sm_subsystem.c',
-		   game / 'game.c', utils / 'logging_utils.c',
-		   utils / 'std_lib_utils.c',
-		   input / 'input.c',
-		   init / 'init.c',
-		   config / 'config.c',
-		   display / 'display.c']
+test_user_move_src = files([test_user_move_name]) + sources
 
 test_user_move_exe = executable('test_user_move',
   sources: [
@@ -81,18 +62,7 @@ test('test_user_move', test_user_move_exe)
 ############################################################################
 test_quit_sm_name = 'test_quit_sm.c'
 
-test_quit_sm_src = [test_quit_sm_name,
-		 game_sub_sms / 'quit_sm_module.c',
-		 game_sub_sms / 'common.c',		 
-		 game_state_machine / 'game_state_machine.c',
-		 game_state_machine / 'game_sm_subsystem.c',
-		 game / 'game.c',
-		 utils / 'logging_utils.c',
-		 utils / 'std_lib_utils.c',
-		 input / 'input.c',
-		 init / 'init.c',
-		 config / 'config.c',
-		 display / 'display.c']
+test_quit_sm_src = files([test_quit_sm_name]) + sources
 
 test_quit_sm_exe = executable('test_quit_sm',
   sources: [

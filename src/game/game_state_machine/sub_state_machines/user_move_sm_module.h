@@ -37,6 +37,8 @@ struct UserMove {
   int coordinates[2];
 };
 
+extern struct InitRegistrationData init_user_move_reg;
+
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/

@@ -10,8 +10,8 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
-#include "string.h"
-#include <asm-generic/errno-base.h>
+#include <errno.h>
+#include <string.h>
 #include <unistd.h>
 
 // App's internal libs
@@ -200,5 +200,3 @@ int game_init(void) {
 
   return 0;
 }
-
-INIT_REGISTER_SUBSYSTEM(&init_game_reg, INIT_MODULE_ORDER_GAME);

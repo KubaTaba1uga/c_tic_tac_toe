@@ -28,6 +28,8 @@ struct GameSmSubsystemRegistrationData {
   int priority;
 };
 
+extern struct InitRegistrationData init_game_sm_sub_reg;
+
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
