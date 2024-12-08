@@ -14,6 +14,8 @@ variables.
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <asm-generic/errno-base.h>
+#include <asm-generic/errno.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -39,6 +41,8 @@ typedef struct ConfigSubsystem *config_sys_t;
 struct ConfigPrivateOps {
   int (*init)(config_sys_t *);
   void (*destroy)(config_sys_t *);
+  char *(*get_variable)(config_sys_t, char *);
+  int (*register_variable)(config_sys_t, struct ConfigRegistrationData *);
 };
 
 static config_sys_t config_subsystem;
@@ -52,9 +56,9 @@ static struct ConfigPrivateOps *config_priv_ops;
 struct ConfigPrivateOps *get_config_priv_ops(void);
 
 /*******************************************************************************
- *    API
+ *    PUBLIC API
  ******************************************************************************/
-static int config_init_subsystem(void) {
+static int config_init_system(void) {
   int err;
 
   array_ops = get_array_utils_ops();
@@ -70,9 +74,41 @@ static int config_init_subsystem(void) {
   return 0;
 }
 
+static void config_destroy_system(void) {
+  if (!config_priv_ops)
+    return;
+
+  config_priv_ops->destroy(&config_subsystem);
+}
+
+static int config_register_variable_system(
+    struct ConfigRegistrationData *config_registration_data) {
+  if (!config_priv_ops)
+    return ENODATA;
+
+  return config_priv_ops->register_variable(config_subsystem,
+                                            config_registration_data);
+}
+
+static char *config_get_variable_system(char *var_name) {
+  if (!config_priv_ops)
+    return NULL;
+
+  return config_priv_ops->get_variable(config_subsystem, var_name);
+}
+
+/*******************************************************************************
+ *    PRIVATE API
+ ******************************************************************************/
 static int config_init(config_sys_t *config) {
   config_sys_t tmp_config;
   int err;
+
+  if (!logging_ops || !array_ops)
+    return ENODATA;
+
+  if (!config)
+    return EINVAL;
 
   tmp_config = malloc(sizeof(struct ConfigSubsystem));
   if (!tmp_config) {
@@ -95,17 +131,13 @@ static int config_init(config_sys_t *config) {
   return 0;
 }
 
-static void config_destroy_subsystem(void) {
-  if (!config_priv_ops)
-    return;
-
-  config_priv_ops->destroy(&config_subsystem);
-}
-
 static void config_destroy(config_sys_t *config) {
   config_sys_t tmp_config;
 
-  if (!array_ops || !config || !*config)
+  if (!array_ops)
+    return;
+
+  if (!config || !*config)
     return;
 
   tmp_config = *config;
@@ -116,35 +148,41 @@ static void config_destroy(config_sys_t *config) {
 }
 
 static int config_register_variable(
+    config_sys_t config,
     struct ConfigRegistrationData *config_registration_data) {
-  if (!array_ops || !logging_ops || !config_subsystem)
+  int err;
+
+  if (!array_ops || !logging_ops)
     return ENODATA;
 
-  if (array_ops->get_length(config_subsystem->registrations) <
-      max_registrations) {
-    array_ops->append(config_subsystem->registrations,
-                      config_registration_data);
-    return 0;
+  if (!config || !config_registration_data)
+    return EINVAL;
+
+  err = array_ops->append(config->registrations, config_registration_data);
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to register %s in config: %s",
+                         config_registration_data->var_name, strerror(err));
+    return err;
   }
 
-  logging_ops->log_err(module_id,
-                       "Unable to register %s in config, "
-                       "no enough space in `registrations` array.",
-                       config_registration_data->var_name);
-  return EINVAL;
+  return 0;
 }
 
-static char *config_get_variable(char *var_name) {
+static char *config_get_variable(config_sys_t config, char *var_name) {
   struct ConfigRegistrationData *variable;
   char *value;
   size_t i;
 
-  if (!array_ops || !logging_ops || !std_lib_ops || !config_subsystem) {
+  if (!array_ops || !logging_ops || !std_lib_ops) {
     return NULL;
   }
 
-  for (i = 0; i < array_ops->get_length(config_subsystem->registrations); i++) {
-    variable = array_ops->get_element(config_subsystem->registrations, i);
+  if (!config || !var_name) {
+    return NULL;
+  }
+
+  for (i = 0; i < array_ops->get_length(config->registrations); i++) {
+    variable = array_ops->get_element(config->registrations, i);
     if (std_lib_ops->are_str_eq(var_name, (char *)variable->var_name)) {
       value = getenv(var_name);
 
@@ -168,8 +206,8 @@ static char *config_get_variable(char *var_name) {
  ******************************************************************************/
 struct InitRegistrationData init_config_reg = {
     .id = module_id,
-    .init = config_init_subsystem,
-    .destroy = config_destroy_subsystem,
+    .init = config_init_system,
+    .destroy = config_destroy_system,
 };
 
 /*******************************************************************************
@@ -178,11 +216,13 @@ struct InitRegistrationData init_config_reg = {
 static struct ConfigPrivateOps config_priv_ops_ = {
     .init = config_init,
     .destroy = config_destroy,
+    .get_variable = config_get_variable,
+    .register_variable = config_register_variable,
 };
 
 static struct ConfigOps config_pub_ops = {
-    .register_var = config_register_variable,
-    .get_var = config_get_variable,
+    .get_system_var = config_get_variable_system,
+    .register_system_var = config_register_variable_system,
 };
 
 struct ConfigOps *get_config_ops(void) { return &config_pub_ops; }

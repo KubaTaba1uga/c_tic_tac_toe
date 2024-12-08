@@ -1,3 +1,4 @@
+#include <asm-generic/errno.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -49,7 +50,7 @@ void test_array_append_failure_no_space() {
 
   // Try adding another element
   int err = array_ops->append(test_array, &element);
-  TEST_ASSERT_EQUAL_INT(ENOMEM, err);
+  TEST_ASSERT_EQUAL_INT(ENOBUFS, err);
 }
 
 void test_array_get_length() {

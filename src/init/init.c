@@ -167,21 +167,11 @@ static int init_register(init_sys_t init,
     return ENODATA;
   }
 
-  if (array_ops->get_length(init->registrations) < max_registrations) {
-    err = array_ops->append(init->registrations, registration_data);
-    if (err) {
-      logging_ops->log_err(module_id,
-                           "Unable to register %s in init, "
-                           "unkown error.",
-                           registration_data->id);
-      return err;
-    }
-  } else {
-    logging_ops->log_err(module_id,
-                         "Unable to register %s in init, "
-                         "no enough space in `registrations` array.",
-                         registration_data->id);
-    return ENOMEM;
+  err = array_ops->append(init->registrations, registration_data);
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to register %s in init: %s",
+                         registration_data->id, strerror(err));
+    return err;
   }
 
   return 0;

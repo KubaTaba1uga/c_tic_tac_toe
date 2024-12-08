@@ -89,7 +89,7 @@ static int display_init(void) {
   display_env->var_name = "display";
   display_env->default_value = DISPLAY_CLI_NAME;
 
-  err = config_ops->register_var(display_env);
+  err = config_ops->register_system_var(display_env);
   if (err) {
     logging_ops->log_err(module_id,
                          "Unable to register display configuration var.");
@@ -113,7 +113,7 @@ static int display_display(struct DataToDisplay *data) {
   std_lib_ops = get_std_lib_utils_ops();
   config_ops = get_config_ops();
 
-  display_env = config_ops->get_var("display");
+  display_env = config_ops->get_system_var("display");
 
   for (size_t i = 0; i < subsystem->count; i++) {
 

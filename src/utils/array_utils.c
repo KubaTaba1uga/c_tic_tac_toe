@@ -71,7 +71,7 @@ static int array_append(array_t array, void *element) {
   struct Array *tmp_array = array;
 
   if (array_ops->get_length(tmp_array) + 1 > array_ops_->get_size(tmp_array)) {
-    return ENOMEM;
+    return ENOBUFS;
   }
 
   tmp_array->data[array_ops->get_length(tmp_array)] = element;
