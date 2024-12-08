@@ -1,7 +1,7 @@
-#ifndef LOGGING_UTILS_H
-#define LOGGING_UTILS_H
+#ifndef SUBSYSTEM_UTILS_H
+#define SUBSYSTEM_UTILS_H
 /*******************************************************************************
- * @file logging_utils.h
+ * @file subsystem_utils.h
  * @brief TO-DO
  *
  * TO-DO
@@ -11,30 +11,31 @@
 /*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
-
-/*******************************************************************************
- *    PRIVATE API
- ******************************************************************************/
+#include <stdbool.h>
+#include <stddef.h>
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct LoggingUtilsOps {
-  int (*init_loggers)(void);
-  void (*destroy_loggers)(void);
-  void (*log_info)(const char *msg_id, char *fmt, ...);
-  void (*log_err)(const char *msg_id, char *fmt, ...);
-  void *private;
+typedef struct Module *module_t;
+typedef struct Subsystem *subsystem_t;
+
+struct SubsystemUtilsOps {
+  int (*init)(subsystem_t *, const char *, const size_t);
+  void (*destroy)(subsystem_t *);
+  int (*register_module)(subsystem_t, const char *, void *);
+  void *(*get_module_by_filter)(subsystem_t, void *,
+                                bool (*)(const char *, void *, void *));
 };
 
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-extern struct InitRegistrationData init_logging_reg;
+extern struct InitRegistrationData init_subsystem_utils_reg;
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-struct LoggingUtilsOps *get_logging_utils_ops(void);
+struct SubsystemUtilsOps *get_subsystem_utils_ops(void);
 
-#endif // LOGGING_UTILS_H
+#endif // SUBSYSTEM_UTILS_H
