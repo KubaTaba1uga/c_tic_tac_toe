@@ -2,3 +2,6 @@
 .github
 build
 subprojects
+*.bkp
+*~*
+*#*
