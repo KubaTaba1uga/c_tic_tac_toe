@@ -139,24 +139,33 @@ static int subsystem_utils_register_module(subsystem_t subsystem,
   return 0;
 };
 
-void *subsystem_utils_get_module_by_filter(
-    subsystem_t subsystem, void *filter_data,
-    bool (*filter_func)(const char *, void *, void *)) {
+int subsystem_utils_get_module(subsystem_t subsystem,
+                               struct SubsystemGetModuleWrapper *get_wrap) {
   module_t module;
   size_t i;
 
   if (!array_ops || !logging_ops || !std_lib_ops) {
-    return NULL;
+    return ENODATA;
   }
 
-  if (!subsystem || !filter_func) {
-    return NULL;
+  if (!subsystem || !get_wrap || !get_wrap->filter_func ||
+      !get_wrap->result_placeholder || !get_wrap->state) {
+    return EINVAL;
+  }
+
+  if (!get_wrap->state->private) {
+    get_wrap->state->private = malloc(size_t size)
   }
 
   for (i = 0; i < array_ops->get_length(subsystem->registrations); i++) {
     module = array_ops->get_element(subsystem->registrations, i);
-    if (filter_func(module->id, module->private, filter_data)) {
-      return module->private;
+
+    if (get_wrap->filter_func(module->id, module->private,
+                              get_wrap->filter_data)) {
+      *get_wrap->result_placeholder = module->private;
+      get_wrap->state->state = SUBSYSTEM_STATE_ITER_INPROGRESS;
+
+      return 0;
     }
   }
 

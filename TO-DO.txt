@@ -1,4 +1,9 @@
-0. Create functions for getting priv ops in input. -
-1. Delete redundant definitions in input. -
-2. Use array in input. -
+0. Create good mechanism to get modules with state and filter and everything.
+     To make it done i need to write some code for working with struct SubsystemGetModuleWrapper
+     ideally would be to hide it via opaque pointer like Module or Subsystem.
+
+Next tasks are suspended:
+#0. Create functions for getting priv ops in input. -
+#1. Delete redundant definitions in input. -
+#2. Use array in input. -
 
