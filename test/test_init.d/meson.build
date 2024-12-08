@@ -1,14 +1,14 @@
 root = join_paths('..', '..')
 src = join_paths(root, 'src')
 
-test_main_name = 'test_main.c'
+test_init_name = 'test_init.c'
 
-test_main_src = files([test_main_name]) + sources
+test_init_src = files([test_init_name]) + sources
 
-test_main_exe = executable('test_main',
+test_init_exe = executable('test_init',
   sources: [
-    test_main_src,
-    unity_gen_runner.process(test_main_name),
+    test_init_src,
+    unity_gen_runner.process(test_init_name),
   ],
   include_directories: [src],
   dependencies: test_dependencies,
@@ -19,4 +19,4 @@ test_main_exe = executable('test_main',
   ]
 )
 
-test('test_main', test_main_exe)
+test('test_init', test_init_exe)

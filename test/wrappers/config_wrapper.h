@@ -4,10 +4,11 @@ struct ConfigSubsystem {
   array_t registrations;
 };
 
-typedef struct ConfigSubsystem *config_t;
+typedef struct ConfigSubsystem *config_sys_t;
 
 struct ConfigPrivateOps {
-  struct ConfigSubsystem *(*get_subsystem)(void);
+  int (*init)(config_sys_t *);
+  void (*destroy)(config_sys_t *);
 };
 
-const size_t max_registrations = 10;
+static const size_t max_registrations = 100;

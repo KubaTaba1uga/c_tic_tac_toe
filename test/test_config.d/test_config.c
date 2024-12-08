@@ -29,29 +29,16 @@ struct ConfigSubsystem *mock_config_get_subsystem(void) {
 };
 
 void setUp() {
-  struct InitOps *init_ops;
   int err;
-  init_ops = get_init_ops();
   config_ops = get_config_ops();
   array_ops = get_array_utils_ops();
   config_priv_ops = config_ops->private_ops;
 
-  // Disable game init and destroy
-  init_game_reg.init = NULL;
-  init_game_reg.destroy = NULL;
-  init_ops->initialize_system();
-
-  config_priv_ops->get_subsystem = mock_config_get_subsystem;
-
-  err = array_ops->init(&config_subsystem.registrations, max_registrations);
+  err = init_config_reg.init();
   TEST_ASSERT_EQUAL_INT(0, err);
 }
 
-void tearDown() {
-  struct InitOps *init_ops = get_init_ops();
-  init_ops->destroy_system();
-  array_ops->destroy(&config_subsystem.registrations);
-}
+void tearDown() { init_config_reg.destroy(); }
 
 void test_config_register_var_success(void) {
   int err;
@@ -66,6 +53,7 @@ void test_config_register_var_success(void) {
 
   TEST_ASSERT_EQUAL_INT(0, err);
 }
+void break_(void){};
 
 void test_config_register_var_failure(void) {
   size_t i;
@@ -76,7 +64,7 @@ void test_config_register_var_failure(void) {
   for (i = 0; i < max_registrations; i++) {
     err = config_ops->register_var(&null_def);
   }
-
+  break_();
   err = config_ops->register_var(&null_def);
 
   TEST_ASSERT_EQUAL_INT(EINVAL, err);

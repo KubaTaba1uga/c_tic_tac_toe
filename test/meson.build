@@ -14,6 +14,7 @@ unity_gen_runner = generator(
 )
 
 subdir('test_unity.d')
+subdir('test_init.d')
 subdir('test_main.d')
 subdir('test_utils.d')
 subdir('test_config.d')

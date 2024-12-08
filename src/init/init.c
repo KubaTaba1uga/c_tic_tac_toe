@@ -14,7 +14,6 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
-#include <asm-generic/errno.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -43,25 +42,25 @@ struct InitSubsystem {
   array_t registrations;
 };
 
-typedef struct InitSubsystem *init_t;
+typedef struct InitSubsystem *init_sys_t;
 
 struct InitPrivateOps {
-  int (*init)(init_t *);
-  void (*destroy)(init_t *);
-  int (*register_module)(init_t, struct InitRegistrationData *);
-  int (*init_modules)(init_t);
-  void (*destroy_modules)(init_t);
-  int (*init_registration)(struct InitRegistrationData *registration);
-  void (*destroy_registration)(struct InitRegistrationData *registration);
+  int (*init)(init_sys_t *);
+  void (*destroy)(init_sys_t *);
+  int (*init_modules)(init_sys_t);
+  void (*destroy_modules)(init_sys_t);
+  int (*init_registration)(struct InitRegistrationData *);
+  void (*destroy_registration)(struct InitRegistrationData *);
+  int (*register_module)(init_sys_t, struct InitRegistrationData *);
 };
 
-static init_t init_subsystem;
+static init_sys_t init_subsystem;
 static struct ArrayUtilsOps *array_ops;
-static struct InitPrivateOps *init_ops;
 static struct LoggingUtilsOps *logging_ops;
 static const size_t max_registrations = 100;
 static const char module_id[] = "init_subsystem";
 
+static struct InitPrivateOps *init_priv_ops;
 static struct InitPrivateOps *get_init_priv_ops(void);
 
 /*******************************************************************************
@@ -81,10 +80,10 @@ static int init_initialize_system(void) {
   int err;
 
   logging_ops = get_logging_utils_ops();
+  init_priv_ops = get_init_priv_ops();
   array_ops = get_array_utils_ops();
-  init_ops = get_init_priv_ops();
 
-  err = init_ops->init(&init_subsystem);
+  err = init_priv_ops->init(&init_subsystem);
   if (err) {
     logging_ops->log_err(module_id, "Unable to initialize init subsystem.");
     return err;
@@ -93,7 +92,7 @@ static int init_initialize_system(void) {
   for (i = 0; i < sizeof(init_modules) / sizeof(struct InitRegistrationData *);
        i++) {
     init_module = init_modules[i];
-    err = init_ops->register_module(init_subsystem, init_module);
+    err = init_priv_ops->register_module(init_subsystem, init_module);
     if (err) {
       logging_ops->log_err(module_id, "Unable to register init module %s.",
                            init_module->id);
@@ -104,7 +103,7 @@ static int init_initialize_system(void) {
                           init_module->id);
   }
 
-  err = init_ops->init_modules(init_subsystem);
+  err = init_priv_ops->init_modules(init_subsystem);
   if (err) {
     logging_ops->log_err(module_id, "Unable to init modules.", init_module->id);
     return err;
@@ -114,18 +113,18 @@ static int init_initialize_system(void) {
 };
 
 static void init_destroy_system(void) {
-  if (!init_ops)
+  if (!init_priv_ops)
     return;
 
-  init_ops->destroy_modules(init_subsystem);
-  init_ops->destroy(&init_subsystem);
+  init_priv_ops->destroy_modules(init_subsystem);
+  init_priv_ops->destroy(&init_subsystem);
 }
 
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
-static int init_init(init_t *init) {
-  init_t tmp_init;
+static int init_init(init_sys_t *init) {
+  init_sys_t tmp_init;
   int err;
 
   tmp_init = malloc(sizeof(struct InitSubsystem));
@@ -147,8 +146,8 @@ static int init_init(init_t *init) {
   return 0;
 };
 
-static void init_destroy(init_t *init) {
-  init_t tmp_init = *init;
+static void init_destroy(init_sys_t *init) {
+  init_sys_t tmp_init = *init;
 
   if (!array_ops) {
     return;
@@ -160,7 +159,7 @@ static void init_destroy(init_t *init) {
   *init = NULL;
 }
 
-static int init_register(init_t init,
+static int init_register(init_sys_t init,
                          struct InitRegistrationData *registration_data) {
   int err;
 
@@ -188,7 +187,7 @@ static int init_register(init_t init,
   return 0;
 }
 
-static int init_initialize_registrations(init_t init) {
+static int init_initialize_registrations(init_sys_t init) {
   struct InitRegistrationData *registration_data;
   int err = 0;
   size_t i;
@@ -204,7 +203,7 @@ static int init_initialize_registrations(init_t init) {
       return EINVAL;
     }
 
-    err = init_ops->init_registration(registration_data);
+    err = init_priv_ops->init_registration(registration_data);
     if (err) {
       return err;
     }
@@ -215,7 +214,7 @@ static int init_initialize_registrations(init_t init) {
   return 0;
 }
 
-static void init_destroy_registrations(init_t init) {
+static void init_destroy_registrations(init_sys_t init) {
   struct InitRegistrationData *registration_data;
   size_t i;
 
@@ -233,7 +232,7 @@ static void init_destroy_registrations(init_t init) {
       return;
     }
 
-    init_ops->destroy_registration(registration_data);
+    init_priv_ops->destroy_registration(registration_data);
   }
 }
 
@@ -278,7 +277,7 @@ static struct InitOps init_pub_ops = {.initialize_system =
                                           init_initialize_system,
                                       .destroy_system = init_destroy_system};
 
-static struct InitPrivateOps init_priv_ops = {
+static struct InitPrivateOps init_priv_ops_ = {
     .init = init_init,
     .destroy = init_destroy,
     .register_module = init_register,
@@ -289,4 +288,4 @@ static struct InitPrivateOps init_priv_ops = {
 
 struct InitOps *get_init_ops(void) { return &init_pub_ops; }
 
-struct InitPrivateOps *get_init_priv_ops(void) { return &init_priv_ops; }
+struct InitPrivateOps *get_init_priv_ops(void) { return &init_priv_ops_; }

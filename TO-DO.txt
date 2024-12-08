@@ -1,4 +1,4 @@
-0. Create functions for getting priv ops in config
-1. Delete redundant definitions in config
-2. Use array in config.
+0. Create functions for getting priv ops in input. -
+1. Delete redundant definitions in input. -
+2. Use array in input. -
 
