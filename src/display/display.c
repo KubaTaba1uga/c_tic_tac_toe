@@ -10,8 +10,10 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 // App's internal libs
 #include "config/config.h"
@@ -30,9 +32,11 @@ struct DisplaySubsystem {
   size_t count;
 };
 
+struct ConfigRegistrationData *display_env;
 static char module_id[] = "display_subsystem";
 static struct DisplaySubsystem display_subsystem;
 static int display_init(void);
+static void display_destroy(void);
 static int display_display(struct DataToDisplay *data);
 static struct DisplaySubsystem *display_get_subsystem(void);
 static void
@@ -61,14 +65,13 @@ struct DisplayOps *get_display_ops(void) { return &display_ops; };
 struct InitRegistrationData init_display_reg = {
     .id = module_id,
     .init = display_init,
-    .destroy = NULL,
+    .destroy = display_destroy,
 };
 
 /*******************************************************************************
  *    API
  ******************************************************************************/
 static int display_init(void) {
-  struct ConfigRegistrationData display_env;
   struct LoggingUtilsOps *logging_ops;
   struct ConfigOps *config_ops;
   int err;
@@ -76,8 +79,15 @@ static int display_init(void) {
   logging_ops = get_logging_utils_ops();
   config_ops = get_config_ops();
 
-  display_env.var_name = "display";
-  display_env.default_value = DISPLAY_CLI_NAME;
+  display_env = malloc(sizeof(struct ConfigRegistrationData));
+  if (!display_env) {
+    logging_ops->log_err(
+        module_id, "Unable to allocate memory for configuration variable.");
+    return ENOMEM;
+  }
+
+  display_env->var_name = "display";
+  display_env->default_value = DISPLAY_CLI_NAME;
 
   err = config_ops->register_var(display_env);
   if (err) {
@@ -88,6 +98,8 @@ static int display_init(void) {
 
   return 0;
 };
+
+static void display_destroy(void) { free(display_env); }
 
 static int display_display(struct DataToDisplay *data) {
   struct LoggingUtilsOps *logging_ops;

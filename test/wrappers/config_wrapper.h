@@ -1,13 +1,13 @@
-#include "config/config.h"
-#include <stdlib.h>
-
-#define MAX_CONFIG_TEST_REGISTRATIONS 100
+#include "utils/array_utils.h"
 
 struct ConfigSubsystem {
-  size_t count;
-  struct ConfigRegistrationData registrations[MAX_CONFIG_TEST_REGISTRATIONS];
+  array_t registrations;
 };
+
+typedef struct ConfigSubsystem *config_t;
 
 struct ConfigPrivateOps {
   struct ConfigSubsystem *(*get_subsystem)(void);
 };
+
+const size_t max_registrations = 10;

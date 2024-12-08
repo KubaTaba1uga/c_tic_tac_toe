@@ -29,7 +29,7 @@ struct ConfigRegistrationData {
 };
 
 struct ConfigOps {
-  int (*register_var)(struct ConfigRegistrationData config_registration_data);
+  int (*register_var)(struct ConfigRegistrationData *config_registration_data);
   char *(*get_var)(char *);
   void *private_ops;
 };

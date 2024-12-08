@@ -14,6 +14,7 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <asm-generic/errno.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -55,6 +56,9 @@ struct InitPrivateOps {
 };
 
 static init_t init_subsystem;
+static struct ArrayUtilsOps *array_ops;
+static struct InitPrivateOps *init_ops;
+static struct LoggingUtilsOps *logging_ops;
 static const size_t max_registrations = 100;
 static const char module_id[] = "init_subsystem";
 
@@ -73,12 +77,11 @@ static int init_initialize_system(void) {
       &init_game_reg,
   };
   struct InitRegistrationData *init_module;
-  struct LoggingUtilsOps *logging_ops;
-  struct InitPrivateOps *init_ops;
   size_t i;
   int err;
 
   logging_ops = get_logging_utils_ops();
+  array_ops = get_array_utils_ops();
   init_ops = get_init_priv_ops();
 
   err = init_ops->init(&init_subsystem);
@@ -111,8 +114,9 @@ static int init_initialize_system(void) {
 };
 
 static void init_destroy_system(void) {
-  struct InitPrivateOps *init_ops;
-  init_ops = get_init_priv_ops();
+  if (!init_ops)
+    return;
+
   init_ops->destroy_modules(init_subsystem);
   init_ops->destroy(&init_subsystem);
 }
@@ -121,13 +125,16 @@ static void init_destroy_system(void) {
  *    PRIVATE API
  ******************************************************************************/
 static int init_init(init_t *init) {
-  struct ArrayUtilsOps *array_ops = get_array_utils_ops();
   init_t tmp_init;
   int err;
 
   tmp_init = malloc(sizeof(struct InitSubsystem));
   if (!tmp_init) {
     return ENOMEM;
+  }
+
+  if (!array_ops) {
+    return ENODATA;
   }
 
   err = array_ops->init(&tmp_init->registrations, max_registrations);
@@ -141,8 +148,11 @@ static int init_init(init_t *init) {
 };
 
 static void init_destroy(init_t *init) {
-  struct ArrayUtilsOps *array_ops = get_array_utils_ops();
   init_t tmp_init = *init;
+
+  if (!array_ops) {
+    return;
+  }
 
   array_ops->destroy(&tmp_init->registrations);
   free(tmp_init);
@@ -152,9 +162,11 @@ static void init_destroy(init_t *init) {
 
 static int init_register(init_t init,
                          struct InitRegistrationData *registration_data) {
-  struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
-  struct ArrayUtilsOps *array_ops = get_array_utils_ops();
   int err;
+
+  if (!array_ops || !logging_ops) {
+    return ENODATA;
+  }
 
   if (array_ops->get_length(init->registrations) < max_registrations) {
     err = array_ops->append(init->registrations, registration_data);
@@ -177,12 +189,13 @@ static int init_register(init_t init,
 }
 
 static int init_initialize_registrations(init_t init) {
-  struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
-  struct ArrayUtilsOps *array_ops = get_array_utils_ops();
-  struct InitPrivateOps *init_ops = get_init_priv_ops();
   struct InitRegistrationData *registration_data;
   int err = 0;
   size_t i;
+
+  if (!array_ops || !logging_ops) {
+    return ENODATA;
+  }
 
   for (i = 0; i < array_ops->get_length(init->registrations); ++i) {
     registration_data = array_ops->get_element(init->registrations, i);
@@ -203,16 +216,20 @@ static int init_initialize_registrations(init_t init) {
 }
 
 static void init_destroy_registrations(init_t init) {
-  struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
-  struct ArrayUtilsOps *array_ops = get_array_utils_ops();
-  struct InitPrivateOps *init_ops = get_init_priv_ops();
   struct InitRegistrationData *registration_data;
-  size_t i = array_ops->get_length(init->registrations);
+  size_t i;
+
+  if (!array_ops || !logging_ops) {
+    return;
+  }
+
+  i = array_ops->get_length(init->registrations);
 
   while (--i) {
     registration_data = array_ops->get_element(init->registrations, i);
     if (!registration_data) {
-      logging_ops->log_err(module_id, "No module data");
+      logging_ops->log_err(module_id,
+                           "Unable to destroy NULL registration data");
       return;
     }
 
@@ -224,6 +241,10 @@ static int
 init_initialize_registration(struct InitRegistrationData *registration) {
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   int err;
+
+  if (!logging_ops || !registration) {
+    return ENODATA;
+  }
 
   if (!registration->init)
     return 0;
@@ -242,9 +263,7 @@ init_initialize_registration(struct InitRegistrationData *registration) {
 
 static void
 init_destroy_registration(struct InitRegistrationData *registration) {
-  struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
-
-  if (!registration->destroy)
+  if (!logging_ops || !registration || !registration->destroy)
     return;
 
   logging_ops->log_info(module_id, "Destroying %s", registration->id);
@@ -255,8 +274,9 @@ init_destroy_registration(struct InitRegistrationData *registration) {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-static struct InitOps init_ops = {.initialize_system = init_initialize_system,
-                                  .destroy_system = init_destroy_system};
+static struct InitOps init_pub_ops = {.initialize_system =
+                                          init_initialize_system,
+                                      .destroy_system = init_destroy_system};
 
 static struct InitPrivateOps init_priv_ops = {
     .init = init_init,
@@ -267,6 +287,6 @@ static struct InitPrivateOps init_priv_ops = {
     .init_registration = init_initialize_registration,
     .destroy_registration = init_destroy_registration};
 
-struct InitOps *get_init_ops(void) { return &init_ops; }
+struct InitOps *get_init_ops(void) { return &init_pub_ops; }
 
 struct InitPrivateOps *get_init_priv_ops(void) { return &init_priv_ops; }

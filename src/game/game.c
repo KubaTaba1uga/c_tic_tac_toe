@@ -10,7 +10,9 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <asm-generic/errno-base.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -26,6 +28,8 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
+struct ConfigRegistrationData *user1_input, *user2_input;
+
 static int game_init(void);
 static int game_process_user1(enum InputEvents input_event);
 static int game_process_user2(enum InputEvents input_event);
@@ -125,7 +129,7 @@ int game_process_and_display(enum InputEvents input_event,
 }
 
 int game_init(void) {
-  struct ConfigRegistrationData user1_input, user2_input;
+
   struct LoggingUtilsOps *logging_ops;
   struct ConfigOps *config_ops;
   struct InputOps *input_ops;
@@ -135,8 +139,14 @@ int game_init(void) {
   config_ops = get_config_ops();
   input_ops = get_input_ops();
 
-  user1_input.var_name = "user1_input";
-  user1_input.default_value = "keyboard1";
+  user1_input = malloc(sizeof(struct ConfigRegistrationData));
+  if (!user1_input) {
+    logging_ops->log_err(module_id, "Unable to allocate memory for user 1.");
+    return ENOMEM;
+  }
+
+  user1_input->var_name = "user1_input";
+  user1_input->default_value = "keyboard1";
   err = config_ops->register_var(user1_input);
   if (err) {
     logging_ops->log_err(module_id,
@@ -144,8 +154,14 @@ int game_init(void) {
     return err;
   }
 
-  user2_input.var_name = "user2_input";
-  user2_input.default_value = "keyboard1";
+  user2_input = malloc(sizeof(struct ConfigRegistrationData));
+  if (!user2_input) {
+    logging_ops->log_err(module_id, "Unable to allocate memory for user 2.");
+    return ENOMEM;
+  }
+
+  user2_input->var_name = "user2_input";
+  user2_input->default_value = "keyboard1";
   err = config_ops->register_var(user2_input);
   if (err) {
     logging_ops->log_err(module_id,
