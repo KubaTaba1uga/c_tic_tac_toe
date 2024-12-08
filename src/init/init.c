@@ -14,7 +14,6 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
-#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -48,9 +47,9 @@ typedef struct InitSubsystem *init_t;
 struct InitPrivateOps {
   int (*init)(init_t *);
   void (*destroy)(init_t *);
-  int (*register_module)(struct InitSubsystem *, struct InitRegistrationData *);
-  int (*init_modules)(struct InitSubsystem *);
-  void (*destroy_modules)(struct InitSubsystem *);
+  int (*register_module)(init_t, struct InitRegistrationData *);
+  int (*init_modules)(init_t);
+  void (*destroy_modules)(init_t);
   int (*init_registration)(struct InitRegistrationData *registration);
   void (*destroy_registration)(struct InitRegistrationData *registration);
 };
@@ -123,7 +122,7 @@ static void init_destroy_system(void) {
  ******************************************************************************/
 static int init_init(init_t *init) {
   struct ArrayUtilsOps *array_ops = get_array_utils_ops();
-  struct InitSubsystem *tmp_init;
+  init_t tmp_init;
   int err;
 
   tmp_init = malloc(sizeof(struct InitSubsystem));
@@ -143,7 +142,7 @@ static int init_init(init_t *init) {
 
 static void init_destroy(init_t *init) {
   struct ArrayUtilsOps *array_ops = get_array_utils_ops();
-  struct InitSubsystem *tmp_init = *init;
+  init_t tmp_init = *init;
 
   array_ops->destroy(&tmp_init->registrations);
   free(tmp_init);
@@ -151,7 +150,7 @@ static void init_destroy(init_t *init) {
   *init = NULL;
 }
 
-static int init_register(struct InitSubsystem *init,
+static int init_register(init_t init,
                          struct InitRegistrationData *registration_data) {
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   struct ArrayUtilsOps *array_ops = get_array_utils_ops();
@@ -177,7 +176,7 @@ static int init_register(struct InitSubsystem *init,
   return 0;
 }
 
-static int init_initialize_registrations(struct InitSubsystem *init) {
+static int init_initialize_registrations(init_t init) {
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   struct ArrayUtilsOps *array_ops = get_array_utils_ops();
   struct InitPrivateOps *init_ops = get_init_priv_ops();
@@ -203,7 +202,7 @@ static int init_initialize_registrations(struct InitSubsystem *init) {
   return 0;
 }
 
-static void init_destroy_registrations(struct InitSubsystem *init) {
+static void init_destroy_registrations(init_t init) {
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   struct ArrayUtilsOps *array_ops = get_array_utils_ops();
   struct InitPrivateOps *init_ops = get_init_priv_ops();
