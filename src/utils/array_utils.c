@@ -174,12 +174,13 @@ int array_search_elements(array_t array, array_search_t search_wrap) {
     return 0;
   }
 
+  // Handle no element
+  *search_wrap->result_placeholder = NULL;
+  search_wrap->state.state = ARRAY_SEARCH_STATE_DONE;
+
   for (; i <= array_ops->get_length(array); i++) {
     element = array_ops->get_element(array, i);
     if (!element) {
-      // Handle no element
-      *search_wrap->result_placeholder = NULL;
-      search_wrap->state.state = ARRAY_SEARCH_STATE_DONE;
       return 0;
     }
 
@@ -190,10 +191,6 @@ int array_search_elements(array_t array, array_search_t search_wrap) {
       return 0;
     }
   }
-
-  // Handle no element
-  *search_wrap->result_placeholder = NULL;
-  search_wrap->state.state = ARRAY_SEARCH_STATE_DONE;
 
   return 0;
 };
