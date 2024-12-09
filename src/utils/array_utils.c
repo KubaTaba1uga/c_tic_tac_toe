@@ -126,6 +126,7 @@ static int array_init_search_wrapper(array_search_t *search_wrap,
   }
 
   tmp_wrap->state.index = 0;
+  *result_placeholder = NULL;
   tmp_wrap->filter_data = filter_data;
   tmp_wrap->filter_func = filter_func;
   tmp_wrap->state.state = ARRAY_SEARCH_STATE_NONE;
