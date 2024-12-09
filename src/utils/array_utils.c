@@ -229,7 +229,7 @@ static struct ArrayUtilsOps array_utils_ops = {
     .search_elements = array_search_elements,
     .init_search_wrapper = array_init_search_wrapper,
     .destroy_search_wrapper = array_destroy_search_wrapper,
-    .get_state_search_wrapper};
+    .get_state_search_wrapper = array_search_get_state};
 
 struct ArrayPrivateOps *get_array_priv_ops(void) { return &array_priv_ops; };
 ;

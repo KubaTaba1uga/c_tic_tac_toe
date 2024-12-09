@@ -82,3 +82,117 @@ void test_array_increment_length_private() {
 
   TEST_ASSERT_EQUAL_INT(1, array_ops->get_length(test_array));
 }
+
+static bool compare_ints(void *el, void *target) {
+  return *(int *)el == *(int *)target;
+}
+
+void test_array_init_search_wrapper_success() {
+  struct ArraySearchWrapper *search_wrapper;
+  int element = 42;
+  int *result = NULL;
+
+  int err = array_ops->init_search_wrapper(&search_wrapper, &element,
+                                           compare_ints, (void **)&result);
+
+  TEST_ASSERT_EQUAL_INT(0, err);
+  TEST_ASSERT_NOT_NULL(search_wrapper);
+
+  array_ops->destroy_search_wrapper(&search_wrapper);
+}
+
+void test_array_destroy_search_wrapper_success() {
+  struct ArraySearchWrapper *search_wrapper;
+  int element = 42;
+  int *result = NULL;
+
+  array_ops->init_search_wrapper(&search_wrapper, &element, compare_ints,
+                                 (void **)&result);
+
+  array_ops->destroy_search_wrapper(&search_wrapper);
+  TEST_ASSERT_NULL(search_wrapper);
+}
+
+void test_array_get_state_search_wrapper_default_value() {
+  struct ArraySearchWrapper *search_wrapper;
+  int element = 42;
+  int *result = NULL;
+
+  array_ops->init_search_wrapper(&search_wrapper, &element, compare_ints,
+                                 (void **)&result);
+
+  enum ArraySearchStateEnum state =
+      array_ops->get_state_search_wrapper(search_wrapper);
+  TEST_ASSERT_EQUAL_INT(ARRAY_SEARCH_STATE_NONE, state);
+
+  array_ops->destroy_search_wrapper(&search_wrapper);
+}
+
+void test_array_search_elements_found() {
+  array_search_t search_wrapper;
+  int *result = NULL;
+  int element = 42;
+  int err;
+
+  array_ops->append(test_array, &element);
+
+  err = array_ops->init_search_wrapper(&search_wrapper, &element, compare_ints,
+                                       (void **)&result);
+
+  array_ops->search_elements(test_array, search_wrapper);
+  TEST_ASSERT_EQUAL_INT(0, err);
+  TEST_ASSERT_EQUAL_PTR(&element, result);
+
+  array_ops->destroy_search_wrapper(&search_wrapper);
+}
+
+void test_array_search_elements_not_found() {
+  array_search_t search_wrapper;
+  int search_target = 24;
+  int *result = NULL;
+  int element = 42;
+  int err;
+
+  array_ops->append(test_array, &element);
+
+  err = array_ops->init_search_wrapper(&search_wrapper, &search_target,
+                                       compare_ints, (void **)&result);
+
+  TEST_ASSERT_EQUAL_INT(0, err);
+
+  err = array_ops->search_elements(test_array, search_wrapper);
+  TEST_ASSERT_EQUAL_INT(0, err);
+  TEST_ASSERT_NULL(result);
+
+  array_ops->destroy_search_wrapper(&search_wrapper);
+}
+
+void test_array_search_multiple_elements() {
+  int elements[] = {10, 20, 30, 40, 50};
+  size_t num_elements = sizeof(elements) / sizeof(int);
+  int err;
+
+  // Add elements to the array
+  for (size_t i = 0; i < num_elements; i++) {
+    array_ops->append(test_array, &elements[i]);
+  }
+
+  // Look up each element
+  for (size_t i = 0; i < num_elements; i++) {
+    array_search_t search_wrapper;
+    int *result = NULL;
+
+    err = array_ops->init_search_wrapper(&search_wrapper, &elements[i],
+                                         compare_ints, (void **)&result);
+    TEST_ASSERT_EQUAL_INT(0, err);
+
+    err = array_ops->search_elements(test_array, search_wrapper);
+    TEST_ASSERT_EQUAL_INT(0, err);
+    TEST_ASSERT_NOT_NULL(result);
+    TEST_ASSERT_EQUAL_INT(elements[i], *result);
+    TEST_ASSERT_EQUAL_INT(ARRAY_SEARCH_STATE_INPROGRESS,
+                          array_ops->get_state_search_wrapper(search_wrapper));
+
+    array_ops->destroy_search_wrapper(&search_wrapper);
+  }
+}

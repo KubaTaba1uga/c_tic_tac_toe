@@ -139,110 +139,6 @@ static int subsystem_utils_register_module(subsystem_t subsystem,
   return 0;
 };
 
-int subsystem_utils_init_get_module_wrapper(module_get_t *get_wrap,
-                                            void *filter_data,
-                                            bool (*filter_func)(const char *,
-                                                                void *, void *),
-                                            void **result_placeholder) {
-  module_get_t tmp_wrap;
-
-  if (!logging_ops)
-    return ENODATA;
-
-  if (!get_wrap || !filter_data || !filter_func || !result_placeholder)
-    return EINVAL;
-
-  tmp_wrap = malloc(sizeof(struct ModuleGetWrapper));
-  if (!tmp_wrap) {
-    logging_ops->log_err(module_id, "Unable to initialize module get data: %s",
-                         strerror(ENOMEM));
-    return ENOMEM;
-  }
-
-  tmp_wrap->state.i = 0;
-  tmp_wrap->filter_data = filter_data;
-  tmp_wrap->filter_func = filter_func;
-  tmp_wrap->state.state = SUBSYSTEM_STATE_NONE;
-  tmp_wrap->result_placeholder = result_placeholder;
-
-  *get_wrap = tmp_wrap;
-
-  return 0;
-};
-
-void subsystem_utils_destroy_get_module_wrapper(module_get_t *get_wrap) {
-  module_get_t tmp_wrap;
-
-  if (!logging_ops)
-    return;
-
-  if (!get_wrap)
-    return;
-
-  tmp_wrap = *get_wrap;
-
-  free(tmp_wrap);
-
-  *get_wrap = NULL;
-};
-
-int subsystem_utils_get_module(subsystem_t subsystem, module_get_t get_wrap) {
-  module_t module;
-  size_t i;
-
-  if (!array_ops || !logging_ops || !std_lib_ops) {
-    return ENODATA;
-  }
-
-  if (!subsystem || !get_wrap || !get_wrap->filter_data ||
-      !get_wrap->filter_func || !get_wrap->result_placeholder) {
-    return EINVAL;
-  }
-
-  switch (get_wrap->state.state) {
-  case SUBSYSTEM_STATE_NONE:
-    i = 0;
-    break;
-  case SUBSYSTEM_STATE_ITER_INPROGRESS:
-    i = get_wrap->state.i;
-    break;
-  default:
-    return 0;
-  }
-
-  for (; i <= array_ops->get_length(subsystem->registrations); i++) {
-    module = array_ops->get_element(subsystem->registrations, i);
-    if (!module) {
-      get_wrap->state.state = SUBSYSTEM_STATE_ITER_DONE;
-      return 0;
-    }
-
-    if (get_wrap->filter_func(module->id, module->private,
-                              get_wrap->filter_data)) {
-      *get_wrap->result_placeholder = module->private;
-      get_wrap->state.state = SUBSYSTEM_STATE_ITER_INPROGRESS;
-      get_wrap->state.i = i;
-      return 0;
-    }
-  }
-
-  return ENOENT; // ENOENT = No entry found
-};
-
-void *unpack_value_get_module_wrapper(module_get_t get_wrap) {
-  if (!get_wrap || !get_wrap->filter_data || !get_wrap->filter_func ||
-      !get_wrap->result_placeholder) {
-    return NULL;
-  }
-
-  switch (get_wrap->state.state) {
-  case SUBSYSTEM_STATE_ITER_INPROGRESS:
-    return *get_wrap->result_placeholder;
-  default:
-    return NULL;
-  }
-};
-
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
@@ -267,8 +163,8 @@ struct SubsystemUtilsOps subsystem_utils_pub_ops = {
     .init = subsystem_utils_init,
     .destroy = subsystem_utils_destroy,
     .register_module = subsystem_utils_register_module,
-    .get_module = subsystem_utils_get_module,
-    .init_get_module_wrapper = subsystem_utils_init_get_module_wrapper,
+    /* .get_module = subsystem_utils_get_module, */
+    /* .init_get_module_wrapper = subsystem_utils_init_get_module_wrapper, */
 };
 
 struct SubsystemUtilsOps *get_subsystem_utils_ops(void) {
