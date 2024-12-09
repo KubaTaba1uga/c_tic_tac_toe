@@ -14,32 +14,20 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "utils/array_utils.h"
+#include "array_utils.h"
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
 typedef struct Module *module_t;
-typedef struct ModuleGetWrapper *module_get_t;
+typedef array_search_t module_get_t;
 typedef struct Subsystem *subsystem_t;
-
-enum ModuleGetStateEnum {
-  SUBSYSTEM_STATE_NONE = 0,
-  SUBSYSTEM_STATE_ITER_INPROGRESS,
-  SUBSYSTEM_STATE_ITER_DONE,
-  SUBSYSTEM_STATE_INVALID,
-};
 
 struct SubsystemUtilsOps {
   int (*init)(subsystem_t *, const char *, const size_t);
   void (*destroy)(subsystem_t *);
   int (*register_module)(subsystem_t, const char *, void *);
   int (*get_module)(subsystem_t, module_get_t);
-  int (*init_get_module_wrapper)(module_get_t *, void *,
-                                 bool (*)(const char *, void *, void *),
-                                 void **);
-  void (*destroy_get_module_wrapper)(module_get_t *);
-  void *(*unpack_value_get_module_wrapper)(module_get_t);
 };
 
 /*******************************************************************************

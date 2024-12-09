@@ -11,11 +11,12 @@
  ******************************************************************************/
 // C standard library
 #include <errno.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 
 // App's internal libs
-#include "utils/array_utils.h"
+#include "array_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
@@ -26,6 +27,18 @@ struct Array {
   void **data;
 };
 
+struct ArraySearchState {
+  enum ArraySearchStateEnum state;
+  size_t index;
+};
+
+struct ArraySearchWrapper {
+  void *filter_data;
+  bool (*filter_func)(void *, void *);
+  void **result_placeholder;
+  struct ArraySearchState state;
+};
+
 struct ArrayPrivateOps {
   void (*increment_length)(array_t);
   size_t (*get_size)(array_t);
@@ -34,7 +47,7 @@ struct ArrayPrivateOps {
 struct ArrayPrivateOps *get_array_priv_ops(void);
 
 /*******************************************************************************
- *    API
+ *    PUBLIC API
  ******************************************************************************/
 static int array_init(array_t *array, size_t size) {
   struct Array *new_array;
@@ -98,6 +111,100 @@ static void *array_get_element(array_t array, size_t index) {
   return tmp_array->data[index];
 };
 
+static int array_init_search_wrapper(array_search_t *search_wrap,
+                                     void *filter_data,
+                                     bool (*filter_func)(void *, void *),
+                                     void **result_placeholder) {
+  array_search_t tmp_wrap;
+
+  if (!search_wrap || !filter_data || !filter_func || !result_placeholder)
+    return EINVAL;
+
+  tmp_wrap = malloc(sizeof(struct ArraySearchWrapper));
+  if (!tmp_wrap) {
+    return ENOMEM;
+  }
+
+  tmp_wrap->state.index = 0;
+  tmp_wrap->filter_data = filter_data;
+  tmp_wrap->filter_func = filter_func;
+  tmp_wrap->state.state = ARRAY_SEARCH_STATE_NONE;
+  tmp_wrap->result_placeholder = result_placeholder;
+
+  *search_wrap = tmp_wrap;
+
+  return 0;
+};
+
+void array_destroy_search_wrapper(array_search_t *search_wrap) {
+  array_search_t tmp_wrap;
+
+  if (!search_wrap)
+    return;
+
+  tmp_wrap = *search_wrap;
+
+  free(tmp_wrap);
+
+  *search_wrap = NULL;
+};
+
+int array_search_elements(array_t array, array_search_t search_wrap) {
+  struct ArrayUtilsOps *array_ops = get_array_utils_ops();
+  void *element;
+  size_t i;
+
+  if (!array_ops) {
+    return ENODATA;
+  }
+
+  if (!array || !search_wrap || !search_wrap->filter_data ||
+      !search_wrap->filter_func || !search_wrap->result_placeholder) {
+    return EINVAL;
+  }
+
+  switch (search_wrap->state.state) {
+  case ARRAY_SEARCH_STATE_NONE:
+    i = 0;
+    break;
+  case ARRAY_SEARCH_STATE_INPROGRESS:
+    i = search_wrap->state.index;
+    break;
+  default:
+    return 0;
+  }
+
+  for (; i <= array_ops->get_length(array); i++) {
+    element = array_ops->get_element(array, i);
+    if (!element) {
+      // Handle no element
+      *search_wrap->result_placeholder = NULL;
+      search_wrap->state.state = ARRAY_SEARCH_STATE_DONE;
+      return 0;
+    }
+
+    if (search_wrap->filter_func(element, search_wrap->filter_data)) {
+      search_wrap->state.index = i;
+      *search_wrap->result_placeholder = element;
+      search_wrap->state.state = ARRAY_SEARCH_STATE_INPROGRESS;
+      return 0;
+    }
+  }
+
+  // Handle no element
+  *search_wrap->result_placeholder = NULL;
+  search_wrap->state.state = ARRAY_SEARCH_STATE_DONE;
+
+  return 0;
+};
+
+enum ArraySearchStateEnum array_search_get_state(array_search_t search_wrap) {
+  return search_wrap->state.state;
+}
+
+/*******************************************************************************
+ *    PRIVATE API
+ ******************************************************************************/
 static void array_increment_length(array_t array) {
   struct Array *tmp_array = array;
 
@@ -122,7 +229,10 @@ static struct ArrayUtilsOps array_utils_ops = {
     .destroy = array_destroy,
     .get_length = array_get_length,
     .get_element = array_get_element,
-};
+    .search_elements = array_search_elements,
+    .init_search_wrapper = array_init_search_wrapper,
+    .destroy_search_wrapper = array_destroy_search_wrapper,
+    .get_state_search_wrapper};
 
 struct ArrayPrivateOps *get_array_priv_ops(void) { return &array_priv_ops; };
 ;

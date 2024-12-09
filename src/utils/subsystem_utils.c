@@ -37,18 +37,6 @@ struct Module {
   void *private;
 };
 
-struct ModuleGetState {
-  enum ModuleGetStateEnum state;
-  size_t i;
-};
-
-struct ModuleGetWrapper {
-  void *filter_data;
-  bool (*filter_func)(const char *, void *, void *);
-  void **result_placeholder;
-  struct ModuleGetState state;
-};
-
 struct SubsystemUtilsPrivateOps {};
 
 static struct ArrayUtilsOps *array_ops;
