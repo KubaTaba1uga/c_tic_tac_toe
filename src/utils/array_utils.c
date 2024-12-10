@@ -169,7 +169,7 @@ int array_search_elements(array_t array, array_search_t search_wrap) {
     i = 0;
     break;
   case ARRAY_SEARCH_STATE_INPROGRESS:
-    i = search_wrap->state.index;
+    i = search_wrap->state.index + 1;
     break;
   default:
     return 0;

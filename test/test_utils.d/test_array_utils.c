@@ -199,31 +199,33 @@ void test_array_search_multiple_elements() {
 void test_array_search_last_element() {
   int elements[] = {10, 20, 30, 40, 50};
   size_t num_elements = sizeof(elements) / sizeof(elements[0]);
+  int *result = NULL;
+  array_search_t search_wrapper;
+  int err;
+  enum ArraySearchStateEnum state;
 
   // Add elements to the array
   for (size_t i = 0; i < num_elements; i++) {
     array_ops->append(test_array, &elements[i]);
   }
 
-  // Look up the last element
-  int *result = NULL;
-  array_search_t search_wrapper;
+  err = array_ops->init_search_wrapper(&search_wrapper,
+                                       &elements[num_elements - 1],
+                                       compare_ints, (void **)&result);
+  TEST_ASSERT_EQUAL_INT(0, err);
 
-  array_ops->init_search_wrapper(&search_wrapper, &elements[num_elements - 1],
-                                 compare_ints, (void **)&result);
-
-  int err = array_ops->search_elements(test_array, search_wrapper);
+  array_ops->search_elements(test_array, search_wrapper);
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_NOT_NULL(result);
   TEST_ASSERT_EQUAL_INT(elements[num_elements - 1], *result);
 
   // Verify search state is done
-  enum ArraySearchStateEnum state =
-      array_ops->get_state_search_wrapper(search_wrapper);
+  state = array_ops->get_state_search_wrapper(search_wrapper);
   TEST_ASSERT_EQUAL_INT(ARRAY_SEARCH_STATE_INPROGRESS, state);
 
   err = array_ops->search_elements(test_array, search_wrapper);
   TEST_ASSERT_EQUAL_INT(0, err);
+  state = array_ops->get_state_search_wrapper(search_wrapper);
   TEST_ASSERT_EQUAL_INT(ARRAY_SEARCH_STATE_DONE, state);
 
   array_ops->destroy_search_wrapper(&search_wrapper);
