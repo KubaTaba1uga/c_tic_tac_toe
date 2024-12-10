@@ -136,6 +136,9 @@ static int subsystem_utils_register_module(subsystem_t subsystem,
     return ENOMEM;
   }
 
+  module->id = module_id;
+  module->private = module_data;
+
   err = array_ops->append(subsystem->registrations, module);
   if (err) {
     logging_ops->log_err(module_id,

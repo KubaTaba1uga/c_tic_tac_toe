@@ -47,3 +47,24 @@ test_array_utils_exe = executable(
 )
 
 test('test_array_utils', test_array_utils_exe)
+
+############################################################################
+#                   Subsystem Utils Tests                                    #
+############################################################################
+test_subsystem_utils_name = 'test_subsystem_utils.c'
+
+test_subsystem_utils_src = files([test_subsystem_utils_name]) + sources
+
+test_subsystem_utils_exe = executable(
+    'test_subsystem_utils',
+    sources: [
+              test_subsystem_utils_src,
+              unity_gen_runner.process(test_subsystem_utils_name),
+	     ],
+    include_directories: [src, test_includes],
+    dependencies: test_dependencies,
+    c_args: ['-DTEST'],
+    link_args: ['-zmuldefs']
+)
+
+test('test_subsystem_utils', test_subsystem_utils_exe)
