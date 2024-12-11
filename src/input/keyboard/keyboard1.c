@@ -47,7 +47,7 @@ struct Keyboard1PrivateOps *keyboard1_private_ops;
 struct Keyboard1PrivateOps *get_keyboard1_priv_ops(void);
 
 /*******************************************************************************
- *    PRIVATE API
+ *    PUBLIC API
  ******************************************************************************/
 static int keyboard1_init(void) {
   int err;
@@ -84,6 +84,9 @@ static void keyboard1_destroy(void) {
   input_reg_ops->destroy(&input_keyboard1_reg);
 }
 
+/*******************************************************************************
+ *    PRIVATE API
+ ******************************************************************************/
 static int keyboard1_stop(void) {
   keyboard_ops->destroy();
   return 0;
@@ -166,6 +169,16 @@ static int keyboard1_callback(size_t n, char buffer[n]) {
 }
 
 /*******************************************************************************
+ *    INIT BOILERCODE
+ ******************************************************************************/
+struct InitRegistrationData init_keyboard1_reg = {
+    .id = INPUT_KEYBOARD1_ID,
+    .init = keyboard1_init,
+    .destroy = keyboard1_destroy,
+};
+struct InitRegistrationData *init_keyboard1_reg_p = &init_keyboard1_reg;
+
+/*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 static struct Keyboard1Ops keyboard1_ops = {};
@@ -182,12 +195,3 @@ static struct Keyboard1PrivateOps keyboard1_private_ops_ = {
 struct Keyboard1PrivateOps *get_keyboard1_priv_ops(void) {
   return &keyboard1_private_ops_;
 }
-/*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-struct InitRegistrationData init_keyboard1_reg = {
-    .id = INPUT_KEYBOARD1_ID,
-    .init = keyboard1_init,
-    .destroy = keyboard1_destroy,
-};
-struct InitRegistrationData *init_keyboard1_reg_p = &init_keyboard1_reg;

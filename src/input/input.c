@@ -34,7 +34,7 @@ struct InputPrivateOps {
   int (*init)(input_sys_t *);
   void (*destroy)(input_sys_t *);
   bool (*search_filter_id)(const char *, void *, void *);
-  bool (*search_filter_all)(const char *, void *, void *);
+  bool (*search_filter_callback)(const char *, void *, void *);
   int (*register_module)(input_sys_t, struct InputRegistrationData *);
   int (*register_callback)(input_sys_t, char *, input_callback_func_t);
 };
@@ -256,9 +256,12 @@ out:
   return err;
 }
 
-static bool input_subsystem_search_filter_all(const char *_, void *__,
-                                              void *___) {
-  return true;
+static bool input_subsystem_search_filter_callback(const char *_, void *tmp,
+                                                   void *__) {
+
+  input_reg_t tmp_reg = tmp;
+
+  return input_reg_ops->get_callback(tmp_reg) != NULL;
 }
 
 static int input_start(input_sys_t input) {
@@ -271,7 +274,7 @@ static int input_start(input_sys_t input) {
   }
 
   err = subsystem_ops->init_search_module_wrapper(
-      &search_wrap, NULL, input_priv_ops->search_filter_all,
+      &search_wrap, NULL, input_priv_ops->search_filter_callback,
       (void **)&registration_data);
   if (err) {
     goto out;
@@ -282,6 +285,7 @@ static int input_start(input_sys_t input) {
     if (err) {
       goto cleanup;
     }
+
     if (!registration_data)
       break;
 
@@ -312,7 +316,7 @@ static int input_wait(input_sys_t input) {
   }
 
   err = subsystem_ops->init_search_module_wrapper(
-      &search_wrap, NULL, input_priv_ops->search_filter_all,
+      &search_wrap, NULL, input_priv_ops->search_filter_callback,
       (void **)&registration_data);
   if (err) {
     goto out;
@@ -323,10 +327,14 @@ static int input_wait(input_sys_t input) {
     if (err) {
       goto cleanup;
     }
+
     if (!registration_data)
       break;
 
-    input_reg_ops->wait(registration_data);
+    err = input_reg_ops->wait(registration_data);
+    if (err) {
+      goto cleanup;
+    }
 
     logging_ops->log_info(module_id, "Waited for %s module",
                           input_reg_ops->get_id(registration_data));
@@ -350,7 +358,7 @@ static int input_stop(input_sys_t input) {
   }
 
   err = subsystem_ops->init_search_module_wrapper(
-      &search_wrap, NULL, input_priv_ops->search_filter_all,
+      &search_wrap, NULL, input_priv_ops->search_filter_callback,
       (void **)&registration_data);
   if (err) {
     goto out;
@@ -361,11 +369,14 @@ static int input_stop(input_sys_t input) {
     if (err) {
       goto cleanup;
     }
+
     if (!registration_data)
       break;
 
-    input_reg_ops->stop(registration_data);
-    input_reg_ops->set_callback(registration_data, NULL);
+    err = input_reg_ops->stop(registration_data);
+    if (err) {
+      goto cleanup;
+    }
 
     logging_ops->log_info(module_id, "Stopped %s module",
                           input_reg_ops->get_id(registration_data));
@@ -410,7 +421,6 @@ static struct InputPrivateOps input_priv_ops_ = {
     .register_module = input_register_module,
     .register_callback = input_register_callback,
     .search_filter_id = input_subsystem_search_filter_id,
-    .search_filter_all = input_subsystem_search_filter_all,
-};
+    .search_filter_callback = input_subsystem_search_filter_callback};
 
 struct InputPrivateOps *get_input_priv_ops(void) { return &input_priv_ops_; }
