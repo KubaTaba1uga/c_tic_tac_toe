@@ -1,3 +1,4 @@
+#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,24 +6,30 @@
 
 #include "input/input.h"
 #include "input/input_registration.h"
+#include "utils/std_lib_utils.h"
 
 // Define the opaque pointer structure
 struct InputRegistrationData {
   const char *id;
   input_wait_func_t wait;
+  input_stop_func_t stop;
   input_start_func_t start;
-  input_destroy_func_t stop;
   input_callback_func_t callback;
 };
 
 int input_reg_init(input_reg_t *input_reg, const char *id,
                    input_wait_func_t wait, input_start_func_t start,
-                   input_destroy_func_t stop) {
+                   input_stop_func_t stop) {
+  struct StdLibUtilsOps *std_lib_ops;
+  input_reg_t tmp_reg;
+
   if (!input_reg || !id || !wait || !start || !stop) {
     return EINVAL;
   }
 
-  input_reg_t tmp_reg = malloc(sizeof(struct InputRegistrationData));
+  std_lib_ops = get_std_lib_utils_ops();
+
+  tmp_reg = std_lib_ops->alloc_raw_mem(sizeof(struct InputRegistrationData));
   if (!tmp_reg) {
     return ENOMEM;
   }
@@ -58,25 +65,28 @@ const char *input_reg_get_id(input_reg_t input_reg) {
   return input_reg->id;
 }
 
-input_wait_func_t input_reg_get_wait(input_reg_t input_reg) {
+int input_reg_wait(input_reg_t input_reg) {
   if (!input_reg) {
-    return NULL;
+    return EINVAL;
   }
-  return input_reg->wait;
+
+  return input_reg->wait();
 }
 
-input_start_func_t input_reg_get_start(input_reg_t input_reg) {
+int input_reg_start(input_reg_t input_reg) {
   if (!input_reg) {
-    return NULL;
+    return EINVAL;
   }
-  return input_reg->start;
+
+  return input_reg->start();
 }
 
-input_destroy_func_t input_reg_get_stop(input_reg_t input_reg) {
+int input_reg_stop(input_reg_t input_reg) {
   if (!input_reg) {
-    return NULL;
+    return EINVAL;
   }
-  return input_reg->stop;
+
+  return input_reg->stop();
 }
 
 input_callback_func_t input_reg_get_callback(input_reg_t input_reg) {
@@ -91,6 +101,7 @@ void input_reg_set_callback(input_reg_t input_reg,
   if (!input_reg) {
     return;
   }
+
   input_reg->callback = callback;
 }
 
@@ -99,13 +110,13 @@ void input_reg_set_callback(input_reg_t input_reg,
  ******************************************************************************/
 static struct InputRegistrationOps input_reg_ops = {
     .init = input_reg_init,
-    .destroy = input_reg_destroy,
+    .wait = input_reg_wait,
+    .stop = input_reg_stop,
+    .start = input_reg_start,
     .get_id = input_reg_get_id,
-    .get_wait = input_reg_get_wait,
-    .get_start = input_reg_get_start,
-    .get_stop = input_reg_get_stop,
+    .destroy = input_reg_destroy,
     .get_callback = input_reg_get_callback,
     .set_callback = input_reg_set_callback,
 };
 
-struct InputRegOps *get_input_reg_ops(void) { return &input_reg_ops; }
+struct InputRegistrationOps *get_input_reg_ops(void) { return &input_reg_ops; }

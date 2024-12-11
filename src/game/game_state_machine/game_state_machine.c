@@ -195,7 +195,7 @@ int game_sm_step(enum InputEvents input_event, enum Users input_user) {
   return 0;
 }
 
-void game_sm_quit(void) { input_ops->destroy(); }
+void game_sm_quit(void) { input_ops->stop(); }
 
 struct GameStateMachineState *game_sm_get_state_machine(void) {
   return &game_sm;

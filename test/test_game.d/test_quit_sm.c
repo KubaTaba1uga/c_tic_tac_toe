@@ -22,7 +22,7 @@
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
 static int destroy_counter;
-static void mock_input_ops_destroy();
+static int mock_input_ops_destroy();
 static struct LoggingUtilsOps *logging_ops;
 static struct GameSmQuitModulePrivateOps *quit_sm_ops;
 static struct InputOps *input_ops;
@@ -42,7 +42,7 @@ void setUp() {
   init_game_reg.destroy = NULL;
   init_ops->initialize_system();
 
-  input_ops->destroy = mock_input_ops_destroy;
+  input_ops->stop = mock_input_ops_destroy;
 
   destroy_counter = 0;
 }
@@ -105,4 +105,7 @@ void test_quit_sm_get_play_state() {
   TEST_ASSERT_EQUAL_INT(0, destroy_counter);
 }
 
-void mock_input_ops_destroy() { destroy_counter++; }
+int mock_input_ops_destroy() {
+  destroy_counter++;
+  return 0;
+}

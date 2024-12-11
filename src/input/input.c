@@ -2,8 +2,6 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
-#include <asm-generic/errno-base.h>
-#include <asm-generic/errno.h>
 #include <errno.h>
 #include <signal.h>
 #include <stddef.h>
@@ -57,13 +55,12 @@ struct InputPrivateOps *get_input_priv_ops(void);
  ******************************************************************************/
 int input_init_system(void) {
   int err;
+
   input_reg_ops = get_input_reg_ops();
   logging_ops = get_logging_utils_ops();
   std_lib_ops = get_std_lib_utils_ops();
   input_priv_ops = get_input_priv_ops();
   subsystem_ops = get_subsystem_utils_ops();
-
-  logging_ops->log_info(module_id, "Initializating subsystem");
 
   err = input_priv_ops->init(&input_subsystem);
   if (err) {
@@ -78,32 +75,82 @@ static void input_destroy_system(void) {
 }
 
 static int input_register_system(input_reg_t input_registration_data) {
-  if (!input_registration_data)
-    return EINVAL;
+  int err;
 
-  logging_ops->log_info(module_id, "Registering %s into subsystem",
+  err =
+      input_priv_ops->register_module(input_subsystem, input_registration_data);
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to register %s module: %s",
+                         input_reg_ops->get_id(input_registration_data),
+                         strerror(err));
+    return err;
+  }
+
+  logging_ops->log_info(module_id, "Registered %s module",
                         input_reg_ops->get_id(input_registration_data));
 
-  return input_priv_ops->register_module(input_subsystem,
-                                         input_registration_data);
+  return 0;
 }
 
 static int input_register_callback_system(char *id,
                                           input_callback_func_t callback) {
-  if (!id || !callback)
-    return EINVAL;
+  int err;
 
-  logging_ops->log_info(module_id, "Registering callback for %s", id);
+  err = input_priv_ops->register_callback(input_subsystem, id, callback);
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to register %s module: %s", id,
+                         strerror(err));
+    return err;
+  }
 
-  return input_priv_ops->register_callback(input_subsystem, id, callback);
+  logging_ops->log_info(module_id, "Registered callback in %s module", id);
+
+  return 0;
 };
 
 static int input_start_system(void) {
-  return input_priv_ops->start(input_subsystem);
+  int err;
+
+  err = input_priv_ops->start(input_subsystem);
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to start subsystem: %s",
+                         strerror(err));
+    return err;
+  }
+
+  logging_ops->log_info(module_id, "Started subsystem");
+
+  return 0;
 }
 
 static int input_stop_system(void) {
-  return input_priv_ops->stop(input_subsystem);
+  int err;
+
+  err = input_priv_ops->stop(input_subsystem);
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to stop subsystem: %s",
+                         strerror(err));
+    return err;
+  }
+
+  logging_ops->log_info(module_id, "Stopped subsystem");
+
+  return 0;
+}
+
+static int input_wait_system(void) {
+  int err;
+
+  err = input_priv_ops->wait(input_subsystem);
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to wait for subsystem: %s",
+                         strerror(err));
+    return err;
+  }
+
+  logging_ops->log_info(module_id, "Waited for subsystem");
+
+  return 0;
 }
 
 /*******************************************************************************
@@ -113,21 +160,16 @@ static int input_init(input_sys_t *input) {
   input_sys_t tmp_input;
   int err;
 
-  if (!subsystem_ops)
-    return ENODATA;
+  if (!input)
+    return EINVAL;
 
   tmp_input = malloc(sizeof(struct InputSubsystem));
   if (!tmp_input) {
-    logging_ops->log_err(module_id,
-                         "Unable to allocate memory for subsystem in input: %s",
-                         strerror(ENOMEM));
     return ENOMEM;
   }
 
   err = subsystem_ops->init(&tmp_input->subsystem, module_id, subsystem_max);
   if (err) {
-    logging_ops->log_err(module_id, "Unable to create subsystem in input: %s",
-                         strerror(err));
     return err;
   }
 
@@ -139,9 +181,6 @@ static int input_init(input_sys_t *input) {
 static void input_destroy(input_sys_t *input) {
   input_sys_t tmp_input;
 
-  if (!subsystem_ops)
-    return;
-
   if (!input || !*input)
     return;
 
@@ -152,26 +191,21 @@ static void input_destroy(input_sys_t *input) {
   *input = NULL;
 }
 
-static int
-input_register_module(input_sys_t input,
-                      struct InputRegistrationData *registration_data) {
+static int input_register_module(input_sys_t input,
+                                 input_reg_t registration_data) {
   int err;
 
-  if (!subsystem_ops || !logging_ops) {
-    return ENODATA;
-  }
+  if (!input || !registration_data)
+    return EINVAL;
 
-  registration_data->callback = NULL;
+  input_reg_ops->set_callback(registration_data, NULL);
 
-  err = subsystem_ops->register_module(input->subsystem, registration_data->id,
+  err = subsystem_ops->register_module(input->subsystem,
+                                       input_reg_ops->get_id(registration_data),
                                        registration_data);
   if (err) {
-    logging_ops->log_err(module_id, "Unable to register %s in input: %s",
-                         registration_data->id, strerror(err));
     return err;
   }
-
-  logging_ops->log_info(module_id, "Registered %s", registration_data->id);
 
   return 0;
 };
@@ -191,25 +225,19 @@ static int input_register_callback(input_sys_t input, char *id,
   module_search_t search_wrap;
   int err;
 
-  if (!subsystem_ops || !logging_ops || !input_priv_ops) {
-    return ENODATA;
+  if (!input || !id || !callback) {
+    return EINVAL;
   }
 
   err = subsystem_ops->init_search_module_wrapper(
       &search_wrap, id, input_priv_ops->search_filter_id,
       (void **)&registration_data);
   if (err) {
-    logging_ops->log_err(module_id, "Unable to init search wrapper: %s",
-                         strerror(err));
     goto out;
   }
 
   err = subsystem_ops->search_modules(input->subsystem, search_wrap);
   if (err) {
-    logging_ops->log_err(module_id,
-                         "Unable to search for"
-                         "%s: %s",
-                         registration_data->id, strerror(err));
     goto cleanup;
   }
 
@@ -218,10 +246,7 @@ static int input_register_callback(input_sys_t input, char *id,
     goto cleanup;
   }
 
-  registration_data->callback = callback;
-
-  logging_ops->log_info(module_id, "Callback set for %s",
-                        registration_data->id);
+  input_reg_ops->set_callback(registration_data, callback);
 
   err = 0;
 
@@ -231,14 +256,9 @@ out:
   return err;
 }
 
-static bool input_subsystem_search_filter_start(const char *_, void *tmp,
-                                                void *__) {
-  if (!tmp)
-    return false;
-
-  struct InputRegistrationData *tmp_reg = tmp;
-
-  return tmp_reg->start != NULL;
+static bool input_subsystem_search_filter_all(const char *_, void *__,
+                                              void *___) {
+  return true;
 }
 
 static int input_start(input_sys_t input) {
@@ -246,57 +266,40 @@ static int input_start(input_sys_t input) {
   module_search_t search_wrap;
   int err;
 
-  if (!subsystem_ops || !logging_ops) {
-    return ENODATA;
+  if (!input) {
+    return EINVAL;
   }
 
   err = subsystem_ops->init_search_module_wrapper(
-      &search_wrap, NULL, input_priv_ops->search_filter_start,
+      &search_wrap, NULL, input_priv_ops->search_filter_all,
       (void **)&registration_data);
   if (err) {
-    logging_ops->log_err(module_id, "Unable to init search wrapper: %s",
-                         strerror(err));
     goto out;
   }
 
   do {
     err = subsystem_ops->search_modules(input->subsystem, search_wrap);
     if (err) {
-      logging_ops->log_err(module_id,
-                           "Unable to search for"
-                           "%s: %s",
-                           registration_data->id, strerror(err));
       goto cleanup;
     }
     if (!registration_data)
       break;
 
-    err = registration_data->start();
+    err = input_reg_ops->start(registration_data);
     if (err) {
       goto cleanup;
     }
 
-    logging_ops->log_info(module_id, "Started %s", registration_data->id);
+    logging_ops->log_info(module_id, "Started %s module",
+                          input_reg_ops->get_id(registration_data));
   } while (true);
 
   err = 0;
-
-  logging_ops->log_info(module_id, "Started all modules");
 
 cleanup:
   subsystem_ops->destroy_search_module_wrapper(&search_wrap);
 out:
   return err;
-}
-
-static bool input_subsystem_search_filter_wait(const char *_, void *tmp,
-                                               void *__) {
-  if (!tmp)
-    return false;
-
-  struct InputRegistrationData *tmp_reg = tmp;
-
-  return tmp_reg->wait != NULL;
 }
 
 static int input_wait(input_sys_t input) {
@@ -304,39 +307,32 @@ static int input_wait(input_sys_t input) {
   module_search_t search_wrap;
   int err;
 
-  if (!subsystem_ops || !logging_ops) {
-    return ENODATA;
+  if (!input) {
+    return EINVAL;
   }
 
   err = subsystem_ops->init_search_module_wrapper(
-      &search_wrap, NULL, input_priv_ops->search_filter_wait,
+      &search_wrap, NULL, input_priv_ops->search_filter_all,
       (void **)&registration_data);
   if (err) {
-    logging_ops->log_err(module_id, "Unable to init search wrapper: %s",
-                         strerror(err));
     goto out;
   }
 
   do {
     err = subsystem_ops->search_modules(input->subsystem, search_wrap);
     if (err) {
-      logging_ops->log_err(module_id,
-                           "Unable to search for"
-                           "%s: %s",
-                           registration_data->id, strerror(err));
       goto cleanup;
     }
     if (!registration_data)
       break;
 
-    registration_data->wait();
+    input_reg_ops->wait(registration_data);
 
-    logging_ops->log_info(module_id, "Waited for %s", registration_data->id);
+    logging_ops->log_info(module_id, "Waited for %s module",
+                          input_reg_ops->get_id(registration_data));
   } while (true);
 
   err = 0;
-
-  logging_ops->log_info(module_id, "Waited for all modules");
 
 cleanup:
   subsystem_ops->destroy_search_module_wrapper(&search_wrap);
@@ -344,60 +340,43 @@ out:
   return err;
 }
 
-static bool input_subsystem_search_filter_stop(const char *_, void *tmp,
-                                               void *___) {
-  if (!tmp)
-    return false;
-
-  struct InputRegistrationData *tmp_reg = tmp;
-
-  return tmp_reg->destroy != NULL;
-}
-
-void input_stop(input_sys_t input) {
+static int input_stop(input_sys_t input) {
   struct InputRegistrationData *registration_data = NULL;
   module_search_t search_wrap;
   int err;
 
-  if (!subsystem_ops || !logging_ops) {
-    return;
+  if (!input) {
+    return EINVAL;
   }
 
   err = subsystem_ops->init_search_module_wrapper(
-      &search_wrap, NULL, input_priv_ops->search_filter_destroy,
+      &search_wrap, NULL, input_priv_ops->search_filter_all,
       (void **)&registration_data);
   if (err) {
-    logging_ops->log_err(module_id, "Unable to init search wrapper: %s",
-                         strerror(err));
     goto out;
   }
 
   do {
     err = subsystem_ops->search_modules(input->subsystem, search_wrap);
     if (err) {
-      logging_ops->log_err(module_id,
-                           "Unable to search for"
-                           "%s: %s",
-                           registration_data->id, strerror(err));
       goto cleanup;
     }
     if (!registration_data)
       break;
 
-    registration_data->stop();
-    registration_data->callback = NULL;
+    input_reg_ops->stop(registration_data);
+    input_reg_ops->set_callback(registration_data, NULL);
 
-    logging_ops->log_info(module_id, "Stopped %s", registration_data->id);
+    logging_ops->log_info(module_id, "Stopped %s module",
+                          input_reg_ops->get_id(registration_data));
   } while (true);
 
   err = 0;
 
-  logging_ops->log_info(module_id, "Stopped all modules");
-
 cleanup:
   subsystem_ops->destroy_search_module_wrapper(&search_wrap);
 out:
-  return;
+  return err;
 }
 
 /*******************************************************************************
@@ -414,6 +393,10 @@ struct InitRegistrationData init_input_reg = {
  ******************************************************************************/
 static struct InputOps input_ops = {
     .register_module = input_register_system,
+    .register_callback = input_register_callback_system,
+    .start = input_start_system,
+    .stop = input_stop_system,
+    .wait = input_wait_system,
 };
 
 struct InputOps *get_input_ops(void) { return &input_ops; };
@@ -421,13 +404,13 @@ struct InputOps *get_input_ops(void) { return &input_ops; };
 static struct InputPrivateOps input_priv_ops_ = {
     .wait = input_wait,
     .init = input_init,
+    .stop = input_stop,
+    .start = input_start,
     .destroy = input_destroy,
     .register_module = input_register_module,
-    .start_no_blocking = input_start_no_blocking,
+    .register_callback = input_register_callback,
     .search_filter_id = input_subsystem_search_filter_id,
     .search_filter_all = input_subsystem_search_filter_all,
-    .search_filter_callback = input_subsystem_search_filter_callback,
-
 };
 
 struct InputPrivateOps *get_input_priv_ops(void) { return &input_priv_ops_; }

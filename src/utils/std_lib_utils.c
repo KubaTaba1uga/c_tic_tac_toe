@@ -11,6 +11,7 @@
  ******************************************************************************/
 // C standard library
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -20,18 +21,6 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-static unsigned long get_current_time(void);
-static bool are_strings_equal(char *str_a, char *str_b);
-
-/*******************************************************************************
- *    MODULARITY BOILERCODE
- ******************************************************************************/
-struct StdLibUtilsOps std_lib_utils_ops = {.get_now = get_current_time,
-                                           .are_str_eq = are_strings_equal};
-
-struct StdLibUtilsOps *get_std_lib_utils_ops(void) {
-  return &std_lib_utils_ops;
-};
 
 /*******************************************************************************
  *    INIT BOILERCODE
@@ -40,7 +29,7 @@ struct StdLibUtilsOps *get_std_lib_utils_ops(void) {
 /*******************************************************************************
  *    API
  ******************************************************************************/
-unsigned long get_current_time(void) {
+static unsigned long get_current_time(void) {
   // Return number of seconds since Epoch.
   // On error returns 0.
   time_t now = time(NULL);
@@ -50,7 +39,22 @@ unsigned long get_current_time(void) {
   return (unsigned long)now;
 }
 
-bool are_strings_equal(char *str_a, char *str_b) {
+static bool are_strings_equal(char *str_a, char *str_b) {
   // Return True if A and B are equal, False otherwise.
   return strcmp(str_a, str_b) == 0;
 }
+
+static void *allocate_raw_mem(size_t size) { return malloc(size); }
+
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
+struct StdLibUtilsOps std_lib_utils_ops = {
+    .get_now = get_current_time,
+    .are_str_eq = are_strings_equal,
+    .alloc_raw_mem = allocate_raw_mem,
+};
+
+struct StdLibUtilsOps *get_std_lib_utils_ops(void) {
+  return &std_lib_utils_ops;
+};

@@ -50,3 +50,26 @@ test_keyboard1_exe = executable('test_keyboard1',
 )
 
 test('test_keyboard1', test_keyboard1_exe)
+
+############################################################################
+#                   Input Registration Tests                               #
+############################################################################
+test_input_registration_name = 'test_input_registration.c'
+
+test_input_registration_src = files([test_input_registration_name]) + sources
+
+test_input_registration_exe = executable('test_input_registration',
+  sources: [
+    test_input_registration_src,
+    unity_gen_runner.process(test_input_registration_name),
+  ],
+  include_directories: [src, test_includes],
+  dependencies: test_dependencies,
+  c_args:['-DTEST'],
+  link_args: [
+    # allow static functions testing
+    '-zmuldefs',
+  ]
+)
+
+test('test_input_registration', test_input_registration_exe)

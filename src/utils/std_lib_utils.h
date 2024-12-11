@@ -12,6 +12,7 @@
  *    IMPORTS
  ******************************************************************************/
 #include <stdbool.h>
+#include <stddef.h>
 
 /*******************************************************************************
  *    PRIVATE API
@@ -23,6 +24,7 @@
 struct StdLibUtilsOps {
   unsigned long (*get_now)(void);
   bool (*are_str_eq)(char *str_a, char *str_b);
+  void *(*alloc_raw_mem)(size_t);
 };
 
 /*******************************************************************************

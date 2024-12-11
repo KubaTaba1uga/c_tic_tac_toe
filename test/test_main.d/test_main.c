@@ -4,7 +4,7 @@
 #include "input/input.h"
 #include "main.c"
 
-void input_wait_mock(void){};
+int input_wait_mock(void) { return 0; };
 
 void setUp() {
   struct InputOps *input_ops = get_input_ops();

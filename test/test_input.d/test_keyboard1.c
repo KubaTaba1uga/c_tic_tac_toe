@@ -26,7 +26,7 @@ void setUp() {
   init_ops->initialize_system();
   logging_ops_ = get_logging_utils_ops();
   input_ops = get_input_ops();
-  keyboard1_priv_ops = get_keyboard1_ops()->private_ops;
+  keyboard1_priv_ops = get_keyboard1_priv_ops();
 
   mockup_callback_counter = 0;
   mockup_input_event = INPUT_EVENT_NONE;

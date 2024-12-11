@@ -31,8 +31,8 @@
  ******************************************************************************/
 struct Keyboard1PrivateOps {
   int (*start)(void);
-  void (*stop)(void);
-  void (*wait)(void);
+  int (*stop)(void);
+  int (*wait)(void);
   int (*callback)(size_t n, char buffer[n]);
 };
 
@@ -84,7 +84,10 @@ static void keyboard1_destroy(void) {
   input_reg_ops->destroy(&input_keyboard1_reg);
 }
 
-static void keyboard1_stop(void) { keyboard_ops->destroy(); }
+static int keyboard1_stop(void) {
+  keyboard_ops->destroy();
+  return 0;
+}
 
 static int keyboard1_start(void) {
   int err;
@@ -109,7 +112,10 @@ static int keyboard1_start(void) {
   return 0;
 }
 
-static void keyboard1_wait(void) { keyboard_ops->wait(); }
+static int keyboard1_wait(void) {
+  keyboard_ops->wait();
+  return 0;
+}
 
 static int keyboard1_callback(size_t n, char buffer[n]) {
   input_callback_func_t callback;

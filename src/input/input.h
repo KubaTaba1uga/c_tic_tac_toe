@@ -21,8 +21,8 @@
  *    PUBLIC API
  ******************************************************************************/
 struct InputOps {
-  void (*wait)(void);
-  void (*stop)(void);
+  int (*wait)(void);
+  int (*stop)(void);
   int (*start)(void);
   int (*unregister_callback)(char *);
   int (*register_module)(input_reg_t);
