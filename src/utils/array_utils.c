@@ -30,6 +30,7 @@ struct Array {
 struct ArraySearchState {
   enum ArraySearchStateEnum state;
   size_t index;
+  int step;
 };
 
 struct ArraySearchWrapper {
@@ -125,6 +126,7 @@ static int array_init_search_wrapper(array_search_t *search_wrap,
     return ENOMEM;
   }
 
+  tmp_wrap->state.step = 1;
   tmp_wrap->state.index = 0;
   *result_placeholder = NULL;
   tmp_wrap->filter_data = filter_data;
@@ -151,9 +153,10 @@ void array_destroy_search_wrapper(array_search_t *search_wrap) {
 };
 
 int array_search_elements(array_t array, array_search_t search_wrap) {
+  // Add step to allow traversing array forward and backward
+  //  step -1 allow to traverse back;
   struct ArrayUtilsOps *array_ops = get_array_utils_ops();
   void *element;
-  size_t i;
 
   if (!array_ops) {
     return ENODATA;
@@ -166,10 +169,14 @@ int array_search_elements(array_t array, array_search_t search_wrap) {
 
   switch (search_wrap->state.state) {
   case ARRAY_SEARCH_STATE_NONE:
-    i = 0;
+    if (search_wrap->state.step >= 0) {
+      search_wrap->state.index = 0;
+    } else {
+      search_wrap->state.index = array_ops->get_length(array) - 1;
+    }
     break;
   case ARRAY_SEARCH_STATE_INPROGRESS:
-    i = search_wrap->state.index + 1;
+    search_wrap->state.index += search_wrap->state.step;
     break;
   default:
     return 0;
@@ -179,14 +186,14 @@ int array_search_elements(array_t array, array_search_t search_wrap) {
   *search_wrap->result_placeholder = NULL;
   search_wrap->state.state = ARRAY_SEARCH_STATE_DONE;
 
-  for (; i <= array_ops->get_length(array); i++) {
-    element = array_ops->get_element(array, i);
+  for (; search_wrap->state.index <= array_ops->get_length(array);
+       search_wrap->state.index += search_wrap->state.step) {
+    element = array_ops->get_element(array, search_wrap->state.index);
     if (!element) {
       return 0;
     }
 
     if (search_wrap->filter_func(element, search_wrap->filter_data)) {
-      search_wrap->state.index = i;
       *search_wrap->result_placeholder = element;
       search_wrap->state.state = ARRAY_SEARCH_STATE_INPROGRESS;
       return 0;
@@ -198,6 +205,10 @@ int array_search_elements(array_t array, array_search_t search_wrap) {
 
 enum ArraySearchStateEnum array_search_get_state(array_search_t search_wrap) {
   return search_wrap->state.state;
+}
+
+void array_search_set_step(array_search_t search_wrap, int step) {
+  search_wrap->state.step = step;
 }
 
 /*******************************************************************************
@@ -230,7 +241,8 @@ static struct ArrayUtilsOps array_utils_ops = {
     .search_elements = array_search_elements,
     .init_search_wrapper = array_init_search_wrapper,
     .destroy_search_wrapper = array_destroy_search_wrapper,
-    .get_state_search_wrapper = array_search_get_state};
+    .get_state_search_wrapper = array_search_get_state,
+    .set_step_search_wrapper = array_search_set_step};
 
 struct ArrayPrivateOps *get_array_priv_ops(void) { return &array_priv_ops; };
 ;

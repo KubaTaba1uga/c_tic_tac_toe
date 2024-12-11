@@ -163,7 +163,7 @@ static int subsystem_utils_init_search_module_wrapper(
     return ENODATA;
   }
 
-  if (!search_wrap || !filter_data || !filter_func || !result_placeholder)
+  if (!search_wrap || !filter_func || !result_placeholder)
     return EINVAL;
 
   tmp_wrap = malloc(sizeof(struct ModuleSearchWrapper));
@@ -240,6 +240,11 @@ subsystem_utils_get_state_search_module_wrapper(module_search_t search_wrap) {
   return array_ops->get_state_search_wrapper(search_wrap->search_wrap);
 };
 
+void subsystem_utils_set_step_search_module_wrapper(module_search_t search_wrap,
+                                                    int step) {
+  array_ops->set_step_search_wrapper(search_wrap->search_wrap, step);
+};
+
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
@@ -280,7 +285,10 @@ struct SubsystemUtilsOps subsystem_utils_pub_ops = {
     .destroy_search_module_wrapper =
         subsystem_utils_destroy_search_module_wrapper,
     .get_state_search_module_wrapper =
-        subsystem_utils_get_state_search_module_wrapper};
+        subsystem_utils_get_state_search_module_wrapper,
+    .set_step_search_module_wrapper =
+        subsystem_utils_set_step_search_module_wrapper,
+};
 
 struct SubsystemUtilsOps *get_subsystem_utils_ops(void) {
   return &subsystem_utils_pub_ops;

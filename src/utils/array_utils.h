@@ -38,6 +38,7 @@ struct ArrayUtilsOps {
                              void **);
   void (*destroy_search_wrapper)(array_search_t *);
   enum ArraySearchStateEnum (*get_state_search_wrapper)(array_search_t);
+  void (*set_step_search_wrapper)(array_search_t search_wrap, int step);
 };
 
 /*******************************************************************************

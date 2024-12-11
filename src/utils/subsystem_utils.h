@@ -34,6 +34,7 @@ struct SubsystemUtilsOps {
                                     void **);
   void (*destroy_search_module_wrapper)(module_search_t *);
   module_search_enum_t (*get_state_search_module_wrapper)(module_search_t);
+  void (*set_step_search_module_wrapper)(module_search_t, int);
 };
 
 /*******************************************************************************
