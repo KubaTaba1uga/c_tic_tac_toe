@@ -10,6 +10,7 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <asm-generic/errno-base.h>
 #include <asm-generic/errno.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -39,6 +40,7 @@ struct Module {
 
 struct ModuleSearchWrapper {
   bool (*filter_func_wrap)(const char *, void *, void *);
+  void **result_placolder_wrap;
   array_search_t search_wrap;
   void *filter_data_wrap;
 };
@@ -171,6 +173,7 @@ static int subsystem_utils_init_search_module_wrapper(
 
   tmp_wrap->filter_func_wrap = filter_func;
   tmp_wrap->filter_data_wrap = filter_data;
+  tmp_wrap->result_placolder_wrap = result_placeholder;
 
   err = array_ops->init_search_wrapper(
       &tmp_wrap->search_wrap, tmp_wrap,
@@ -206,9 +209,27 @@ subsystem_utils_destroy_search_module_wrapper(module_search_t *search_wrap) {
 };
 
 static int subsystem_utils_search_modules(subsystem_t subsystem,
-                                          module_search_t search_data) {
-  return array_ops->search_elements(subsystem->registrations,
-                                    search_data->search_wrap);
+                                          module_search_t search_wrap) {
+  module_t module;
+  int err;
+
+  if (!subsystem || !search_wrap || !search_wrap->result_placolder_wrap) {
+    return EINVAL;
+  }
+
+  err = array_ops->search_elements(subsystem->registrations,
+                                   search_wrap->search_wrap);
+  if (err) {
+    return err;
+  }
+
+  // If module exsists unpack it's value.
+  module = *search_wrap->result_placolder_wrap;
+  if (module) {
+    *search_wrap->result_placolder_wrap = module->private;
+  }
+
+  return 0;
 }
 
 module_search_enum_t

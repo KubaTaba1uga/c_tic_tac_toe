@@ -13,6 +13,7 @@
 
 // Mock requirement
 #include "config_wrapper.h"
+#include "utils/subsystem_utils.h"
 
 #define NULL_DEF()                                                             \
   struct ConfigRegistrationData null_def = {                                   \
@@ -24,16 +25,15 @@
 static struct ArrayUtilsOps *array_ops;
 static struct ConfigOps *config_ops;
 static struct ConfigPrivateOps *config_priv_ops;
-static struct ConfigSubsystem config_subsystem;
-struct ConfigSubsystem *mock_config_get_subsystem(void) {
-  return &config_subsystem;
-};
 
 void setUp() {
   int err;
   config_ops = get_config_ops();
   array_ops = get_array_utils_ops();
   config_priv_ops = get_config_priv_ops();
+
+  err = init_subsystem_utils_reg.init();
+  TEST_ASSERT_EQUAL_INT(0, err);
 
   err = init_logging_reg.init();
   TEST_ASSERT_EQUAL_INT(0, err);
@@ -66,6 +66,7 @@ void test_config_register_var_failure(void) {
 
   for (i = 0; i < max_registrations; i++) {
     err = config_ops->register_system_var(&null_def);
+    TEST_ASSERT_EQUAL_INT(0, err);
   }
 
   err = config_ops->register_system_var(&null_def);
