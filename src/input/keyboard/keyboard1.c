@@ -1,8 +1,9 @@
 /*******************************************************************************
  * @file keyboard1.c
- * @brief TO-DO
+ * @brief Implementation of the Keyboard1 module.
  *
- * TO-DO
+ * This module handles keyboard input using the Keyboard1 subsystem. It
+ * provides initialization, destruction, and input handling logic.
  *
  ******************************************************************************/
 
@@ -19,6 +20,8 @@
 #include "config/config.h"
 #include "init/init.h"
 #include "input/input.h"
+#include "input/input_common.h"
+#include "input/input_registration.h"
 #include "input/keyboard/keyboard.h"
 #include "input/keyboard/keyboard1.h"
 #include "utils/logging_utils.h"
@@ -26,109 +29,99 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-static const char *module_id = INPUT_KEYBOARD1_ID;
-
-static int keyboard1_module_init(void);
-static void keyboard1_module_destroy(void);
-static int keyboard1_start(void);
-static void keyboard1_wait(void);
-static int keyboard1_callback(size_t n, char buffer[n]);
-static void keyboard1_destroy(void);
-
-static struct InputOps *input_ops;
-static struct KeyboardOps *keyboard_ops;
-static struct LoggingUtilsOps *logging_ops;
-struct InputRegistrationData input_keyboard1_reg = {
-    .destroy = keyboard1_destroy,
-    .start = keyboard1_start,
-    .wait = keyboard1_wait,
-    .id = INPUT_KEYBOARD1_ID,
-};
-
-/*******************************************************************************
- *    MODULARITY BOILERCODE
- ******************************************************************************/
 struct Keyboard1PrivateOps {
-  int (*init)(void);
-  void (*destroy)(void);
   int (*start)(void);
+  void (*stop)(void);
   void (*wait)(void);
   int (*callback)(size_t n, char buffer[n]);
 };
 
-static struct Keyboard1PrivateOps keyboard1_private_ops = {
-    .destroy = keyboard1_destroy,
-    .start = keyboard1_start,
-    .wait = keyboard1_wait,
-    .callback = keyboard1_callback,
-};
+static struct InputOps *input_ops;
+static input_reg_t input_keyboard1_reg;
+static struct KeyboardOps *keyboard_ops;
+static struct LoggingUtilsOps *logging_ops;
+static struct InputRegistrationOps *input_reg_ops;
+static const char *module_id = INPUT_KEYBOARD1_ID;
 
-static struct Keyboard1Ops keyboard1_ops = {.private_ops =
-                                                &keyboard1_private_ops};
-
-struct Keyboard1Ops *get_keyboard1_ops(void) { return &keyboard1_ops; };
+struct Keyboard1PrivateOps *keyboard1_private_ops;
+struct Keyboard1PrivateOps *get_keyboard1_priv_ops(void);
 
 /*******************************************************************************
- *    INIT BOILERCODE
+ *    PRIVATE API
  ******************************************************************************/
-struct InitRegistrationData init_keyboard1_reg = {
-    .id = INPUT_KEYBOARD1_ID,
-    .init = keyboard1_module_init,
-    .destroy = keyboard1_module_destroy,
-};
-struct InitRegistrationData *init_keyboard1_reg_p = &init_keyboard1_reg;
-
-/*******************************************************************************
- *    API
- ******************************************************************************/
-int keyboard1_module_init(void) {
-  input_ops = get_input_ops();
-  keyboard_ops = get_keyboard_ops();
-  logging_ops = get_logging_utils_ops();
-
-  input_ops->register_module(&input_keyboard1_reg);
-
-  return 0;
-}
-
-void keyboard1_module_destroy(void) {}
-
-int keyboard1_start(void) {
+static int keyboard1_init(void) {
   int err;
 
-  err = keyboard_ops->initialize();
-  if (err) {
-    logging_ops->log_err(module_id, "Unable to initialize keyboard1 module");
-    return err;
-  }
+  input_ops = get_input_ops();
+  keyboard_ops = get_keyboard_ops();
+  input_reg_ops = get_input_reg_ops();
+  logging_ops = get_logging_utils_ops();
+  keyboard1_private_ops = get_keyboard1_priv_ops();
 
-  // Keyboard callback is set to start gathering and processing input by
-  // keyboard.
-  err = keyboard_ops->register_callback(keyboard1_private_ops.callback);
+  // Initialize the input registration
+  err = input_reg_ops->init(
+      &input_keyboard1_reg, module_id, keyboard1_private_ops->wait,
+      keyboard1_private_ops->start, keyboard1_private_ops->stop);
   if (err) {
     logging_ops->log_err(module_id,
-                         "Unable to register callback for keyboard1 module");
-
+                         "Unable to initialize input registration: %s",
+                         strerror(err));
     return err;
   }
 
-  logging_ops->log_info(module_id, "Keyboard1 started");
+  // Register the module
+  err = input_ops->register_module(input_keyboard1_reg);
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to register module: %s",
+                         strerror(err));
+    return err;
+  }
 
   return 0;
 }
 
-void keyboard1_wait(void) { keyboard_ops->wait(); }
+static void keyboard1_destroy(void) {
+  input_reg_ops->destroy(&input_keyboard1_reg);
+}
 
-void keyboard1_destroy(void) { keyboard_ops->destroy(); }
+static void keyboard1_stop(void) { keyboard_ops->destroy(); }
 
-int keyboard1_callback(size_t n, char buffer[n]) {
-  enum InputEvents input_event = INPUT_EVENT_NONE;
+static int keyboard1_start(void) {
+  int err;
+
+  // Initialize the keyboard subsystem
+  err = keyboard_ops->initialize();
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to initialize Keyboard1 subsystem");
+    return err;
+  }
+
+  // Register callback for handling input
+  err = keyboard_ops->register_callback(keyboard1_private_ops->callback);
+  if (err) {
+    logging_ops->log_err(module_id,
+                         "Unable to register callback for Keyboard1 subsystem");
+    return err;
+  }
+
+  logging_ops->log_info(module_id, "Keyboard1 subsystem started successfully");
+
+  return 0;
+}
+
+static void keyboard1_wait(void) { keyboard_ops->wait(); }
+
+static int keyboard1_callback(size_t n, char buffer[n]) {
+  input_callback_func_t callback;
+  enum InputEvents input_event;
   size_t i;
   int err;
 
-  // Input callback is set by a game, once user choose it's input device.
-  if (input_keyboard1_reg.callback == NULL) {
-    logging_ops->log_err(module_id, "No callback set up for keyboard1");
+  input_event = INPUT_EVENT_NONE;
+  callback = input_reg_ops->get_callback(input_keyboard1_reg);
+
+  if (!callback) {
+    logging_ops->log_err(module_id, "No callback set up for Keyboard1");
     return EINVAL;
   }
 
@@ -137,32 +130,27 @@ int keyboard1_callback(size_t n, char buffer[n]) {
     case 'w':
       input_event = INPUT_EVENT_UP;
       break;
-
     case 'a':
       input_event = INPUT_EVENT_LEFT;
       break;
-
     case 's':
       input_event = INPUT_EVENT_DOWN;
       break;
-
     case 'd':
       input_event = INPUT_EVENT_RIGHT;
       break;
-
     case '\n':
       input_event = INPUT_EVENT_SELECT;
       break;
-
     case 'q':
       input_event = INPUT_EVENT_EXIT;
       break;
-
-    default:;
+    default:
+      break;
     }
   }
 
-  err = input_keyboard1_reg.callback(input_event);
+  err = callback(input_event);
   if (err != 0) {
     logging_ops->log_err(module_id, "Callback failed: %s", strerror(err));
     return err;
@@ -170,3 +158,30 @@ int keyboard1_callback(size_t n, char buffer[n]) {
 
   return 0;
 }
+
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
+static struct Keyboard1Ops keyboard1_ops = {};
+
+struct Keyboard1Ops *get_keyboard1_ops(void) { return &keyboard1_ops; }
+
+static struct Keyboard1PrivateOps keyboard1_private_ops_ = {
+    .stop = keyboard1_stop,
+    .wait = keyboard1_wait,
+    .start = keyboard1_start,
+    .callback = keyboard1_callback,
+};
+
+struct Keyboard1PrivateOps *get_keyboard1_priv_ops(void) {
+  return &keyboard1_private_ops_;
+}
+/*******************************************************************************
+ *    INIT BOILERCODE
+ ******************************************************************************/
+struct InitRegistrationData init_keyboard1_reg = {
+    .id = INPUT_KEYBOARD1_ID,
+    .init = keyboard1_init,
+    .destroy = keyboard1_destroy,
+};
+struct InitRegistrationData *init_keyboard1_reg_p = &init_keyboard1_reg;

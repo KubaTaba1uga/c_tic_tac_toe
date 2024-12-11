@@ -13,11 +13,13 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <termios.h>
 #include <unistd.h>
 
 // App's internal libs
@@ -39,6 +41,8 @@ struct CliDisplay {
 static struct DisplayRegistrationData cli_display_reg_data;
 
 static char module_id[] = "cli";
+struct termios orginal_termios;
+
 static int cli_display(struct DataToDisplay *data);
 static int cli_get_terminal_size(struct CliDisplay *data);
 static int cli_format_game_row(struct CliDisplay *display,
@@ -48,6 +52,10 @@ static void cli_sort_user_moves(int n, struct UserMove user_moves[n]);
 static int cli_module_init(void);
 static void cli_module_destroy(void);
 static int cli_init_display(struct CliDisplay *data);
+static int cli_configure_terminal(void);
+static void cli_terminal_disable_echo_and_cannonical(void);
+static void cli_restore_terminal(void);
+static void cli_setup_signal_handlers();
 
 /*******************************************************************************
  *    PUBLIC API
@@ -94,11 +102,87 @@ static int cli_module_init(void) {
   cli_display_reg_data.display = priv_ops.display;
   cli_display_reg_data.id = module_id;
 
+  cli_configure_terminal();
+
   display_ops->register_module(&cli_display_reg_data);
 
   return 0;
 };
 static void cli_module_destroy(void){};
+
+int cli_configure_terminal(void) {
+  // Disable canonical mode and echo, to receive input without pressing enter.
+  // Register the terminal restoration function to run at exit
+  atexit(cli_restore_terminal);
+
+  // Setup signal handlers
+  cli_setup_signal_handlers();
+
+  // Setup terminal
+  cli_terminal_disable_echo_and_cannonical();
+
+  return 0;
+}
+
+// Function to restore the original terminal settings
+void cli_terminal_disable_echo_and_cannonical(void) {
+  struct termios new_termios;
+
+  // Get the current terminal settings
+  if (tcgetattr(STDIN_FILENO, &orginal_termios) == -1) {
+    perror("tcgetattr");
+    exit(EXIT_FAILURE);
+  }
+
+  // Disable canonical mode (ICANON) and echo (ECHO)
+  new_termios = orginal_termios;
+  new_termios.c_lflag &= ~(ICANON | ECHO);
+
+  // Apply the new settings immediately
+  if (tcsetattr(STDIN_FILENO, TCSANOW, &new_termios) == -1) {
+    perror("tcsetattr");
+    exit(EXIT_FAILURE);
+  }
+}
+
+// Function to restore the original terminal settings
+void cli_restore_terminal(void) {
+  if (tcsetattr(STDIN_FILENO, TCSANOW, &orginal_termios) == -1) {
+    perror("tcsetattr");
+  }
+}
+
+// Signal handler to restore terminal settings and exit
+void cli_handle_signal(int sig) {
+  // Restore terminal settings
+  cli_restore_terminal();
+
+  // Print the signal that caused termination
+  fprintf(stderr, "Program terminated due to signal: %d\n", sig);
+
+  // Re-raise the signal to terminate with the original signal handler
+  signal(sig, SIG_DFL);
+  raise(sig);
+}
+
+// Register the signal handlers for critical signals
+void cli_setup_signal_handlers() {
+  struct sigaction sa;
+
+  sa.sa_handler = cli_handle_signal;
+  /* sa.sa_flags = SA_RESTART; // Restart interrupted syscalls */
+  sa.sa_flags = 0; // Do not restart interrupted syscalls
+  sigemptyset(&sa.sa_mask);
+
+  // Signals to handle
+  int signals[] = {SIGINT, SIGTERM, SIGSEGV, SIGABRT};
+  for (size_t i = 0; i < sizeof(signals) / sizeof(signals[0]); ++i) {
+    if (sigaction(signals[i], &sa, NULL) == -1) {
+      perror("sigaction");
+      exit(EXIT_FAILURE);
+    }
+  }
+}
 
 int cli_display(struct DataToDisplay *data) {
   struct LoggingUtilsOps *logging_ops;

@@ -7,3 +7,8 @@ Next tasks are suspended:
 #1. Delete redundant definitions in input. -
 #2. Use array in input. -
 
+
+Write articles about:
+1. Do not write too defensive software, set one point of validation. If someones forget to init module then it should sigfault.
+2. Getter setter init destruct in c pattern.
+
