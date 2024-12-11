@@ -34,6 +34,7 @@
 #include "utils/array_utils.h"
 #include "utils/logging_utils.h"
 #include "utils/std_lib_utils.h"
+#include "utils/subsystem_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
@@ -68,11 +69,17 @@ static struct InitPrivateOps *get_init_priv_ops(void);
  ******************************************************************************/
 static int init_initialize_system(void) {
   struct InitRegistrationData *init_modules[] = {
-      &init_logging_reg,   &init_config_reg,
-      &init_input_reg,     &init_keyboard1_reg,
-      &init_keyboard_reg,  &init_display_reg,
-      &init_game_sm_reg,   &init_game_sm_sub_reg,
-      &init_user_move_reg, &init_quit_state_machine_reg,
+      &init_logging_reg,
+      &init_subsystem_utils_reg,
+      &init_config_reg,
+      &init_input_reg,
+      &init_keyboard1_reg,
+      &init_keyboard_reg,
+      &init_display_reg,
+      &init_game_sm_reg,
+      &init_game_sm_sub_reg,
+      &init_user_move_reg,
+      &init_quit_state_machine_reg,
       &init_game_reg,
   };
   struct InitRegistrationData *init_module;

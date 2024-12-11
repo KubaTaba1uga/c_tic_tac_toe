@@ -259,8 +259,8 @@ static struct ConfigPrivateOps config_priv_ops_ = {
     .init = config_init,
     .destroy = config_destroy,
     .get_variable = config_get_variable,
-    .register_variable = config_register_variable,
     .search_filter = config_array_search_filter,
+    .register_variable = config_register_variable,
 };
 
 static struct ConfigOps config_pub_ops = {
