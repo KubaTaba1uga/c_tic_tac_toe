@@ -126,12 +126,14 @@ static int keyboard_register_callback_system(keyboard_reg_t keyboard_reg) {
 
   err = keyboard_priv_ops->register_callback(keyboard_subsystem, keyboard_reg);
   if (err) {
-    logging_ops->log_err(module_id, "Failed to register keyboard callback: %s",
+    logging_ops->log_err(module_id, "Failed to register callback for %s: %s.",
+                         keyboard_reg_ops->get_module_id(keyboard_reg),
                          strerror(err));
     return err;
   }
 
-  logging_ops->log_info(module_id, "Keyboard callback registered.");
+  logging_ops->log_info(module_id, "Registered callback for %s.",
+                        keyboard_reg_ops->get_module_id(keyboard_reg));
   return 0;
 }
 
@@ -264,7 +266,10 @@ static void keyboard_read_stdin(keyboard_sys_t keyboard) {
   }
 
   keyboard->stdin_buffer_count = bytes_read;
-  keyboard->stdin_buffer[bytes_read] = '\0';
+
+  if (bytes_read != 0) {
+    keyboard->stdin_buffer[bytes_read] = '\0';
+  }
 }
 
 static bool keyboard_array_search_filter(const char *_, void *__, void *___) {

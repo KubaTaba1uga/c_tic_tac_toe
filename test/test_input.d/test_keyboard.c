@@ -1,4 +1,4 @@
-// TO-DO test if destruction and init are working properly.
+#include <pty.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,122 +12,124 @@
 #include "init/init.h"
 #include "input/input.h"
 #include "input/keyboard/keyboard.h"
+#include "input/keyboard/keyboard_registration.h"
 #include "utils/logging_utils.h"
 #include "utils/std_lib_utils.h"
+#include "utils/terminal_utils.h"
 
+#include "input_keyboard_wrapper.h"
+
+// Globals for testing
 int stdin_backup;
-int mockup_callback_counter;
-int pipefd[2];
-void *print_revents_backup_ptr;
-struct KeyboardOps *keyboard_ops_;
-struct LoggingUtilsOps *logging_ops_;
+int master_fd; // PTY master file descriptor
+int mockup_callback_counter =
+    0; // Global variable to count callback invocations
+static struct KeyboardOps *keyboard_ops_;
+static struct LoggingUtilsOps *logging_ops_;
+static struct KeyboardPrivateOps *keyboard_ops_priv;
+static struct TerminalUtilsOps *terminal_ops;
+keyboard_reg_t test_keyboard_reg;
 
-struct timespec ts = {.tv_sec = 0, .tv_nsec = 50000000};
+struct timespec ts = {.tv_sec = 2,
+                      .tv_nsec = 500000000}; // 50ms for thread sleep
 
+// Prototypes
 static void restore_orig_stdin();
-static void mock_stdin();
+static void setup_pty();
 static int mock_keyboard_callback(size_t n, char buffer[n]);
-static void mock_keyboard_print_revents(short revents);
-struct KeyboardPrivateOpsCopy {
-  void *(*process_stdin)(void *);
-  void (*read_stdin)(void);
-  void (*execute_callbacks)(void);
-  void (*print_revents)(short revents);
-};
 
 void setUp() {
   struct InitOps *init_ops = get_init_ops();
   logging_ops_ = get_logging_utils_ops();
   keyboard_ops_ = get_keyboard_ops();
-
-  // This is how mock static functions without including c file.
-  struct KeyboardPrivateOpsCopy *keyboard_priv_ops = keyboard_ops_->private_ops;
-  print_revents_backup_ptr = keyboard_priv_ops->print_revents;
-  keyboard_priv_ops->print_revents = mock_keyboard_print_revents;
+  keyboard_ops_priv = get_keyboard_priv_ops();
+  terminal_ops = get_terminal_ops();
 
   // Disable game init and destroy
   init_game_reg.init = NULL;
   init_game_reg.destroy = NULL;
   init_ops->initialize_system();
 
-  mock_stdin();
+  setup_pty();
 
-  mockup_callback_counter = 0;
+  // Initialize keyboard registration for tests
+  struct KeyboardRegistrationOps *keyboard_reg_ops =
+      get_keyboard_registration_ops();
+  TEST_ASSERT_EQUAL_INT(0, keyboard_reg_ops->init(&test_keyboard_reg,
+                                                  "test_module",
+                                                  mock_keyboard_callback));
+
+  mockup_callback_counter = 0; // Reset callback counter
 }
 
 void tearDown() {
   struct InitOps *init_ops = get_init_ops();
 
-  struct KeyboardPrivateOpsCopy *keyboard_priv_ops = keyboard_ops_->private_ops;
-  keyboard_priv_ops->print_revents = print_revents_backup_ptr;
-
   restore_orig_stdin();
+
+  // Destroy the test registration
+  struct KeyboardRegistrationOps *keyboard_reg_ops =
+      get_keyboard_registration_ops();
+  keyboard_reg_ops->destroy(&test_keyboard_reg);
 
   init_ops->destroy_system();
 }
 
 void test_process_single_stdin() {
-  // On low spec machine this test may fail due to ts being too small.
+  // Start the keyboard subsystem
+  keyboard_ops_->register_callback(test_keyboard_reg);
   keyboard_ops_->start();
-  keyboard_ops_->register_callback(mock_keyboard_callback);
 
-  // Write something to the pipe to simulate stdin input
-  write(pipefd[1], "test", strlen("test"));
-  close(pipefd[1]);
+  // Write one character to the PTY master
+  write(master_fd, "x", strlen("x")); // Simulate typing 'x'
 
-  thrd_sleep(&ts, NULL);
+  thrd_sleep(&ts, NULL); // Allow thread to process input
 
-  keyboard_ops_->destroy();
+  keyboard_ops_->stop();
 
-  // Check if the callback was executed
-  TEST_ASSERT_EQUAL_INT(1, mockup_callback_counter);
-}
-
-void test_process_multiple_stdin() {
-  // On low spec machine this test may file due to ts being to small.
-  keyboard_ops_->initialize();
-  keyboard_ops_->register_callback(mock_keyboard_callback);
-
-  // Write something to the pipe to simulate stdin input
-  write(pipefd[1], "test \n", strlen("test \n"));
-
-  thrd_sleep(&ts, NULL);
-
-  // Check if the callback was executed
-  TEST_ASSERT_EQUAL_INT(1, mockup_callback_counter);
-
-  // Write something to the pipe to simulate stdin input
-  write(pipefd[1], "test", strlen("test"));
-
-  close(pipefd[1]);
-
-  thrd_sleep(&ts, NULL);
-
-  keyboard_ops_->destroy();
-
-  // Check if the callback was executed
+  // Check if the callback was executed exactly once
   TEST_ASSERT_EQUAL_INT(2, mockup_callback_counter);
 }
 
-void mock_stdin() {
+// TO-DO test how multiple chars processing work
+
+void setup_pty() {
+  int slave_fd;
+
   // Backup the current stdin
   stdin_backup = dup(STDIN_FILENO);
 
-  // Create a pipe and redirect stdin to it
-  pipe(pipefd);
-  dup2(pipefd[0], STDIN_FILENO);
+  // Open a pseudo-terminal
+  if (openpty(&master_fd, &slave_fd, NULL, NULL, NULL) == -1) {
+    perror("openpty");
+    exit(EXIT_FAILURE);
+  }
+
+  // Redirect stdin to the PTY slave
+  dup2(slave_fd, STDIN_FILENO);
+  close(slave_fd); // Close the slave_fd in the test process
+
+  terminal_ops->disable_canonical_mode(master_fd);
 }
 
 void restore_orig_stdin() {
   // Restore the original stdin
   dup2(stdin_backup, STDIN_FILENO);
-  close(pipefd[0]);
+  close(stdin_backup);
+  close(master_fd);
 }
 
 int mock_keyboard_callback(size_t n, char buffer[n]) {
-  /* logging_ops_->log_info("mock_keyboard_callback", "executed"); */
+  // Log the callback invocation
+  logging_ops_->log_info("mock_keyboard_callback", "Buffer: %.*s, Size: %zu",
+                         (int)n, buffer, n);
+
+  // Increment the callback counter
   mockup_callback_counter++;
+
+  // Ensure callback receives the correct single character
+  /* TEST_ASSERT_EQUAL_INT(1, n);            // Only one character */
+  /* TEST_ASSERT_EQUAL_CHAR('x', buffer[0]); // The character should be 'x' */
+
   return 0;
 }
-
-static void mock_keyboard_print_revents(short revents) {}

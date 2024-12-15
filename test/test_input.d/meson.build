@@ -17,7 +17,7 @@ test_keyboard_exe = executable('test_keyboard',
     test_keyboard_src,
     unity_gen_runner.process(test_keyboard_name),
   ],
-  include_directories: [src],
+  include_directories: [src, test_includes],
   dependencies: test_dependencies,
   c_args:['-DTEST'],
   link_args: [
