@@ -98,19 +98,20 @@ static int keyboard1_start(void) {
   // Initialize the keyboard subsystem
   err = keyboard_ops->initialize();
   if (err) {
-    logging_ops->log_err(module_id, "Unable to initialize Keyboard1 subsystem");
+    logging_ops->log_err(module_id,
+                         "Unable to initialize Keyboard1 subsystem: %s",
+                         strerror(err));
     return err;
   }
 
   // Register callback for handling input
   err = keyboard_ops->register_callback(keyboard1_private_ops->callback);
   if (err) {
-    logging_ops->log_err(module_id,
-                         "Unable to register callback for Keyboard1 subsystem");
+    logging_ops->log_err(
+        module_id, "Unable to register callback for Keyboard1 subsystem: %s",
+        strerror(err));
     return err;
   }
-
-  logging_ops->log_info(module_id, "Keyboard1 subsystem started successfully");
 
   return 0;
 }

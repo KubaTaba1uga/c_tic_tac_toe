@@ -18,12 +18,16 @@
  ******************************************************************************/
 typedef int (*keyboard_callback_func_t)(size_t n, char buffer[n]);
 
+struct KeyboardRegistration {
+  keyboard_callback_func_t callback;
+  const char *module_id;
+};
+
 struct KeyboardOps {
-  int (*initialize)(void);
-  void (*destroy)(void);
-  void (*wait)(void);
-  int (*register_callback)(keyboard_callback_func_t);
-  void *(private_ops);
+  int (*wait)(void);
+  void (*stop)(void);
+  int (*start)(void);
+  int (*register_callback)(struct KeyboardRegistration *);
 };
 
 extern struct InitRegistrationData init_keyboard_reg;
