@@ -40,9 +40,9 @@ static struct InputOps *input_ops;
 static input_reg_t input_keyboard1_reg;
 static struct KeyboardOps *keyboard_ops;
 static struct LoggingUtilsOps *logging_ops;
+static struct KeyboardRegistration keyboard_reg;
 static struct InputRegistrationOps *input_reg_ops;
 static const char *module_id = INPUT_KEYBOARD1_ID;
-
 struct Keyboard1PrivateOps *keyboard1_private_ops;
 struct Keyboard1PrivateOps *get_keyboard1_priv_ops(void);
 
@@ -69,7 +69,10 @@ static int keyboard1_init(void) {
     return err;
   }
 
-  // Register the module
+  keyboard_reg.callback = keyboard1_private_ops->callback;
+  keyboard_reg.module_id = module_id;
+
+  // Register module in input
   err = input_ops->register_module(input_keyboard1_reg);
   if (err) {
     logging_ops->log_err(module_id, "Unable to register module: %s",
@@ -84,32 +87,28 @@ static void keyboard1_destroy(void) {
   input_reg_ops->destroy(&input_keyboard1_reg);
 }
 
-/*******************************************************************************
- *    PRIVATE API
- ******************************************************************************/
 static int keyboard1_stop(void) {
-  keyboard_ops->destroy();
+  keyboard_ops->stop();
   return 0;
 }
 
 static int keyboard1_start(void) {
   int err;
 
-  // Initialize the keyboard subsystem
-  err = keyboard_ops->initialize();
-  if (err) {
-    logging_ops->log_err(module_id,
-                         "Unable to initialize Keyboard1 subsystem: %s",
-                         strerror(err));
-    return err;
-  }
-
   // Register callback for handling input
-  err = keyboard_ops->register_callback(keyboard1_private_ops->callback);
+  err = keyboard_ops->register_callback(&keyboard_reg);
   if (err) {
     logging_ops->log_err(
         module_id, "Unable to register callback for Keyboard1 subsystem: %s",
         strerror(err));
+    return err;
+  }
+
+  // Start the keyboard subsystem
+  err = keyboard_ops->start();
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to start Keyboard1 subsystem: %s",
+                         strerror(err));
     return err;
   }
 
@@ -120,6 +119,10 @@ static int keyboard1_wait(void) {
   keyboard_ops->wait();
   return 0;
 }
+
+/*******************************************************************************
+ *    PRIVATE API
+ ******************************************************************************/
 
 static int keyboard1_callback(size_t n, char buffer[n]) {
   input_callback_func_t callback;

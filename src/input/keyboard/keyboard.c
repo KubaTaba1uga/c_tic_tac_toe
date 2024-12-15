@@ -207,8 +207,11 @@ static void keyboard_destroy(keyboard_sys_t *keyboard) {
 static int keyboard_start_thread(keyboard_sys_t keyboard) {
   int err;
 
-  if (!keyboard || keyboard->is_initialized)
+  if (!keyboard)
     return EINVAL;
+
+  if (keyboard->is_initialized)
+    return 0;
 
   keyboard->is_initialized = true;
   err = pthread_create(&keyboard->thread, NULL,
