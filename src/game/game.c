@@ -121,7 +121,6 @@ int game_process_and_display(enum InputEvents input_event,
   if (err) {
     logging_ops->log_err(module_id, "Unable to display game for user %i.",
                          input_user);
-
     return err;
   }
 

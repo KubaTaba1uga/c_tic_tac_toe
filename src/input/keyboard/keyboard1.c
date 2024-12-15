@@ -24,6 +24,7 @@
 #include "input/input_registration.h"
 #include "input/keyboard/keyboard.h"
 #include "input/keyboard/keyboard1.h"
+#include "input/keyboard/keyboard_registration.h"
 #include "utils/logging_utils.h"
 #include "utils/terminal_utils.h"
 
@@ -41,9 +42,11 @@ static struct InputOps *input_ops;
 static input_reg_t input_keyboard1_reg;
 static struct KeyboardOps *keyboard_ops;
 static struct LoggingUtilsOps *logging_ops;
-static struct KeyboardRegistration keyboard_reg;
+static keyboard_reg_t keyboard_keyboard1_reg;
 static struct InputRegistrationOps *input_reg_ops;
 static const char *module_id = INPUT_KEYBOARD1_ID;
+static struct KeyboardRegistrationOps *keyboard_reg_ops;
+
 struct Keyboard1PrivateOps *keyboard1_private_ops;
 struct Keyboard1PrivateOps *get_keyboard1_priv_ops(void);
 
@@ -58,6 +61,17 @@ static int keyboard1_init(void) {
   input_reg_ops = get_input_reg_ops();
   logging_ops = get_logging_utils_ops();
   keyboard1_private_ops = get_keyboard1_priv_ops();
+  keyboard_reg_ops = get_keyboard_registration_ops();
+
+  // Initialize the keyboard registration
+  err = keyboard_reg_ops->init(&keyboard_keyboard1_reg, module_id,
+                               keyboard1_private_ops->callback);
+  if (err) {
+    logging_ops->log_err(module_id,
+                         "Failed to initialize keyboard registration: %s",
+                         strerror(err));
+    return err;
+  }
 
   // Initialize the input registration
   err = input_reg_ops->init(
@@ -69,9 +83,6 @@ static int keyboard1_init(void) {
                          strerror(err));
     return err;
   }
-
-  keyboard_reg.callback = keyboard1_private_ops->callback;
-  keyboard_reg.module_id = module_id;
 
   // Register module in input
   err = input_ops->register_module(input_keyboard1_reg);
@@ -86,8 +97,12 @@ static int keyboard1_init(void) {
 
 static void keyboard1_destroy(void) {
   input_reg_ops->destroy(&input_keyboard1_reg);
+  keyboard_reg_ops->destroy(&keyboard_keyboard1_reg);
 }
 
+/*******************************************************************************
+ *    PRIVATE API
+ ******************************************************************************/
 static int keyboard1_stop(void) {
   keyboard_ops->stop();
   return 0;
@@ -97,7 +112,7 @@ static int keyboard1_start(void) {
   int err;
 
   // Register callback for handling input
-  err = keyboard_ops->register_callback(&keyboard_reg);
+  err = keyboard_ops->register_callback(keyboard_keyboard1_reg);
   if (err) {
     logging_ops->log_err(
         module_id, "Unable to register callback for Keyboard1 subsystem: %s",
@@ -120,10 +135,6 @@ static int keyboard1_wait(void) {
   keyboard_ops->wait();
   return 0;
 }
-
-/*******************************************************************************
- *    PRIVATE API
- ******************************************************************************/
 
 static int keyboard1_callback(size_t n, char buffer[n]) {
   input_callback_func_t callback;

@@ -22,6 +22,7 @@
 #include "init/init.h"
 #include "input/input.h"
 #include "input/keyboard/keyboard.h"
+#include "input/keyboard/keyboard_registration.h"
 #include "keyboard.h"
 #include "utils/logging_utils.h"
 #include "utils/subsystem_utils.h"
@@ -54,7 +55,7 @@ struct KeyboardPrivateOps {
   void (*stop_thread)(keyboard_sys_t);
   void *(*process_stdin)(keyboard_sys_t);
   void (*execute_callbacks)(keyboard_sys_t);
-  int (*register_callback)(keyboard_sys_t, struct KeyboardRegistration *);
+  int (*register_callback)(keyboard_sys_t, keyboard_reg_t);
 };
 
 static keyboard_sys_t keyboard_subsystem;
@@ -62,6 +63,7 @@ static const char module_id[] = "keyboard";
 static struct LoggingUtilsOps *logging_ops;
 static struct TerminalUtilsOps *terminal_ops;
 static struct SubsystemUtilsOps *subsystem_ops;
+static struct KeyboardRegistrationOps *keyboard_reg_ops;
 
 static struct KeyboardPrivateOps *keyboard_priv_ops;
 struct KeyboardPrivateOps *get_keyboard_priv_ops(void);
@@ -76,6 +78,7 @@ static int keyboard_init_system(void) {
   logging_ops = get_logging_utils_ops();
   subsystem_ops = get_subsystem_utils_ops();
   keyboard_priv_ops = get_keyboard_priv_ops();
+  keyboard_reg_ops = get_keyboard_registration_ops();
 
   if (keyboard_subsystem) {
     logging_ops->log_info(module_id, "Keyboard subsystem already initialized.");
@@ -118,8 +121,7 @@ static void keyboard_stop_thread_system(void) {
   logging_ops->log_info(module_id, "Keyboard thread stopped.");
 }
 
-static int
-keyboard_register_callback_system(struct KeyboardRegistration *keyboard_reg) {
+static int keyboard_register_callback_system(keyboard_reg_t keyboard_reg) {
   int err;
 
   err = keyboard_priv_ops->register_callback(keyboard_subsystem, keyboard_reg);
@@ -270,7 +272,7 @@ static bool keyboard_array_search_filter(const char *_, void *__, void *___) {
 }
 
 static void keyboard_execute_callbacks(keyboard_sys_t keyboard) {
-  struct KeyboardRegistration *keyboard_reg;
+  keyboard_reg_t keyboard_reg;
   module_search_t search_wrap;
   int err;
 
@@ -295,11 +297,11 @@ static void keyboard_execute_callbacks(keyboard_sys_t keyboard) {
     if (!keyboard_reg)
       break;
 
-    keyboard_reg->callback(keyboard->stdin_buffer_count,
-                           keyboard->stdin_buffer);
+    keyboard_reg_ops->callback(keyboard_reg, keyboard->stdin_buffer_count,
+                               keyboard->stdin_buffer);
 
     logging_ops->log_info(module_id, "Executed callback for %s",
-                          keyboard_reg->module_id);
+                          keyboard_reg_ops->get_module_id(keyboard_reg));
   } while (true);
 
   logging_ops->log_info(module_id, "Executed all callbacks");
@@ -310,19 +312,18 @@ out:
   return;
 }
 
-static int
-keyboard_register_callback(keyboard_sys_t keyboard,
-                           struct KeyboardRegistration *keyboard_reg) {
+static int keyboard_register_callback(keyboard_sys_t keyboard,
+                                      keyboard_reg_t keyboard_reg) {
   int err;
 
-  if (!keyboard || !keyboard_reg || !keyboard_reg->callback ||
-      !keyboard_reg->module_id) {
+  if (!keyboard || !keyboard_reg) {
     logging_ops->log_err(module_id, "Invalid keyboard registration data.");
     return EINVAL;
   }
 
   err = subsystem_ops->register_module(
-      keyboard->subsystem, keyboard_reg->module_id, (void *)keyboard_reg);
+      keyboard->subsystem, keyboard_reg_ops->get_module_id(keyboard_reg),
+      (void *)keyboard_reg);
   if (err) {
     return err;
   }
