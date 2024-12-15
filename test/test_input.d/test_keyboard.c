@@ -68,7 +68,7 @@ void tearDown() {
 
 void test_process_single_stdin() {
   // On low spec machine this test may fail due to ts being too small.
-  keyboard_ops_->initialize();
+  keyboard_ops_->start();
   keyboard_ops_->register_callback(mock_keyboard_callback);
 
   // Write something to the pipe to simulate stdin input

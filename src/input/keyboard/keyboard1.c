@@ -25,6 +25,7 @@
 #include "input/keyboard/keyboard.h"
 #include "input/keyboard/keyboard1.h"
 #include "utils/logging_utils.h"
+#include "utils/terminal_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS

@@ -25,6 +25,7 @@
 #include "keyboard.h"
 #include "utils/logging_utils.h"
 #include "utils/subsystem_utils.h"
+#include "utils/terminal_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
@@ -59,6 +60,7 @@ struct KeyboardPrivateOps {
 static keyboard_sys_t keyboard_subsystem;
 static const char module_id[] = "keyboard";
 static struct LoggingUtilsOps *logging_ops;
+static struct TerminalUtilsOps *terminal_ops;
 static struct SubsystemUtilsOps *subsystem_ops;
 
 static struct KeyboardPrivateOps *keyboard_priv_ops;
@@ -70,6 +72,7 @@ struct KeyboardPrivateOps *get_keyboard_priv_ops(void);
 static int keyboard_init_system(void) {
   int err;
 
+  terminal_ops = get_terminal_ops();
   logging_ops = get_logging_utils_ops();
   subsystem_ops = get_subsystem_utils_ops();
   keyboard_priv_ops = get_keyboard_priv_ops();
@@ -134,7 +137,7 @@ static int keyboard_wait_system(void) {
   if (!keyboard_subsystem->is_initialized) {
     logging_ops->log_info(
         module_id, "Keyboard subsystem is not running. Nothing to wait for.");
-    return 0; // Nothing to wait for; return success
+    return 0;
   }
 
   logging_ops->log_info(module_id, "Waiting for keyboard thread to finish.");
@@ -151,7 +154,7 @@ static int keyboard_wait_system(void) {
 
   logging_ops->log_info(module_id,
                         "Keyboard thread has finished successfully.");
-  return 0; // Success
+  return 0;
 }
 
 /*******************************************************************************
@@ -184,6 +187,7 @@ static int keyboard_init(keyboard_sys_t *keyboard) {
   }
 
   tmp_keyboard->is_initialized = false;
+  terminal_ops->disable_canonical_mode(STDIN_FILENO);
 
   *keyboard = tmp_keyboard;
 
@@ -201,6 +205,9 @@ static void keyboard_destroy(keyboard_sys_t *keyboard) {
   subsystem_ops->destroy(&tmp_keyboard->subsystem);
 
   free(tmp_keyboard);
+
+  terminal_ops->enable_canonical_mode(STDIN_FILENO);
+
   *keyboard = NULL;
 }
 
@@ -314,9 +321,8 @@ keyboard_register_callback(keyboard_sys_t keyboard,
     return EINVAL;
   }
 
-  err = subsystem_ops->register_module(keyboard->subsystem,
-                                       keyboard_reg->module_id,
-                                       (void *)keyboard_reg->callback);
+  err = subsystem_ops->register_module(
+      keyboard->subsystem, keyboard_reg->module_id, (void *)keyboard_reg);
   if (err) {
     return err;
   }

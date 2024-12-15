@@ -5,6 +5,8 @@
 
 typedef struct InputRegistrationData *input_reg_t;
 
+// Input subsystem spawns threads, start/stop/wait/destroy functions
+//   are controlling mechanism over these threads.
 typedef int (*input_wait_func_t)(void);
 typedef int (*input_stop_func_t)(void);
 typedef int (*input_start_func_t)(void);
