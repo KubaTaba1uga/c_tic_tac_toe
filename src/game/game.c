@@ -10,7 +10,6 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
-#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>

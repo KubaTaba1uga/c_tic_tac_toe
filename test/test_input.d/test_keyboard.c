@@ -19,11 +19,9 @@
 
 #include "input_keyboard_wrapper.h"
 
-// Globals for testing
-int stdin_backup;
-int master_fd; // PTY master file descriptor
-int mockup_callback_counter =
-    0; // Global variable to count callback invocations
+static int stdin_backup;
+static int master_fd; // PTY master file descriptor
+static int mockup_callback_counter = 0;
 static struct KeyboardOps *keyboard_ops_;
 static struct LoggingUtilsOps *logging_ops_;
 static struct KeyboardPrivateOps *keyboard_ops_priv;
@@ -32,7 +30,6 @@ keyboard_reg_t test_keyboard_reg;
 
 struct timespec ts = {.tv_sec = 0, .tv_nsec = 50000000};
 
-// Prototypes
 static void restore_orig_stdin();
 static void setup_pty();
 static int mock_keyboard_callback(size_t n, char buffer[n]);
