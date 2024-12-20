@@ -30,8 +30,7 @@ static struct KeyboardPrivateOps *keyboard_ops_priv;
 static struct TerminalUtilsOps *terminal_ops;
 keyboard_reg_t test_keyboard_reg;
 
-struct timespec ts = {.tv_sec = 2,
-                      .tv_nsec = 500000000}; // 50ms for thread sleep
+struct timespec ts = {.tv_sec = 0, .tv_nsec = 50000000};
 
 // Prototypes
 static void restore_orig_stdin();
@@ -88,10 +87,47 @@ void test_process_single_stdin() {
   keyboard_ops_->stop();
 
   // Check if the callback was executed exactly once
+  TEST_ASSERT_EQUAL_INT(1, mockup_callback_counter);
+}
+
+void test_process_double_stdin() {
+  // Start the keyboard subsystem
+  keyboard_ops_->register_callback(test_keyboard_reg);
+  keyboard_ops_->start();
+
+  // Write one character to the PTY master
+  write(master_fd, "x", strlen("x")); // Simulate typing 'x'
+
+  thrd_sleep(&ts, NULL); // Allow thread to process input
+
+  write(master_fd, "x", strlen("x")); // Simulate typing 'x'
+
+  thrd_sleep(&ts, NULL); // Allow thread to process input
+
+  keyboard_ops_->stop();
+
+  // Check if the callback was executed exactly once
   TEST_ASSERT_EQUAL_INT(2, mockup_callback_counter);
 }
 
-// TO-DO test how multiple chars processing work
+void test_process_multiple_inputs() {
+  // Array of inputs to simulate
+  const char *inputs[] = {"abc", "bca", "cab", "def", "efd"};
+  size_t input_count = sizeof(inputs) / sizeof(const char *);
+
+  // Start the keyboard subsystem
+  keyboard_ops_->register_callback(test_keyboard_reg);
+  keyboard_ops_->start();
+
+  // Write each input to the PTY master
+  for (size_t i = 0; i < input_count; i++) {
+    write(master_fd, inputs[i], strlen(inputs[i])); // Simulate typing input
+    thrd_sleep(&ts, NULL); // Allow thread to process input
+    TEST_ASSERT_EQUAL_INT(i + 1, mockup_callback_counter);
+  }
+
+  keyboard_ops_->stop();
+}
 
 void setup_pty() {
   int slave_fd;
