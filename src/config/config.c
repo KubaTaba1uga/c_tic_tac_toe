@@ -85,6 +85,24 @@ static void config_destroy_system(void) {
   config_priv_ops->destroy(&config_subsystem);
 }
 
+static int config_init_obj(struct ConfigRegistrationData *reg_data,
+                           char *var_name, char *default_value) {
+  if (!reg_data || !var_name) {
+    return EINVAL;
+  }
+
+  memset(reg_data, 0, sizeof(struct ConfigRegistrationData));
+
+  strncpy(reg_data->var_name, var_name, CONFIG_VAR_NAME_MAX - 1);
+
+  if (default_value) {
+    strncpy(reg_data->default_value, default_value,
+            CONFIG_DEFAULT_VALUE_MAX - 1);
+  }
+
+  return 0;
+}
+
 static int config_register_variable_system(
     struct ConfigRegistrationData *config_registration_data) {
   if (!config_priv_ops)
@@ -159,8 +177,7 @@ static int config_register_variable(
   if (!subsystem_ops || !logging_ops)
     return ENODATA;
 
-  if (!config || !config_registration_data ||
-      !config_registration_data->var_name)
+  if (!config || !config_registration_data)
     return EINVAL;
 
   err = subsystem_ops->register_module(config->subsystem,
@@ -240,6 +257,10 @@ static char *config_get_variable(config_sys_t config, char *var_name) {
   if (value == NULL)
     value = (char *)variable->default_value;
 
+  if (strlen(value) == 0) {
+    value = NULL;
+  }
+
   return value;
 }
 
@@ -264,6 +285,7 @@ static struct ConfigPrivateOps config_priv_ops_ = {
 };
 
 static struct ConfigOps config_pub_ops = {
+    .init = config_init_obj,
     .get_system_var = config_get_variable_system,
     .register_system_var = config_register_variable_system,
 };

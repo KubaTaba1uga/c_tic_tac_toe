@@ -16,18 +16,20 @@
 #include "utils/subsystem_utils.h"
 
 #define NULL_DEF()                                                             \
-  struct ConfigRegistrationData null_def = {                                   \
-      .var_name = "non_existing_var_123", .default_value = NULL}
+  struct ConfigRegistrationData null_def;                                      \
+  config_ops->init(&null_def, "non_existing_var_123", NULL);
 
 #define VAL_DEF()                                                              \
-  struct ConfigRegistrationData val_def = {.var_name = "existing_var_321",     \
-                                           .default_value = "super value"}
+  struct ConfigRegistrationData val_def;                                       \
+  config_ops->init(&val_def, "existing_var_321", "super value");
+
 static struct ArrayUtilsOps *array_ops;
 static struct ConfigOps *config_ops;
 static struct ConfigPrivateOps *config_priv_ops;
 
 void setUp() {
   int err;
+
   config_ops = get_config_ops();
   array_ops = get_array_utils_ops();
   config_priv_ops = get_config_priv_ops();

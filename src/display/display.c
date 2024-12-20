@@ -10,7 +10,6 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
-#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -86,8 +85,12 @@ static int display_init(void) {
     return ENOMEM;
   }
 
-  display_env->var_name = "display";
-  display_env->default_value = DISPLAY_CLI_NAME;
+  err = config_ops->init(display_env, "display", DISPLAY_CLI_NAME);
+  if (err) {
+    logging_ops->log_err(module_id,
+                         "Unable to init display configuration var.");
+    return err;
+  }
 
   err = config_ops->register_system_var(display_env);
   if (err) {
