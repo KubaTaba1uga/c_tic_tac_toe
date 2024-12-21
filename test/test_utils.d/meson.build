@@ -43,28 +43,30 @@ test_array_utils_exe = executable(
     include_directories: [src, test_includes],
     dependencies: test_dependencies,
     c_args: ['-DTEST'],
-    link_args: ['-zmuldefs']
 )
 
 test('test_array_utils', test_array_utils_exe)
 
 ############################################################################
-#                   Subsystem Utils Tests                                    #
+#                   Registration Utils Tests                                    #
 ############################################################################
-test_subsystem_utils_name = 'test_subsystem_utils.c'
+test_registration_utils_name = 'test_registration_utils.c'
 
-test_subsystem_utils_src = files([test_subsystem_utils_name]) + sources
+test_registration_utils_src = [test_registration_utils_name,
+                               utils / 'array_utils.c',
+			       utils / 'registration_utils.c',
+			       utils / 'std_lib_utils.c',
+			       utils / 'logging_utils.c']
 
-test_subsystem_utils_exe = executable(
-    'test_subsystem_utils',
+test_registration_utils_exe = executable(
+    'test_registration_utils',
     sources: [
-              test_subsystem_utils_src,
-              unity_gen_runner.process(test_subsystem_utils_name),
+              test_registration_utils_src,
+              unity_gen_runner.process(test_registration_utils_name),
 	     ],
     include_directories: [src, test_includes],
     dependencies: test_dependencies,
     c_args: ['-DTEST'],
-    link_args: ['-zmuldefs']
 )
 
-test('test_subsystem_utils', test_subsystem_utils_exe)
+test('test_registration_utils', test_registration_utils_exe)

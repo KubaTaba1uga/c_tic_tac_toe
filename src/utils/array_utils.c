@@ -10,6 +10,7 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -46,12 +47,20 @@ static int array_init(struct Array *array, size_t size) {
 };
 
 static void array_destroy(struct Array *array) {
+  if (!array) {
+    return;
+  }
+
   free(array->data);
 
   array->data = NULL;
 };
 
 static int array_append(struct Array *array, void *element) {
+  if (!array) {
+    return EINVAL;
+  }
+
   if (array->length + 1 > array->size) {
     return ENOBUFS;
   }

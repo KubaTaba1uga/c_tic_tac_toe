@@ -52,7 +52,6 @@ struct ArrayUtilsOps {
                            void *);
   int (*init_search_input_with_step)(struct ArraySearchInput *,
                                      bool (*)(void *, void *), void *, int);
-
   int (*search_elements)(struct Array, struct ArraySearchInput *,
                          struct ArraySearchOutput *);
 };
