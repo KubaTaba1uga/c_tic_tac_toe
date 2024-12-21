@@ -31,7 +31,6 @@ variables.
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-
 struct ConfigSubsystem {
   struct Registrar registrar;
 };
@@ -45,7 +44,6 @@ struct ConfigPrivateOps {
 };
 
 static struct ArrayUtilsOps *array_ops;
-static struct StdLibUtilsOps *std_lib_ops;
 static struct LoggingUtilsOps *logging_ops;
 static struct RegistrationUtilsOps *reg_ops;
 static const size_t max_registrations = 100;
@@ -62,7 +60,6 @@ static int config_init_system(void) {
 
   array_ops = get_array_utils_ops();
   logging_ops = get_logging_utils_ops();
-  std_lib_ops = get_std_lib_utils_ops();
   reg_ops = get_registration_utils_ops();
   config_priv_ops = get_config_priv_ops();
 
