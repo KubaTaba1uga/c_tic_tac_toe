@@ -21,181 +21,129 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-struct Array {
-  size_t length;
-  size_t size;
-  void **data;
-};
-
-struct ArraySearchState {
+struct ArrayInputPrivate {
   enum ArraySearchStateEnum state;
   size_t index;
-  int step;
 };
-
-struct ArraySearchWrapper {
-  void *filter_data;
-  bool (*filter_func)(void *, void *);
-  void **result_placeholder;
-  struct ArraySearchState state;
-};
-
-struct ArrayPrivateOps {
-  void (*increment_length)(array_t);
-  size_t (*get_size)(array_t);
-};
-
-struct ArrayPrivateOps *get_array_priv_ops(void);
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-static int array_init(array_t *array, size_t size) {
-  struct Array *new_array;
-
-  new_array = malloc(sizeof(struct Array));
-  if (!new_array) {
-    return ENOMEM;
+static int array_init(struct Array *array, size_t size) {
+  if (!array) {
+    return EINVAL;
   }
 
-  new_array->size = size;
-  new_array->length = 0;
+  array->size = size;
+  array->length = 0;
 
-  new_array->data = malloc(sizeof(void *) * size);
-  if (!new_array->data) {
+  array->data = malloc(sizeof(void *) * size);
+  if (!array->data) {
     return ENOMEM;
   }
-
-  *array = new_array;
 
   return 0;
 };
 
-static void array_destroy(array_t *array) {
-  struct Array *tmp_array = *array;
-  free(tmp_array->data);
-  free(tmp_array);
+static void array_destroy(struct Array *array) {
+  free(array->data);
 
-  *array = NULL;
+  array->data = NULL;
 };
 
-static int array_append(array_t array, void *element) {
-  struct ArrayPrivateOps *array_ops_ = get_array_priv_ops();
-  struct ArrayUtilsOps *array_ops = get_array_utils_ops();
-  struct Array *tmp_array = array;
-
-  if (array_ops->get_length(tmp_array) + 1 > array_ops_->get_size(tmp_array)) {
+static int array_append(struct Array *array, void *element) {
+  if (array->length + 1 > array->size) {
     return ENOBUFS;
   }
 
-  tmp_array->data[array_ops->get_length(tmp_array)] = element;
-
-  array_ops_->increment_length(tmp_array);
+  array->data[array->length++] = element;
 
   return 0;
 };
 
-static size_t array_get_length(array_t array) {
-  struct Array *tmp_array = array;
-
-  return tmp_array->length;
-};
-
-static void *array_get_element(array_t array, size_t index) {
-  struct ArrayUtilsOps *array_ops = get_array_utils_ops();
-  struct Array *tmp_array = array;
-
-  if (index >= array_ops->get_length(tmp_array)) {
-    return NULL;
+static int array_get_element(struct Array array, size_t index,
+                             void **value_placeholder) {
+  if (index >= array.length) {
+    return ENOENT;
   }
 
-  return tmp_array->data[index];
+  *value_placeholder = array.data[index];
+
+  return 0;
 };
 
-static int array_init_search_wrapper(array_search_t *search_wrap,
-                                     void *filter_data,
-                                     bool (*filter_func)(void *, void *),
-                                     void **result_placeholder) {
-  array_search_t tmp_wrap;
+static int array_init_search_input(struct ArraySearchInput *search_input,
+                                   bool (*filter_func)(void *, void *),
+                                   void *filter_data) {
 
-  if (!search_wrap || !filter_data || !filter_func || !result_placeholder)
+  if (!search_input || !filter_func)
     return EINVAL;
 
-  tmp_wrap = malloc(sizeof(struct ArraySearchWrapper));
-  if (!tmp_wrap) {
-    return ENOMEM;
-  }
-
-  tmp_wrap->state.step = 1;
-  tmp_wrap->state.index = 0;
-  *result_placeholder = NULL;
-  tmp_wrap->filter_data = filter_data;
-  tmp_wrap->filter_func = filter_func;
-  tmp_wrap->state.state = ARRAY_SEARCH_STATE_NONE;
-  tmp_wrap->result_placeholder = result_placeholder;
-
-  *search_wrap = tmp_wrap;
+  search_input->filter_func = filter_func;
+  search_input->filter_data = filter_data;
+  search_input->index = 0;
+  search_input->step = 1;
+  search_input->state = ARRAY_SEARCH_STATE_NONE;
 
   return 0;
 };
 
-void array_destroy_search_wrapper(array_search_t *search_wrap) {
-  array_search_t tmp_wrap;
+static int
+array_init_search_input_with_step(struct ArraySearchInput *search_input,
+                                  bool (*filter_func)(void *, void *),
+                                  void *filter_data, int step) {
+  int err;
 
-  if (!search_wrap)
-    return;
+  err = array_init_search_input(search_input, filter_func, filter_data);
+  if (err) {
+    return err;
+  }
 
-  tmp_wrap = *search_wrap;
+  search_input->step = step;
 
-  free(tmp_wrap);
-
-  *search_wrap = NULL;
+  return 0;
 };
 
-int array_search_elements(array_t array, array_search_t search_wrap) {
-  // Add step to allow traversing array forward and backward
-  //  step -1 allow to traverse back;
+int array_search_elements(struct Array array, struct ArraySearchInput *input,
+                          struct ArraySearchOutput *output) {
   struct ArrayUtilsOps *array_ops = get_array_utils_ops();
   void *element;
+  int err;
 
-  if (!array_ops) {
-    return ENODATA;
-  }
-
-  if (!array || !search_wrap || !search_wrap->filter_data ||
-      !search_wrap->filter_func || !search_wrap->result_placeholder) {
+  if (!input || !output) {
     return EINVAL;
   }
 
-  switch (search_wrap->state.state) {
+  // Set defaults for output
+  output->result = NULL;
+  output->state = ARRAY_SEARCH_STATE_DONE;
+
+  switch (input->state) {
   case ARRAY_SEARCH_STATE_NONE:
-    if (search_wrap->state.step >= 0) {
-      search_wrap->state.index = 0;
+    if (input->step >= 0) {
+      input->index = 0;
     } else {
-      search_wrap->state.index = array_ops->get_length(array) - 1;
+      input->index = array.length - 1;
     }
     break;
   case ARRAY_SEARCH_STATE_INPROGRESS:
-    search_wrap->state.index += search_wrap->state.step;
+    input->index += input->step;
     break;
   default:
     return 0;
   }
 
-  // Handle no element
-  *search_wrap->result_placeholder = NULL;
-  search_wrap->state.state = ARRAY_SEARCH_STATE_DONE;
-
-  for (; search_wrap->state.index <= array_ops->get_length(array);
-       search_wrap->state.index += search_wrap->state.step) {
-    element = array_ops->get_element(array, search_wrap->state.index);
-    if (!element) {
-      return 0;
+  for (; input->index < array.length; input->index += input->step) {
+    err = array_ops->get_element(array, input->index, &element);
+    if (err) {
+      return err;
     }
 
-    if (search_wrap->filter_func(element, search_wrap->filter_data)) {
-      *search_wrap->result_placeholder = element;
-      search_wrap->state.state = ARRAY_SEARCH_STATE_INPROGRESS;
+    if (input->filter_func(element, input->filter_data)) {
+      input->state = ARRAY_SEARCH_STATE_INPROGRESS;
+      output->state = input->state;
+      output->result = element;
+
       return 0;
     }
   }
@@ -203,48 +151,17 @@ int array_search_elements(array_t array, array_search_t search_wrap) {
   return 0;
 };
 
-enum ArraySearchStateEnum array_search_get_state(array_search_t search_wrap) {
-  return search_wrap->state.state;
-}
-
-void array_search_set_step(array_search_t search_wrap, int step) {
-  search_wrap->state.step = step;
-}
-
-/*******************************************************************************
- *    PRIVATE API
- ******************************************************************************/
-static void array_increment_length(array_t array) {
-  struct Array *tmp_array = array;
-
-  tmp_array->length++;
-};
-
-static size_t array_get_size(array_t array) {
-  struct Array *tmp_array = array;
-
-  return tmp_array->size;
-};
-
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-static struct ArrayPrivateOps array_priv_ops = {
-    .increment_length = array_increment_length, .get_size = array_get_size};
-
 static struct ArrayUtilsOps array_utils_ops = {
     .init = array_init,
     .append = array_append,
     .destroy = array_destroy,
-    .get_length = array_get_length,
     .get_element = array_get_element,
     .search_elements = array_search_elements,
-    .init_search_wrapper = array_init_search_wrapper,
-    .destroy_search_wrapper = array_destroy_search_wrapper,
-    .get_state_search_wrapper = array_search_get_state,
-    .set_step_search_wrapper = array_search_set_step};
-
-struct ArrayPrivateOps *get_array_priv_ops(void) { return &array_priv_ops; };
-;
+    .init_search_input = array_init_search_input,
+    .init_search_input_with_step = array_init_search_input_with_step,
+};
 
 struct ArrayUtilsOps *get_array_utils_ops(void) { return &array_utils_ops; };

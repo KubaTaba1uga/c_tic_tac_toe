@@ -17,8 +17,11 @@
 /*******************************************************************************
  *    API
  ******************************************************************************/
-typedef struct Array *array_t;
-typedef struct ArraySearchWrapper *array_search_t;
+struct Array {
+  size_t length;
+  size_t size;
+  void **data;
+};
 
 enum ArraySearchStateEnum {
   ARRAY_SEARCH_STATE_NONE = 0,
@@ -27,18 +30,31 @@ enum ArraySearchStateEnum {
   ARRAY_SEARCH_STATE_INVALID,
 };
 
+struct ArraySearchInput {
+  bool (*filter_func)(void *, void *);
+  void *filter_data;
+  int step;
+  enum ArraySearchStateEnum state;
+  size_t index;
+};
+
+struct ArraySearchOutput {
+  enum ArraySearchStateEnum state;
+  void *result;
+};
+
 struct ArrayUtilsOps {
-  int (*init)(array_t *, size_t);
-  void (*destroy)(array_t *);
-  int (*append)(array_t, void *);
-  size_t (*get_length)(array_t);
-  void *(*get_element)(array_t, size_t);
-  int (*search_elements)(array_t, array_search_t);
-  int (*init_search_wrapper)(array_search_t *, void *, bool (*)(void *, void *),
-                             void **);
-  void (*destroy_search_wrapper)(array_search_t *);
-  enum ArraySearchStateEnum (*get_state_search_wrapper)(array_search_t);
-  void (*set_step_search_wrapper)(array_search_t search_wrap, int step);
+  int (*init)(struct Array *, size_t);
+  void (*destroy)(struct Array *);
+  int (*append)(struct Array *, void *);
+  int (*get_element)(struct Array, size_t, void **);
+  int (*init_search_input)(struct ArraySearchInput *, bool (*)(void *, void *),
+                           void *);
+  int (*init_search_input_with_step)(struct ArraySearchInput *,
+                                     bool (*)(void *, void *), void *, int);
+
+  int (*search_elements)(struct Array, struct ArraySearchInput *,
+                         struct ArraySearchOutput *);
 };
 
 /*******************************************************************************
