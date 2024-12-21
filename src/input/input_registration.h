@@ -23,19 +23,10 @@ struct InputRegistration {
 };
 
 // Ops
-struct InputRegisterInput {
-  struct InputRegistration *registration;
-  void *input;
-};
-
-struct InputRegisterOutput {
-  int registration_id;
-};
 
 struct InputRegistrationOps {
-  int (*registration_init)(struct InputRegistration *, const char *,
-                           input_wait_func_t, input_start_func_t,
-                           input_stop_func_t);
+  int (*init)(struct InputRegistration *, const char *, input_wait_func_t,
+              input_start_func_t, input_stop_func_t);
 };
 
 /*******************************************************************************

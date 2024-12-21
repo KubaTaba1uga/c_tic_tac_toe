@@ -32,12 +32,23 @@ struct InputSetRegistrationCallbackInput {
 
 struct InputSetRegistrationCallbackOutput {};
 
+struct InputRegisterInput {
+  struct InputRegistration *registration;
+  void *input;
+};
+
+struct InputRegisterOutput {
+  int registration_id;
+};
+
 struct InputOps {
   int (*start)(void);
   int (*stop)(void);
   int (*wait)(void);
   int (*set_callback)(struct InputSetRegistrationCallbackInput,
                       struct InputSetRegistrationCallbackOutput *);
+  int (*register_module)(struct InputRegisterInput,
+                         struct InputRegisterOutput *);
 };
 
 /*******************************************************************************

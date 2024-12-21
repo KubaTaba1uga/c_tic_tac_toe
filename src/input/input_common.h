@@ -1,8 +1,6 @@
 #ifndef INPUT_COMMON
 #define INPUT_COMMON
 
-#define INPUT_KEYBOARD1_ID "keyboard1"
-
 enum InputEvents {
   INPUT_EVENT_NONE = 0,
   INPUT_EVENT_UP,
@@ -13,6 +11,7 @@ enum InputEvents {
   INPUT_EVENT_EXIT,
   INPUT_EVENT_MAX,
 };
+
 typedef int (*input_callback_func_t)(enum InputEvents input_event);
 
-#endif
+#endif // INPUT_COMMON

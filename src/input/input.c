@@ -58,8 +58,10 @@ static void input_destroy_system(void) {
   }
 }
 
-static int input_register_callback(struct InputRegisterVarInput input,
-                                   struct InputRegisterVarOutput *output) {
+// TO_DO
+static int
+input_set_callback(struct InputSetRegistrationCallbackInput input,
+                   struct InputSetRegistrationCallbackOutput *output) {
   struct InputSubsystem *tmp_input;
   struct RegisterOutput reg_output;
   struct RegisterInput reg_input;
@@ -70,9 +72,10 @@ static int input_register_callback(struct InputRegisterVarInput input,
 
   input.input = tmp_input = &input_subsystem;
 
-  int err = reg_ops->registration_init(&input.registration->registration,
-                                       input.registration->data.display_name,
-                                       input.registration->data.callback);
+  int err =
+      reg_ops->get_registration(&input.registration->registration,
+                                (char *)input.registration->data.display_name,
+                                input.registration->data.callback);
   if (err) {
     log_ops->log_err("input", "Failed to initialize registration for '%s': %s",
                      input.registration->data.display_name, strerror(err));
@@ -88,7 +91,50 @@ static int input_register_callback(struct InputRegisterVarInput input,
     return err;
   }
 
-  log_ops->log_info("input", "Callback registered successfully for '%s'",
+  output->registration_id = reg_output.registration_id;
+
+  log_ops->log_info("input", "Callback registered successfully for '%i:%s'",
+                    output->registration_id,
+                    input.registration->data.display_name);
+  return 0;
+}
+
+static int input_register_system(struct InputRegisterInput input,
+                                 struct InputRegisterOutput *output) {
+  struct InputSubsystem *tmp_input;
+  struct RegisterOutput reg_output;
+  struct RegisterInput reg_input;
+
+  if (!output) {
+    return EINVAL;
+  }
+
+  output->registration_id = -1;
+  input.input = tmp_input = &input_subsystem;
+
+  int err =
+      reg_ops->registration_init(&input.registration->registration,
+                                 (char *)input.registration->data.display_name,
+                                 input.registration->data.callback);
+  if (err) {
+    log_ops->log_err("input", "Failed to initialize registration for '%s': %s",
+                     input.registration->data.display_name, strerror(err));
+    return err;
+  }
+
+  reg_input.registrar = &tmp_input->registrar;
+
+  err = reg_ops->register_module(reg_input, &reg_output);
+  if (err) {
+    log_ops->log_err("input", "Failed to register callback for '%s': %s",
+                     input.registration->data.display_name, strerror(err));
+    return err;
+  }
+
+  output->registration_id = reg_output.registration_id;
+
+  log_ops->log_info("input", "Callback registered successfully for '%i:%s'",
+                    output->registration_id,
                     input.registration->data.display_name);
   return 0;
 }
@@ -125,6 +171,7 @@ static struct InputOps input_ops = {
     .stop = input_stop,
     .wait = input_wait,
     .register_callback = input_register_callback,
+
 };
 
 struct InputOps *get_input_ops(void) { return &input_ops; }
