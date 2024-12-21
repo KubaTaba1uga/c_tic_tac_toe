@@ -57,7 +57,7 @@ struct ConfigOps {
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-extern struct InitRegistrationData init_config_reg;
+extern struct InitRegistration init_config_reg;
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE

@@ -153,7 +153,7 @@ registration_utils_get_registration(struct GetRegistrationInput input,
  *    INIT BOILERCODE
  ******************************************************************************/
 struct InitRegistrationData init_registration_utils_reg = {
-    .id = __FILE__,
+    .display_name = __FILE__,
     .init = registration_utils_init_system,
     .destroy = NULL,
 };

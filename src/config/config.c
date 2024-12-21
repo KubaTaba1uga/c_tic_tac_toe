@@ -218,11 +218,11 @@ static int config_get_variable(struct ConfigGetVarInput *input,
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-struct InitRegistrationData init_config_reg = {
-    .id = __FILE__,
-    .init = config_init_system,
-    .destroy = config_destroy_system,
-};
+struct InitRegistration init_config_reg = {.data = {
+                                               .display_name = __FILE__,
+                                               .init = config_init_system,
+                                               .destroy = config_destroy_system,
+                                           }};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
