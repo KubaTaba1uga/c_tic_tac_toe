@@ -25,33 +25,31 @@ variables.
 #include "init/init.h"
 #include "utils/array_utils.h"
 #include "utils/logging_utils.h"
+#include "utils/registration_utils.h"
 #include "utils/std_lib_utils.h"
-#include "utils/subsystem_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-struct ConfigSubsystem {
-  subsystem_t subsystem;
-};
 
-typedef struct ConfigSubsystem *config_sys_t;
+struct ConfigSubsystem {
+  struct Registrar registrar;
+};
 
 struct ConfigPrivateOps {
-  int (*init)(config_sys_t *);
-  void (*destroy)(config_sys_t *);
-  char *(*get_variable)(config_sys_t, char *);
-  bool (*search_filter)(const char *, void *, void *);
-  int (*register_variable)(config_sys_t, struct ConfigRegistrationData *);
+  int (*init)(struct ConfigSubsystem *);
+  void (*destroy)(struct ConfigSubsystem *);
+  int (*get_variable)(struct ConfigGetVarInput *, struct ConfigGetVarOutput *);
+  int (*register_variable)(struct ConfigRegisterVarInput *,
+                           struct ConfigRegisterVarOutput *);
 };
 
-static config_sys_t config_subsystem;
 static struct ArrayUtilsOps *array_ops;
 static struct StdLibUtilsOps *std_lib_ops;
 static struct LoggingUtilsOps *logging_ops;
+static struct RegistrationUtilsOps *reg_ops;
 static const size_t max_registrations = 100;
-static struct SubsystemUtilsOps *subsystem_ops;
-static const char module_id[] = "config_subsystem";
+static struct ConfigSubsystem config_subsystem;
 
 static struct ConfigPrivateOps *config_priv_ops;
 struct ConfigPrivateOps *get_config_priv_ops(void);
@@ -65,8 +63,8 @@ static int config_init_system(void) {
   array_ops = get_array_utils_ops();
   logging_ops = get_logging_utils_ops();
   std_lib_ops = get_std_lib_utils_ops();
+  reg_ops = get_registration_utils_ops();
   config_priv_ops = get_config_priv_ops();
-  subsystem_ops = get_subsystem_utils_ops();
 
   err = config_priv_ops->init(&config_subsystem);
   if (err) {
@@ -77,175 +75,154 @@ static int config_init_system(void) {
 }
 
 static void config_destroy_system(void) {
-  if (!config_priv_ops)
-    return;
-
   config_priv_ops->destroy(&config_subsystem);
 }
 
-static int config_register_variable_system(
-    struct ConfigRegistrationData *config_registration_data) {
-  if (!config_priv_ops)
-    return ENODATA;
+static int
+config_register_variable_system(struct ConfigRegisterVarInput input,
+                                struct ConfigRegisterVarOutput *output) {
+  if (!input.registration || !output)
+    return EINVAL;
 
-  return config_priv_ops->register_variable(config_subsystem,
-                                            config_registration_data);
+  input.config = &config_subsystem;
+
+  return config_priv_ops->register_variable(&input, output);
 }
 
-static char *config_get_variable_system(char *var_name) {
-  if (!config_priv_ops)
-    return NULL;
+static int config_get_variable_system(struct ConfigGetVarInput input,
+                                      struct ConfigGetVarOutput *output) {
+  if (!output)
+    return EINVAL;
 
-  return config_priv_ops->get_variable(config_subsystem, var_name);
+  input.config = &config_subsystem;
+
+  return config_priv_ops->get_variable(&input, output);
 }
 
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
-static int config_init(config_sys_t *config) {
-  config_sys_t tmp_config;
+static int config_init(struct ConfigSubsystem *config) {
   int err;
-
-  if (!logging_ops || !subsystem_ops)
-    return ENODATA;
-
   if (!config)
     return EINVAL;
 
-  tmp_config = malloc(sizeof(struct ConfigSubsystem));
-  if (!tmp_config) {
-    logging_ops->log_err(
-        module_id, "Unable to allocate memory for subsystem in config: %s",
-        strerror(ENOMEM));
-    return ENOMEM;
-  }
-
-  err =
-      subsystem_ops->init(&tmp_config->subsystem, module_id, max_registrations);
+  err = reg_ops->init(&config->registrar, __FILE__, max_registrations);
   if (err) {
-    logging_ops->log_err(module_id, "Unable to create subsystem in config: %s",
+    logging_ops->log_err(__FILE__, "Unable to create registrar: %s",
                          strerror(err));
     return err;
   }
 
-  *config = tmp_config;
-
   return 0;
 }
 
-static void config_destroy(config_sys_t *config) {
-  config_sys_t tmp_config;
-
-  if (!subsystem_ops)
+static void config_destroy(struct ConfigSubsystem *config) {
+  if (!config)
     return;
 
-  if (!config || !*config)
-    return;
-
-  tmp_config = *config;
-
-  subsystem_ops->destroy(&tmp_config->subsystem);
-
-  *config = NULL;
+  reg_ops->destroy(&config->registrar);
 }
 
-static int config_register_variable(
-    config_sys_t config,
-    struct ConfigRegistrationData *config_registration_data) {
+static int config_registration_init(struct ConfigRegistration *registration,
+                                    char *var_name, char *default_value) {
+  int err;
+  if (!registration || !var_name) {
+    return EINVAL;
+  }
+
+  err = reg_ops->registration_init(&registration->registration, var_name,
+                                   &registration->data);
+  if (err) {
+    logging_ops->log_err(__FILE__, "Unable to init '%s' registration",
+                         registration->data.var_name);
+    return ENOMEM;
+  }
+
+  registration->data.default_value = default_value;
+
+  // registration_init copy the var_name into display_name
+  //  so we need to sync pointers to point to one str.
+  registration->data.var_name = registration->registration.display_name;
+
+  return 0;
+};
+
+static int config_register_variable(struct ConfigRegisterVarInput *input,
+                                    struct ConfigRegisterVarOutput *output) {
+  struct RegisterOutput reg_output;
+  struct RegisterInput reg_input;
+  struct ConfigSubsystem *config;
   int err;
 
-  if (!subsystem_ops || !logging_ops)
-    return ENODATA;
-
-  if (!config || !config_registration_data ||
-      !config_registration_data->var_name)
+  if (!input || !output) {
     return EINVAL;
+  }
 
-  err = subsystem_ops->register_module(config->subsystem,
-                                       config_registration_data->var_name,
-                                       config_registration_data);
+  output->registration_id = -1;
+
+  config = input->config;
+
+  reg_input.registration = &input->registration->registration;
+  reg_input.registrar = &config->registrar;
+
+  err = reg_ops->register_module(reg_input, &reg_output);
   if (err) {
+    logging_ops->log_err(__FILE__, "Unable to register module: %s",
+                         strerror(err));
     return err;
   }
 
+  output->registration_id = reg_output.registration_id;
+
   return 0;
 }
 
-static bool config_array_search_filter(const char *tmp_var_name, void *_,
-                                       void *target_var_name) {
-  if (!std_lib_ops || !tmp_var_name || !target_var_name)
-    return false;
-
-  return std_lib_ops->are_str_eq((char *)tmp_var_name, (char *)target_var_name);
-}
-
-static char *config_get_variable(config_sys_t config, char *var_name) {
-  struct ConfigRegistrationData *variable = NULL;
-  module_search_t search_wrap;
-  char *value;
+static int config_get_variable(struct ConfigGetVarInput *input,
+                               struct ConfigGetVarOutput *output) {
+  struct GetRegistrationOutput reg_output;
+  struct GetRegistrationInput reg_input;
+  struct ConfigRegistrationData *data;
+  struct ConfigSubsystem *config;
   int err;
 
-  if (!subsystem_ops || !logging_ops || !std_lib_ops || !config_priv_ops) {
-    return NULL;
+  if (!input || !output) {
+    return EINVAL;
   }
 
-  if (!config || !var_name) {
-    return NULL;
-  }
+  output->var_name = NULL;
+  output->value = NULL;
 
-  err = subsystem_ops->init_search_module_wrapper(
-      &search_wrap, var_name, config_array_search_filter, (void **)&variable);
+  config = input->config;
+
+  reg_input.registration_id = input->registration_id;
+  reg_input.registrar = &config->registrar;
+
+  err = reg_ops->get_registration(reg_input, &reg_output);
   if (err) {
-    logging_ops->log_err(module_id,
-                         "Unable to create search wrapper for"
-                         "%s: %s",
-                         var_name, strerror(err));
-    return NULL;
+    logging_ops->log_err(__FILE__,
+                         "Unable to get"
+                         "'%i' registration: %s",
+                         input->registration_id, strerror(err));
+    return err;
   }
 
-  err = subsystem_ops->search_modules(config->subsystem, search_wrap);
-  if (err) {
-    logging_ops->log_err(module_id,
-                         "Unable to search for"
-                         "%s: %s",
-                         var_name, strerror(err));
-    subsystem_ops->destroy_search_module_wrapper(&search_wrap);
-    return NULL;
-  }
+  data = reg_output.registration->private;
 
-  if (subsystem_ops->get_state_search_module_wrapper(search_wrap) >=
-      ARRAY_SEARCH_STATE_INVALID) {
-    logging_ops->log_err(module_id,
-                         "Invalid search result for"
-                         "%s",
-                         var_name, strerror(err));
-    subsystem_ops->destroy_search_module_wrapper(&search_wrap);
-    return NULL;
-  };
+  output->var_name = data->var_name;
+  output->value = getenv(data->var_name);
 
-  subsystem_ops->destroy_search_module_wrapper(&search_wrap);
+  if (!output->value)
+    output->value = data->default_value;
 
-  if (!variable) {
-    logging_ops->log_err(module_id,
-                         "Unable to retreive var from config:"
-                         "%s not registered.",
-                         var_name);
-    return NULL;
-  }
-
-  value = getenv(variable->var_name);
-
-  if (value == NULL)
-    value = (char *)variable->default_value;
-
-  return value;
+  return 0;
 }
 
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
 struct InitRegistrationData init_config_reg = {
-    .id = module_id,
+    .id = __FILE__,
     .init = config_init_system,
     .destroy = config_destroy_system,
 };
@@ -257,11 +234,11 @@ static struct ConfigPrivateOps config_priv_ops_ = {
     .init = config_init,
     .destroy = config_destroy,
     .get_variable = config_get_variable,
-    .search_filter = config_array_search_filter,
     .register_variable = config_register_variable,
 };
 
 static struct ConfigOps config_pub_ops = {
+    .registration_init = config_registration_init,
     .get_system_var = config_get_variable_system,
     .register_system_var = config_register_variable_system,
 };

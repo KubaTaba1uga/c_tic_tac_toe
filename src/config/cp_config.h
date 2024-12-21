@@ -12,46 +12,16 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-#include "utils/registration_utils.h"
-
-// Data
 #define PROJECT_NAME "c_tic_tac_toe"
 
 struct ConfigRegistrationData {
-  char *var_name;
-  char *default_value;
-};
-
-struct ConfigRegistration {
-  struct ConfigRegistrationData data;
-  struct Registration registration;
-};
-
-// Ops
-struct ConfigRegisterVarInput {
-  struct ConfigRegistration *registration;
-  void *config;
-};
-
-struct ConfigRegisterVarOutput {
-  int registration_id;
-};
-
-struct ConfigGetVarInput {
-  int registration_id;
-  void *config;
-};
-
-struct ConfigGetVarOutput {
-  char *var_name;
-  char *value;
+  const char *var_name;
+  const char *default_value;
 };
 
 struct ConfigOps {
-  int (*registration_init)(struct ConfigRegistration *, char *, char *);
-  int (*register_system_var)(struct ConfigRegisterVarInput,
-                             struct ConfigRegisterVarOutput *);
-  int (*get_system_var)(struct ConfigGetVarInput, struct ConfigGetVarOutput *);
+  int (*register_system_var)(struct ConfigRegistrationData *);
+  char *(*get_system_var)(char *);
 };
 
 /*******************************************************************************
