@@ -2,10 +2,9 @@
 #define INPUT_H
 /*******************************************************************************
  * @file input.h
- * @brief TO-DO
+ * @brief Input subsystem header.
  *
- * TO-DO
- *
+ * Provides an API for managing input devices and callbacks.
  ******************************************************************************/
 
 /*******************************************************************************
@@ -14,20 +13,31 @@
 #include <stddef.h>
 
 #include "init/init.h"
-#include "input/input_common.h"
 #include "input/input_registration.h"
+#include "utils/logging_utils.h"
+#include "utils/registration_utils.h"
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
+// Data
 #define INPUT_KEYBOARD1_ID "keyboard1"
+
+// Ops
+struct InputSetRegistrationCallbackInput {
+  input_callback_func_t callback;
+  int registration_id;
+  void *input;
+};
+
+struct InputSetRegistrationCallbackOutput {};
+
 struct InputOps {
-  int (*wait)(void);
-  int (*stop)(void);
   int (*start)(void);
-  int (*unregister_callback)(char *);
-  int (*register_module)(input_reg_t);
-  int (*register_callback)(char *, input_callback_func_t);
+  int (*stop)(void);
+  int (*wait)(void);
+  int (*set_callback)(struct InputSetRegistrationCallbackInput,
+                      struct InputSetRegistrationCallbackOutput *);
 };
 
 /*******************************************************************************

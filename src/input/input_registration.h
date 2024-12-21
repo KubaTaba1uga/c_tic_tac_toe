@@ -2,27 +2,40 @@
 #define INPUT_REGISTRATION_H
 
 #include "input/input_common.h"
+#include "utils/registration_utils.h"
 
-typedef struct InputRegistrationData *input_reg_t;
-
-// Input subsystem spawns threads, start/stop/wait/destroy functions
-//   are controlling mechanism over these threads.
+// Data
 typedef int (*input_wait_func_t)(void);
 typedef int (*input_stop_func_t)(void);
 typedef int (*input_start_func_t)(void);
-typedef int (*input_unregister_callback_func_t)(char *);
-typedef int (*input_register_callback_func_t)(char *, input_callback_func_t);
+
+struct InputRegistrationData {
+  input_wait_func_t wait;
+  input_stop_func_t stop;
+  input_start_func_t start;
+  const char *display_name;
+  input_callback_func_t callback;
+};
+
+struct InputRegistration {
+  struct InputRegistrationData data;
+  struct Registration registration;
+};
+
+// Ops
+struct InputRegisterInput {
+  struct InputRegistration *registration;
+  void *input;
+};
+
+struct InputRegisterOutput {
+  int registration_id;
+};
 
 struct InputRegistrationOps {
-  int (*wait)(input_reg_t);
-  int (*stop)(input_reg_t);
-  int (*start)(input_reg_t);
-  void (*destroy)(input_reg_t *);
-  const char *(*get_id)(input_reg_t);
-  input_callback_func_t (*get_callback)(input_reg_t);
-  void (*set_callback)(input_reg_t, input_callback_func_t);
-  int (*init)(input_reg_t *, const char *, input_wait_func_t,
-              input_start_func_t, input_stop_func_t);
+  int (*registration_init)(struct InputRegistration *, const char *,
+                           input_wait_func_t, input_start_func_t,
+                           input_stop_func_t);
 };
 
 /*******************************************************************************
