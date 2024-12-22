@@ -80,7 +80,7 @@ registration_utils_registration_init(struct Registration *registration,
 
   memset(registration->display_name, 0, REGISTRATION_DISPLAY_NAME_MAX);
   strncpy(registration->display_name, display_name,
-          REGISTRATION_DISPLAY_NAME_MAX);
+          REGISTRATION_DISPLAY_NAME_MAX - 1);
 
   registration->private = private;
 
@@ -153,7 +153,7 @@ registration_utils_get_registration(struct GetRegistrationInput input,
  *    INIT BOILERCODE
  ******************************************************************************/
 struct InitRegistrationData init_registration_utils_reg = {
-    .display_name = __FILE__,
+    .display_name = __FILE_NAME__,
     .init = registration_utils_init_system,
     .destroy = NULL,
 };

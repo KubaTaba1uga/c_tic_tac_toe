@@ -104,9 +104,9 @@ static int config_init(struct ConfigSubsystem *config) {
   if (!config)
     return EINVAL;
 
-  err = reg_ops->init(&config->registrar, __FILE__, max_registrations);
+  err = reg_ops->init(&config->registrar, __FILE_NAME__, max_registrations);
   if (err) {
-    logging_ops->log_err(__FILE__, "Unable to create registrar: %s",
+    logging_ops->log_err(__FILE_NAME__, "Unable to create registrar: %s",
                          strerror(err));
     return err;
   }
@@ -131,8 +131,8 @@ static int config_registration_init(struct ConfigRegistration *registration,
   err = reg_ops->registration_init(&registration->registration, var_name,
                                    &registration->data);
   if (err) {
-    logging_ops->log_err(__FILE__, "Unable to init '%s' registration",
-                         registration->data.var_name);
+    logging_ops->log_err(__FILE_NAME__, "Unable to init '%s' registration",
+                         var_name);
     return ENOMEM;
   }
 
@@ -165,7 +165,7 @@ static int config_register_variable(struct ConfigRegisterVarInput *input,
 
   err = reg_ops->register_module(reg_input, &reg_output);
   if (err) {
-    logging_ops->log_err(__FILE__, "Unable to register module: %s",
+    logging_ops->log_err(__FILE_NAME__, "Unable to register module: %s",
                          strerror(err));
     return err;
   }
@@ -197,7 +197,7 @@ static int config_get_variable(struct ConfigGetVarInput *input,
 
   err = reg_ops->get_registration(reg_input, &reg_output);
   if (err) {
-    logging_ops->log_err(__FILE__,
+    logging_ops->log_err(__FILE_NAME__,
                          "Unable to get"
                          "'%i' registration: %s",
                          input->registration_id, strerror(err));
@@ -219,7 +219,7 @@ static int config_get_variable(struct ConfigGetVarInput *input,
  *    INIT BOILERCODE
  ******************************************************************************/
 struct InitRegistration init_config_reg = {.data = {
-                                               .display_name = __FILE__,
+                                               .display_name = __FILE_NAME__,
                                                .init = config_init_system,
                                                .destroy = config_destroy_system,
                                            }};

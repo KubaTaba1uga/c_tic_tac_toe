@@ -73,3 +73,32 @@ test_input_registration_exe = executable('test_input_registration',
 )
 
 test('test_input_registration', test_input_registration_exe)
+
+############################################################################
+#                   Input Tests                                        #
+############################################################################
+test_input_name = 'test_input.c'
+
+test_input_src = [test_input_name,
+                   input / 'input.c',
+                   input / 'input_registration.c',		   
+		   utils / 'array_utils.c',
+		   utils / 'registration_utils.c',
+		   utils / 'std_lib_utils.c',
+		   utils / 'logging_utils.c']
+
+test_input_exe = executable('test_input',
+  sources: [
+    test_input_src,
+    unity_gen_runner.process(test_input_name),
+  ],
+  include_directories: [src, test_includes],
+  dependencies: test_dependencies,
+  c_args:['-DTEST'],
+  link_args: [
+    # allow static functions testing
+    '-zmuldefs',
+  ]
+)
+
+test('test_input', test_input_exe)
