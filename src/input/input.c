@@ -156,7 +156,7 @@ static int input_wait_system(void) {
     return err;
   }
 
-  log_ops->log_info(__FILE_NAME__, "Input subsystem waited successfully.");
+  log_ops->log_info(__FILE_NAME__, "Input subsystem started successfully.");
   return 0;
 }
 

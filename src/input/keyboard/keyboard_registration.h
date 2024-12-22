@@ -7,13 +7,24 @@
 #define KEYBOARD_REGISTRATION_H
 
 #include <stddef.h>
-typedef struct KeyboardRegistration *keyboard_reg_t;
 
+#include "utils/registration_utils.h"
+
+// Data
+typedef int (*keyboard_callback_func_t)(size_t n, char buffer[n]);
+
+struct KeyboardRegistrationData {
+  keyboard_callback_func_t callback;
+};
+
+struct KeyboardRegistration {
+  struct KeyboardRegistrationData data;
+  struct Registration registration;
+};
+
+// Ops
 struct KeyboardRegistrationOps {
-  int (*init)(keyboard_reg_t *, const char *, int (*)(size_t, char[]));
-  void (*destroy)(keyboard_reg_t *);
-  int (*callback)(keyboard_reg_t, size_t, char[]);
-  const char *(*get_module_id)(keyboard_reg_t);
+  int (*init)(struct KeyboardRegistration *, char *, keyboard_callback_func_t);
 };
 
 struct KeyboardRegistrationOps *get_keyboard_registration_ops(void);

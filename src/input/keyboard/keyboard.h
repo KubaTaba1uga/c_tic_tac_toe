@@ -13,21 +13,26 @@
  ******************************************************************************/
 #include <stddef.h>
 
+#include "input/keyboard/keyboard_registration.h"
+
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-typedef int (*keyboard_callback_func_t)(size_t n, char buffer[n]);
+struct KeyboardRegisterInput {
+  struct KeyboardRegistration *registration;
+  void *keyboard;
+};
 
-struct KeyboardRegistration {
-  keyboard_callback_func_t callback;
-  const char *module_id;
+struct KeyboardRegisterOutput {
+  int registration_id;
 };
 
 struct KeyboardOps {
   int (*wait)(void);
   void (*stop)(void);
   int (*start)(void);
-  int (*register_callback)(struct KeyboardRegistration *);
+  int (*register_callback)(struct KeyboardRegisterInput,
+                           struct KeyboardRegisterOutput *);
 };
 
 extern struct InitRegistrationData init_keyboard_reg;

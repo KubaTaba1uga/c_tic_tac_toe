@@ -31,6 +31,11 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
+struct Keyboard1System {
+  int input_registration_id;
+  int keyboard_registration_id;
+};
+
 struct Keyboard1PrivateOps {
   int (*start)(void);
   int (*stop)(void);
@@ -39,12 +44,12 @@ struct Keyboard1PrivateOps {
 };
 
 static struct InputOps *input_ops;
-static input_reg_t input_keyboard1_reg;
 static struct KeyboardOps *keyboard_ops;
 static struct LoggingUtilsOps *logging_ops;
 static keyboard_reg_t keyboard_keyboard1_reg;
+static struct Keyboard1System keyboard1_subsystem;
 static struct InputRegistrationOps *input_reg_ops;
-static const char *module_id = INPUT_KEYBOARD1_ID;
+static struct InputRegistration input_keyboard1_reg;
 static struct KeyboardRegistrationOps *keyboard_reg_ops;
 
 struct Keyboard1PrivateOps *keyboard1_private_ops;
@@ -54,7 +59,12 @@ struct Keyboard1PrivateOps *get_keyboard1_priv_ops(void);
  *    PUBLIC API
  ******************************************************************************/
 static int keyboard1_init(void) {
+  struct InputRegisterInput reg_input = {.registration = &input_keyboard1_reg};
+  struct InputRegisterOutput reg_output;
   int err;
+
+  keyboard1_subsystem.input_registration_id = -1;
+  keyboard1_subsystem.keyboard_registration_id = -1;
 
   input_ops = get_input_ops();
   keyboard_ops = get_keyboard_ops();
@@ -63,40 +73,31 @@ static int keyboard1_init(void) {
   keyboard1_private_ops = get_keyboard1_priv_ops();
   keyboard_reg_ops = get_keyboard_registration_ops();
 
-  // Initialize the keyboard registration
-  err = keyboard_reg_ops->init(&keyboard_keyboard1_reg, module_id,
-                               keyboard1_private_ops->callback);
-  if (err) {
-    logging_ops->log_err(module_id,
-                         "Failed to initialize keyboard registration: %s",
-                         strerror(err));
-    return err;
-  }
-
   // Initialize the input registration
   err = input_reg_ops->init(
-      &input_keyboard1_reg, module_id, keyboard1_private_ops->wait,
+      &input_keyboard1_reg, __FILE_NAME__, keyboard1_private_ops->wait,
       keyboard1_private_ops->start, keyboard1_private_ops->stop);
   if (err) {
-    logging_ops->log_err(module_id,
+    logging_ops->log_err(__FILE_NAME__,
                          "Unable to initialize input registration: %s",
                          strerror(err));
     return err;
   }
 
   // Register module in input
-  err = input_ops->register_module(input_keyboard1_reg);
+  err = input_ops->register_module(reg_input, &reg_output);
   if (err) {
-    logging_ops->log_err(module_id, "Unable to register module: %s",
+    logging_ops->log_err(__FILE_NAME__, "Unable to register module: %s",
                          strerror(err));
     return err;
   }
+
+  keyboard1_subsystem.input_registration_id = reg_output.registration_id;
 
   return 0;
 }
 
 static void keyboard1_destroy(void) {
-  input_reg_ops->destroy(&input_keyboard1_reg);
   keyboard_reg_ops->destroy(&keyboard_keyboard1_reg);
 }
 
@@ -115,7 +116,8 @@ static int keyboard1_start(void) {
   err = keyboard_ops->register_callback(keyboard_keyboard1_reg);
   if (err) {
     logging_ops->log_err(
-        module_id, "Unable to register callback for Keyboard1 subsystem: %s",
+        __FILE_NAME__,
+        "Unable to register callback for Keyboard1 subsystem: %s",
         strerror(err));
     return err;
   }
@@ -123,7 +125,8 @@ static int keyboard1_start(void) {
   // Start the keyboard subsystem
   err = keyboard_ops->start();
   if (err) {
-    logging_ops->log_err(module_id, "Unable to start Keyboard1 subsystem: %s",
+    logging_ops->log_err(__FILE_NAME__,
+                         "Unable to start Keyboard1 subsystem: %s",
                          strerror(err));
     return err;
   }
@@ -143,10 +146,10 @@ static int keyboard1_callback(size_t n, char buffer[n]) {
   int err;
 
   input_event = INPUT_EVENT_NONE;
-  callback = input_reg_ops->get_callback(input_keyboard1_reg);
+  callback = input_keyboard1_reg.data.callback;
 
   if (!callback) {
-    logging_ops->log_err(module_id, "No callback set up for Keyboard1");
+    logging_ops->log_err(__FILE_NAME__, "No callback set up for Keyboard1");
     return EINVAL;
   }
 
@@ -177,7 +180,7 @@ static int keyboard1_callback(size_t n, char buffer[n]) {
 
   err = callback(input_event);
   if (err != 0) {
-    logging_ops->log_err(module_id, "Callback failed: %s", strerror(err));
+    logging_ops->log_err(__FILE_NAME__, "Callback failed: %s", strerror(err));
     return err;
   }
 
@@ -187,12 +190,12 @@ static int keyboard1_callback(size_t n, char buffer[n]) {
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-struct InitRegistrationData init_keyboard1_reg = {
-    .id = INPUT_KEYBOARD1_ID,
-    .init = keyboard1_init,
-    .destroy = keyboard1_destroy,
-};
-struct InitRegistrationData *init_keyboard1_reg_p = &init_keyboard1_reg;
+struct InitRegistration init_keyboard1_reg = {
+    .data = {
+        .display_name = INPUT_KEYBOARD1_ID,
+        .init = keyboard1_init,
+        .destroy = keyboard1_destroy,
+    }};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE

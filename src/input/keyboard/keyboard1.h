@@ -11,11 +11,7 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct Keyboard1Ops {
-  void *(private_ops);
-};
-
-extern struct InitRegistrationData init_keyboard1_reg;
+struct Keyboard1Ops {};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
@@ -25,6 +21,6 @@ struct Keyboard1Ops *get_keyboard1_ops(void);
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-extern struct InitRegistrationData *init_keyboard1_reg_p;
+extern struct InitRegistration init_keyboard1_reg;
 
 #endif // KEYBOARD1_H

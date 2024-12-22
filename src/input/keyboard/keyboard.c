@@ -25,7 +25,7 @@
 #include "input/keyboard/keyboard_registration.h"
 #include "keyboard.h"
 #include "utils/logging_utils.h"
-#include "utils/subsystem_utils.h"
+#include "utils/registration_utils.h"
 #include "utils/terminal_utils.h"
 
 /*******************************************************************************
@@ -37,32 +37,31 @@
 struct KeyboardSubsystem {
   pthread_t thread;
   bool is_initialized;
-  subsystem_t subsystem;
-  size_t stdin_buffer_count;
+  struct Registrar registrar;
   // Stdin buffer is not using array abstraction as array
   //   abstraction uses void * to provide genericness.
   //   We want to store pure chars in the array no ptrs to chars.
+  size_t stdin_buffer_count;
   char stdin_buffer[KEYBOARD_STDIN_BUFFER_MAX];
 };
 
-typedef struct KeyboardSubsystem *keyboard_sys_t;
-
 struct KeyboardPrivateOps {
-  int (*init)(keyboard_sys_t *);
-  void (*destroy)(keyboard_sys_t *);
-  void (*read_stdin)(keyboard_sys_t);
-  int (*start_thread)(keyboard_sys_t);
-  void (*stop_thread)(keyboard_sys_t);
-  void *(*process_stdin)(keyboard_sys_t);
-  void (*execute_callbacks)(keyboard_sys_t);
-  int (*register_callback)(keyboard_sys_t, keyboard_reg_t);
+  int (*init)(struct KeyboardSubsystem *);
+  void (*destroy)(struct KeyboardSubsystem *);
+  void (*read_stdin)(struct KeyboardSubsystem);
+  int (*start_thread)(struct KeyboardSubsystem);
+  void (*stop_thread)(struct KeyboardSubsystem);
+  void *(*process_stdin)(struct KeyboardSubsystem);
+  void (*execute_callbacks)(struct KeyboardSubsystem);
+  int (*register_callback)(struct KeyboardSubsystem, keyboard_reg_t);
 };
 
-static keyboard_sys_t keyboard_subsystem;
+struct RegistrationUtilsOps *reg_ops;
 static const char module_id[] = "keyboard";
 static struct LoggingUtilsOps *logging_ops;
 static struct TerminalUtilsOps *terminal_ops;
 static struct SubsystemUtilsOps *subsystem_ops;
+static struct KeyboardSubsystem keyboard_subsystem;
 static struct KeyboardRegistrationOps *keyboard_reg_ops;
 
 static struct KeyboardPrivateOps *keyboard_priv_ops;
@@ -76,7 +75,7 @@ static int keyboard_init_system(void) {
 
   terminal_ops = get_terminal_ops();
   logging_ops = get_logging_utils_ops();
-  subsystem_ops = get_subsystem_utils_ops();
+
   keyboard_priv_ops = get_keyboard_priv_ops();
   keyboard_reg_ops = get_keyboard_registration_ops();
 
@@ -164,8 +163,8 @@ static int keyboard_wait_system(void) {
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
-static int keyboard_init(keyboard_sys_t *keyboard) {
-  keyboard_sys_t tmp_keyboard;
+static int keyboard_init(struct KeyboardSubsystem *keyboard) {
+  struct KeyboardSubsystem tmp_keyboard;
   int err;
 
   if (!keyboard)
@@ -198,8 +197,8 @@ static int keyboard_init(keyboard_sys_t *keyboard) {
   return 0;
 }
 
-static void keyboard_destroy(keyboard_sys_t *keyboard) {
-  keyboard_sys_t tmp_keyboard;
+static void keyboard_destroy(struct KeyboardSubsystem *keyboard) {
+  struct KeyboardSubsystem tmp_keyboard;
 
   if (!keyboard || !*keyboard)
     return;
@@ -215,7 +214,7 @@ static void keyboard_destroy(keyboard_sys_t *keyboard) {
   *keyboard = NULL;
 }
 
-static int keyboard_start_thread(keyboard_sys_t keyboard) {
+static int keyboard_start_thread(struct KeyboardSubsystem keyboard) {
   int err;
 
   if (!keyboard)
@@ -237,7 +236,7 @@ static int keyboard_start_thread(keyboard_sys_t keyboard) {
   return 0;
 }
 
-static void keyboard_stop_thread(keyboard_sys_t keyboard) {
+static void keyboard_stop_thread(struct KeyboardSubsystem keyboard) {
   if (!keyboard || !keyboard->is_initialized)
     return;
 
@@ -250,7 +249,7 @@ static void keyboard_stop_thread(keyboard_sys_t keyboard) {
   }
 }
 
-static void keyboard_read_stdin(keyboard_sys_t keyboard) {
+static void keyboard_read_stdin(struct KeyboardSubsystem keyboard) {
   ssize_t bytes_read;
 
   if (!keyboard || !keyboard->is_initialized)
@@ -276,7 +275,7 @@ static bool keyboard_array_search_filter(const char *_, void *__, void *___) {
   return true;
 }
 
-static void keyboard_execute_callbacks(keyboard_sys_t keyboard) {
+static void keyboard_execute_callbacks(struct KeyboardSubsystem keyboard) {
   keyboard_reg_t keyboard_reg;
   module_search_t search_wrap;
   int err;
@@ -317,7 +316,7 @@ out:
   return;
 }
 
-static int keyboard_register_callback(keyboard_sys_t keyboard,
+static int keyboard_register_callback(struct KeyboardSubsystem keyboard,
                                       keyboard_reg_t keyboard_reg) {
   int err;
 
@@ -346,7 +345,7 @@ void keyboard_signal_handler(int sig) {
   }
 }
 
-static void *keyboard_process_stdin(keyboard_sys_t keyboard) {
+static void *keyboard_process_stdin(struct KeyboardSubsystem keyboard) {
   if (!keyboard || !keyboard->is_initialized) {
     logging_ops->log_err(
         module_id, "Keyboard subsystem is not initialized. Exiting thread.");
