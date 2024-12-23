@@ -43,7 +43,18 @@ test('test_keyboard', test_keyboard_exe)
 ############################################################################
 test_keyboard1_name = 'test_keyboard1.c'
 
-test_keyboard1_src = files([test_keyboard1_name]) + sources
+test_keyboard1_src = [test_keyboard1_name,
+                      keyboard / 'keyboard1.c',
+                      keyboard / 'keyboard.c',
+                      keyboard / 'keyboard_registration.c',		   
+                      input / 'input.c',
+                      input / 'input_registration.c',
+		      utils / 'array_utils.c',
+		      utils / 'registration_utils.c',
+		      utils / 'std_lib_utils.c',
+		      utils / 'logging_utils.c',
+   		      utils / 'terminal_utils.c'		
+		   ]
 
 test_keyboard1_exe = executable('test_keyboard1',
   sources: [
