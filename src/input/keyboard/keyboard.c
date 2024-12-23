@@ -356,11 +356,10 @@ static void *keyboard_process_stdin(struct KeyboardSubsystem *keyboard) {
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-struct InitRegistrationData init_keyboard_reg = {
-    .display_name = __FILE_NAME__,
-    .init = keyboard_init_system,
-    .destroy = keyboard_destroy_system,
-};
+struct InitRegistration init_keyboard_reg = {
+    .data = {.display_name = __FILE_NAME__,
+             .init = keyboard_init_system,
+             .destroy = keyboard_destroy_system}};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE

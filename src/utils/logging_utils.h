@@ -30,7 +30,7 @@ struct LoggingUtilsOps {
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-extern struct InitRegistrationData init_logging_reg;
+extern struct InitRegistration init_logging_reg;
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE

@@ -54,7 +54,7 @@ struct InputOps {
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-extern struct InitRegistrationData init_input_reg;
+extern struct InitRegistration init_input_reg;
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE

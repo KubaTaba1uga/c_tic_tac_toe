@@ -131,6 +131,7 @@ static void init_destroy_registrar(struct InitSubsystem *subsystem) {
 
 static int init_register_modules(struct InitSubsystem *subsystem) {
   struct InitRegistration *init_registrations[] = {
+      &init_logging_reg,
       &init_config_reg,
   };
   size_t i;

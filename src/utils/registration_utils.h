@@ -65,7 +65,7 @@ struct RegistrationUtilsOps {
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-extern struct InitRegistrationData init_registration_utils_reg;
+extern struct InitRegistration init_registration_utils_reg;
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE

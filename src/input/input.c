@@ -362,11 +362,10 @@ static int input_wait(struct InputSubsystem *subsystem) {
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-struct InitRegistrationData init_input_reg = {
-    .display_name = "Input Subsystem",
-    .init = input_init_system,
-    .destroy = input_destroy_system,
-};
+struct InitRegistration init_input_reg = {
+    .data = {.display_name = __FILE_NAME__,
+             .init = input_init_system,
+             .destroy = input_destroy_system}};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE

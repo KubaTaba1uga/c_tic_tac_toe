@@ -152,11 +152,12 @@ registration_utils_get_registration(struct GetRegistrationInput input,
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-struct InitRegistrationData init_registration_utils_reg = {
-    .display_name = __FILE_NAME__,
-    .init = registration_utils_init_system,
-    .destroy = NULL,
-};
+struct InitRegistration init_registration_utils_reg = {
+    .data = {
+        .display_name = __FILE_NAME__,
+        .init = registration_utils_init_system,
+        .destroy = NULL,
+    }};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
