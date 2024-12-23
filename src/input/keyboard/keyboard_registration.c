@@ -12,7 +12,6 @@
 #include "keyboard_registration.h"
 #include "utils/registration_utils.h"
 
-// Function to initialize a KeyboardRegistration structure
 int keyboard_registration_init(struct KeyboardRegistration *registration,
                                char *display_name,
                                keyboard_callback_func_t callback) {

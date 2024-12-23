@@ -10,7 +10,17 @@ init = join_paths(src, 'init')
 
 test_keyboard_name = 'test_keyboard.c'
 
-test_keyboard_src = files([test_keyboard_name]) + sources
+test_keyboard_src = [test_keyboard_name,
+                   keyboard / 'keyboard.c',
+                   keyboard / 'keyboard_registration.c',		   
+                   input / 'input.c',
+                   input / 'input_registration.c',
+		   utils / 'array_utils.c',
+		   utils / 'registration_utils.c',
+		   utils / 'std_lib_utils.c',
+		   utils / 'logging_utils.c',
+   		   utils / 'terminal_utils.c'		
+		   ]
 
 test_keyboard_exe = executable('test_keyboard',
   sources: [
@@ -52,29 +62,6 @@ test_keyboard1_exe = executable('test_keyboard1',
 test('test_keyboard1', test_keyboard1_exe)
 
 ############################################################################
-#                   Input Registration Tests                               #
-############################################################################
-test_input_registration_name = 'test_input_registration.c'
-
-test_input_registration_src = files([test_input_registration_name]) + sources
-
-test_input_registration_exe = executable('test_input_registration',
-  sources: [
-    test_input_registration_src,
-    unity_gen_runner.process(test_input_registration_name),
-  ],
-  include_directories: [src, test_includes],
-  dependencies: test_dependencies,
-  c_args:['-DTEST'],
-  link_args: [
-    # allow static functions testing
-    '-zmuldefs',
-  ]
-)
-
-test('test_input_registration', test_input_registration_exe)
-
-############################################################################
 #                   Input Tests                                        #
 ############################################################################
 test_input_name = 'test_input.c'
@@ -95,10 +82,6 @@ test_input_exe = executable('test_input',
   include_directories: [src, test_includes],
   dependencies: test_dependencies,
   c_args:['-DTEST'],
-  link_args: [
-    # allow static functions testing
-    '-zmuldefs',
-  ]
 )
 
 test('test_input', test_input_exe)

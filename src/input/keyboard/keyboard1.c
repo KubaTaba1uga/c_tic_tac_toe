@@ -46,11 +46,11 @@ struct Keyboard1PrivateOps {
 static struct InputOps *input_ops;
 static struct KeyboardOps *keyboard_ops;
 static struct LoggingUtilsOps *logging_ops;
-static keyboard_reg_t keyboard_keyboard1_reg;
 static struct Keyboard1System keyboard1_subsystem;
 static struct InputRegistrationOps *input_reg_ops;
 static struct InputRegistration input_keyboard1_reg;
 static struct KeyboardRegistrationOps *keyboard_reg_ops;
+static struct KeyboardRegistration keyboard_keyboard1_reg;
 
 struct Keyboard1PrivateOps *keyboard1_private_ops;
 struct Keyboard1PrivateOps *get_keyboard1_priv_ops(void);
@@ -97,9 +97,7 @@ static int keyboard1_init(void) {
   return 0;
 }
 
-static void keyboard1_destroy(void) {
-  keyboard_reg_ops->destroy(&keyboard_keyboard1_reg);
-}
+static void keyboard1_destroy(void) {}
 
 /*******************************************************************************
  *    PRIVATE API
@@ -110,17 +108,29 @@ static int keyboard1_stop(void) {
 }
 
 static int keyboard1_start(void) {
+  struct KeyboardRegisterInput input = {.registration =
+                                            &keyboard_keyboard1_reg};
+  struct KeyboardRegisterOutput output;
   int err;
 
-  // Register callback for handling input
-  err = keyboard_ops->register_callback(keyboard_keyboard1_reg);
+  err = keyboard_reg_ops->init(&keyboard_keyboard1_reg, __FILE_NAME__,
+                               keyboard1_private_ops->callback);
   if (err) {
-    logging_ops->log_err(
-        __FILE_NAME__,
-        "Unable to register callback for Keyboard1 subsystem: %s",
-        strerror(err));
+    logging_ops->log_err(__FILE_NAME__,
+                         "Unable to init callback registration: %s",
+                         strerror(err));
     return err;
   }
+
+  // Register callback for handling input
+  err = keyboard_ops->register_callback(input, &output);
+  if (err) {
+    logging_ops->log_err(__FILE_NAME__, "Unable to register callback: %s",
+                         strerror(err));
+    return err;
+  }
+
+  keyboard1_subsystem.keyboard_registration_id = output.registration_id;
 
   // Start the keyboard subsystem
   err = keyboard_ops->start();
