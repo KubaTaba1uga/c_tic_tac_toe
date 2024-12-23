@@ -13,6 +13,7 @@
 #include <stddef.h>
 
 #include "init/init.h"
+#include "input/input_common.h"
 #include "input/input_registration.h"
 #include "utils/logging_utils.h"
 #include "utils/registration_utils.h"
@@ -20,8 +21,6 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-// Data
-#define INPUT_KEYBOARD1_ID "keyboard1"
 
 // Ops
 struct InputSetRegistrationCallbackInput {

@@ -1,11 +1,4 @@
-0. Create good mechanism to get modules with state and filter and everything.
-     To make it done i need to write some code for working with struct SubsystemGetModuleWrapper
-     ideally would be to hide it via opaque pointer like Module or Subsystem.
-
-Next tasks are suspended:
-#0. Create functions for getting priv ops in input. -
-#1. Delete redundant definitions in input. -
-#2. Use array in input. -
+0. Refactor game so it would allow for multiple users. Users are now part of GameStateMachine. In game state machine should be current user int and users array which hold multiple users. During game state machine init which user has assigned input registration id. Onece input trigger processing game state machine checks current user input registration and can forbid to process input if they do not match.
 
 
 Write articles about:
