@@ -34,15 +34,15 @@ void setUp() {
 
   // Initialize subsystems
   // Initialize subsystems
-  err = init_registration_utils_reg.init();
+  err = init_registration_utils_reg.data.init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
-  err = init_config_reg.init();
+  err = init_config_reg.data.init();
   TEST_ASSERT_EQUAL_INT(0, err);
 }
 
 // Test Teardown
-void tearDown() { init_config_reg.destroy(); }
+void tearDown() { init_config_reg.data.destroy(); }
 
 // Test Variable Registration - Success
 void test_config_register_var_success() {

@@ -177,7 +177,6 @@ static void input_destroy_registrar(struct InputSubsystem *subsystem) {
 
 static int input_register_module(struct InputRegisterInput input,
                                  struct InputRegisterOutput *output) {
-  struct RegisterInput reg_input;
   struct RegisterOutput reg_output;
   int err;
 
@@ -188,12 +187,10 @@ static int input_register_module(struct InputRegisterInput input,
     return EINVAL;
   }
 
-  output->registration_id = -1;
-
-  reg_input.registrar = &input_subsystem.registrar;
-  reg_input.registration = &input.registration->registration;
-
-  err = reg_ops->register_module(reg_input, &reg_output);
+  err = reg_ops->register_module(
+      (struct RegisterInput){.registration = &input.registration->registration,
+                             .registrar = &input_subsystem.registrar},
+      &reg_output);
   if (err) {
     log_ops->log_err(__FILE_NAME__, "Failed to register module: %s",
                      strerror(err));
@@ -221,12 +218,12 @@ static int input_set_registration_callback(
     return EINVAL;
   }
 
-  struct GetRegistrationInput get_input = {
-      .registrar = &input_subsystem.registrar,
-      .registration_id = input.registration_id,
-  };
-
-  err = reg_ops->get_registration(get_input, &get_output);
+  err = reg_ops->get_registration(
+      (struct GetRegistrationInput){
+          .registrar = &input_subsystem.registrar,
+          .registration_id = input.registration_id,
+      },
+      &get_output);
   if (err) {
     log_ops->log_err(__FILE_NAME__,
                      "Failed to retrieve registration for ID %d: %s",
@@ -245,19 +242,17 @@ static int input_set_registration_callback(
 static int input_start(struct InputSubsystem *subsystem) {
   struct GetRegistrationOutput get_output;
   struct InputRegistrationData *reg_data;
-  struct GetRegistrationInput get_input;
   int err;
 
   if (!subsystem) {
     return EINVAL;
   }
 
-  get_input.registrar = &subsystem->registrar;
-
   for (int i = 0; i < subsystem->registrar.registrations.length; i++) {
-    get_input.registration_id = i;
-
-    err = reg_ops->get_registration(get_input, &get_output);
+    err = reg_ops->get_registration(
+        (struct GetRegistrationInput){.registration_id = i,
+                                      .registrar = &subsystem->registrar},
+        &get_output);
     if (err) {
       log_ops->log_err(__FILE_NAME__,
                        "Failed to get registration for module ID %d: %s", i,
@@ -284,19 +279,17 @@ static int input_start(struct InputSubsystem *subsystem) {
 static int input_stop(struct InputSubsystem *subsystem) {
   struct GetRegistrationOutput get_output;
   struct InputRegistrationData *reg_data;
-  struct GetRegistrationInput get_input;
   int err;
 
   if (!subsystem) {
     return EINVAL;
   }
 
-  get_input.registrar = &subsystem->registrar;
-
   for (int i = 0; i < subsystem->registrar.registrations.length; i++) {
-    get_input.registration_id = i;
-
-    err = reg_ops->get_registration(get_input, &get_output);
+    err = reg_ops->get_registration(
+        (struct GetRegistrationInput){.registration_id = i,
+                                      .registrar = &subsystem->registrar},
+        &get_output);
     if (err) {
       log_ops->log_err(__FILE_NAME__,
                        "Failed to get registration for module ID %d: %s", i,
@@ -324,19 +317,17 @@ static int input_stop(struct InputSubsystem *subsystem) {
 static int input_wait(struct InputSubsystem *subsystem) {
   struct GetRegistrationOutput get_output;
   struct InputRegistrationData *reg_data;
-  struct GetRegistrationInput get_input;
   int err;
 
   if (!subsystem) {
     return EINVAL;
   }
 
-  get_input.registrar = &subsystem->registrar;
-
   for (int i = 0; i < subsystem->registrar.registrations.length; i++) {
-    get_input.registration_id = i;
-
-    err = reg_ops->get_registration(get_input, &get_output);
+    err = reg_ops->get_registration(
+        (struct GetRegistrationInput){.registration_id = i,
+                                      .registrar = &subsystem->registrar},
+        &get_output);
     if (err) {
       log_ops->log_err(__FILE_NAME__,
                        "Failed to get registration for module ID %d: %s", i,

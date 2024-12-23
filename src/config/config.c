@@ -78,8 +78,10 @@ static void config_destroy_system(void) {
 static int
 config_register_variable_system(struct ConfigRegisterVarInput input,
                                 struct ConfigRegisterVarOutput *output) {
-  if (!input.registration || !output)
-    return EINVAL;
+  struct ConfigRegisterVarOutput local_output;
+
+  if (!output)
+    output = &local_output;
 
   input.config = &config_subsystem;
 
@@ -88,8 +90,10 @@ config_register_variable_system(struct ConfigRegisterVarInput input,
 
 static int config_get_variable_system(struct ConfigGetVarInput input,
                                       struct ConfigGetVarOutput *output) {
+  struct ConfigGetVarOutput local_output;
+
   if (!output)
-    return EINVAL;
+    output = &local_output;
 
   input.config = &config_subsystem;
 
@@ -148,22 +152,20 @@ static int config_registration_init(struct ConfigRegistration *registration,
 static int config_register_variable(struct ConfigRegisterVarInput *input,
                                     struct ConfigRegisterVarOutput *output) {
   struct RegisterOutput reg_output;
-  struct RegisterInput reg_input;
   struct ConfigSubsystem *config;
   int err;
 
-  if (!input || !output) {
+  if (!input || !input->registration || !output) {
     return EINVAL;
   }
 
   output->registration_id = -1;
-
   config = input->config;
 
-  reg_input.registration = &input->registration->registration;
-  reg_input.registrar = &config->registrar;
-
-  err = reg_ops->register_module(reg_input, &reg_output);
+  err = reg_ops->register_module(
+      (struct RegisterInput){.registration = &input->registration->registration,
+                             .registrar = &config->registrar},
+      &reg_output);
   if (err) {
     logging_ops->log_err(__FILE_NAME__, "Unable to register module: %s",
                          strerror(err));
@@ -178,7 +180,6 @@ static int config_register_variable(struct ConfigRegisterVarInput *input,
 static int config_get_variable(struct ConfigGetVarInput *input,
                                struct ConfigGetVarOutput *output) {
   struct GetRegistrationOutput reg_output;
-  struct GetRegistrationInput reg_input;
   struct ConfigRegistrationData *data;
   struct ConfigSubsystem *config;
   int err;
@@ -192,10 +193,10 @@ static int config_get_variable(struct ConfigGetVarInput *input,
 
   config = input->config;
 
-  reg_input.registration_id = input->registration_id;
-  reg_input.registrar = &config->registrar;
-
-  err = reg_ops->get_registration(reg_input, &reg_output);
+  err = reg_ops->get_registration(
+      (struct GetRegistrationInput){.registration_id = input->registration_id,
+                                    .registrar = &config->registrar},
+      &reg_output);
   if (err) {
     logging_ops->log_err(__FILE_NAME__,
                          "Unable to get"

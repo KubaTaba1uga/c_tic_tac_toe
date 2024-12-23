@@ -103,10 +103,11 @@ registration_utils_register_input_init(struct RegisterInput *input,
 
 static int registration_utils_register_module(struct RegisterInput input,
                                               struct RegisterOutput *output) {
+  struct RegisterOutput local_output;
   int err;
 
   if (!output) {
-    return EINVAL;
+    output = &local_output;
   }
 
   // Set default output values
@@ -125,13 +126,14 @@ static int registration_utils_register_module(struct RegisterInput input,
 static int
 registration_utils_get_registration(struct GetRegistrationInput input,
                                     struct GetRegistrationOutput *output) {
+  struct GetRegistrationOutput local_output;
   int err;
+
   if (!output) {
-    return EINVAL;
+    output = &local_output;
   }
 
-  if (input.registration_id < 0 ||
-      input.registration_id >= input.registrar->registrations.length) {
+  if (input.registration_id < 0) {
     return ENOENT;
   }
 

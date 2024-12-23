@@ -54,20 +54,20 @@ void setUp() {
   mock_stop_counter = 0;
   mock_wait_counter = 0;
 
-  err = init_logging_reg.init();
+  err = init_logging_reg.data.init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
-  err = init_registration_utils_reg.init();
+  err = init_registration_utils_reg.data.init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
-  err = init_input_reg.init();
+  err = init_input_reg.data.init();
   TEST_ASSERT_EQUAL_INT(0, err);
 }
 
 // Test Teardown
 void tearDown() {
   // Destroy the input subsystem
-  init_input_reg.destroy();
+  init_input_reg.data.destroy();
 }
 
 // Test Module Registration - Success

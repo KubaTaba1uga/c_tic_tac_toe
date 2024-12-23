@@ -35,16 +35,16 @@ void setUp(void) {
   logging_ops = get_logging_utils_ops();
   terminal_ops = get_terminal_ops();
 
-  err = init_logging_reg.init();
+  err = init_logging_reg.data.init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
-  err = init_registration_utils_reg.init();
+  err = init_registration_utils_reg.data.init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
-  err = init_input_reg.init();
+  err = init_input_reg.data.init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
-  err = init_keyboard_reg.init();
+  err = init_keyboard_reg.data.init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
   setup_pty();

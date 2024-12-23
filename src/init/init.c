@@ -103,7 +103,7 @@ static int init_initialize_registrar(struct InitSubsystem *subsystem) {
     return EINVAL;
   }
 
-  err = init_registration_utils_reg.init();
+  err = init_registration_utils_reg.data.init();
   if (err) {
     // Logging module has fallback to stdout/stderr if not initialized
     //   that's why we can init it like all others modules.
@@ -160,7 +160,6 @@ static int init_register_modules(struct InitSubsystem *subsystem) {
 static int init_register_module(struct InitSubsystem *subsystem,
                                 struct InitRegistration *module) {
   struct RegisterOutput output;
-  struct RegisterInput input;
   int err;
 
   if (!subsystem || !module) {
@@ -178,10 +177,10 @@ static int init_register_module(struct InitSubsystem *subsystem,
 
   module->data.display_name = module->registration.display_name;
 
-  reg_ops->register_input_init(&input, &subsystem->registrar,
-                               &module->registration);
-
-  err = reg_ops->register_module(input, &output);
+  err = reg_ops->register_module(
+      (struct RegisterInput){.registration = &module->registration,
+                             .registrar = &subsystem->registrar},
+      &output);
   if (err) {
     log_ops->log_err(__FILE_NAME__, "Failed to register module: %s",
                      strerror(err));
@@ -194,20 +193,19 @@ static int init_register_module(struct InitSubsystem *subsystem,
 }
 
 static int init_modules(struct InitSubsystem *subsystem) {
-  struct GetRegistrationInput reg_input;
   struct GetRegistrationOutput reg_output;
+  struct InitRegistrationData *module;
   int err;
 
   if (!subsystem) {
     return EINVAL;
   }
 
-  reg_input.registrar = &subsystem->registrar;
-
   for (int i = 0; i < subsystem->registrar.registrations.length; i++) {
-    reg_input.registration_id = i;
-
-    err = reg_ops->get_registration(reg_input, &reg_output);
+    err = reg_ops->get_registration(
+        (struct GetRegistrationInput){.registrar = &subsystem->registrar,
+                                      .registration_id = i},
+        &reg_output);
     if (err) {
       log_ops->log_err(__FILE_NAME__,
                        "Failed to get registration for module ID %d: %s", i,
@@ -215,7 +213,7 @@ static int init_modules(struct InitSubsystem *subsystem) {
       return err;
     }
 
-    struct InitRegistrationData *module = reg_output.registration->private;
+    module = reg_output.registration->private;
     if (module->init) {
       err = module->init();
       if (err) {
@@ -233,25 +231,34 @@ static int init_modules(struct InitSubsystem *subsystem) {
 }
 
 static void destroy_modules(struct InitSubsystem *subsystem) {
-  struct GetRegistrationInput reg_input;
   struct GetRegistrationOutput reg_output;
+  struct InitRegistrationData *module;
+  int err;
 
   if (!subsystem) {
+
     return;
   }
 
   for (int i = subsystem->registrar.registrations.length - 1; i >= 0; i--) {
-    reg_input.registrar = &subsystem->registrar;
-    reg_input.registration_id = i;
-
-    if (reg_ops->get_registration(reg_input, &reg_output) == 0) {
-      struct InitRegistrationData *module = reg_output.registration->private;
-      if (module->destroy) {
-        module->destroy();
-        log_ops->log_info(__FILE_NAME__, "Module '%s' destroyed successfully.",
-                          module->display_name);
-      }
+    err = reg_ops->get_registration(
+        (struct GetRegistrationInput){.registrar = &subsystem->registrar,
+                                      .registration_id = i},
+        &reg_output);
+    if (err) {
+      log_ops->log_err(__FILE_NAME__,
+                       "Failed to get registration for module ID %d: %s", i,
+                       strerror(err));
+      return;
     }
+
+    module = reg_output.registration->private;
+    if (module->destroy) {
+      module->destroy();
+    }
+
+    log_ops->log_info(__FILE_NAME__, "Module '%s' destroyed successfully.",
+                      module->display_name);
   }
 }
 

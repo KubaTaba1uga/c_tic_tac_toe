@@ -37,7 +37,7 @@ void setUp() {
   std_lib_ops = get_std_lib_utils_ops();
 
   // Initialize the registration system
-  err = init_registration_utils_reg.init();
+  err = init_registration_utils_reg.data.init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
   // Initialize the test registrar
