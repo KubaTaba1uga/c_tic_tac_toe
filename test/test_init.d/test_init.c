@@ -21,10 +21,7 @@ void test_init_success(void) {
 }
 
 void test_init_failure(void) {
-  struct InitPrivateOps *priv_ops = get_init_priv_ops();
   struct InitSubsystem test_subsystem;
-
-  priv_ops->init_registrar(&test_subsystem);
 
   struct InitRegistration game_mock_reg = {.data = {
                                                .display_name = "game_mock",

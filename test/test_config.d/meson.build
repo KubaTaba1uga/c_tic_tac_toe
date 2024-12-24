@@ -8,8 +8,6 @@ test_config_name = 'test_config.c'
 
 test_config_src = [test_config_name,
 		   config / 'config.c',
-		   utils / 'array_utils.c',
-		   utils / 'registration_utils.c',
 		   utils / 'std_lib_utils.c',
 		   utils / 'logging_utils.c']
 
@@ -18,7 +16,7 @@ test_config_exe = executable('test_config',
     test_config_src,
     unity_gen_runner.process(test_config_name),
   ],
-  include_directories: [src, test_includes],
+  include_directories: test_includes,
   dependencies: test_dependencies,
   c_args:['-DTEST'],
 )

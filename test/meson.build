@@ -2,8 +2,8 @@ unity_subproject = subproject('unity')
 
 unity_dependency = unity_subproject.get_variable('unity_dep')
 
-test_dependencies = [logging_dep, pthread_dep, unity_dependency]
-test_includes = include_directories('wrappers')
+test_dependencies = app_deps + [unity_dependency]
+test_includes = app_includes + [include_directories('wrappers')]
 
 scripts = join_paths('..', 'scripts')
 

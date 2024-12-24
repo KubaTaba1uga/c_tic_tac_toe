@@ -1,37 +1,22 @@
 #ifndef INIT_H
 #define INIT_H
-/*******************************************************************************
- * @file init.h
- * @brief Header file for the initialization subsystem.
- ******************************************************************************/
 
-/*******************************************************************************
- *    IMPORTS
- ******************************************************************************/
-#include "utils/registration_utils.h"
+#include <stddef.h>
 
-/*******************************************************************************
- *    API
- ******************************************************************************/
-struct InitRegistrationData {
+/* Data structure for initialization registration */
+struct InitRegistration {
   int (*init)(void);
   void (*destroy)(void);
-  char *display_name;
+  const char *display_name;
 };
 
-struct InitRegistration {
-  struct InitRegistrationData data;
-  struct Registration registration;
-};
-
+/* Operations for initialization */
 struct InitOps {
   int (*initialize)(void);
   void (*destroy)(void);
 };
 
-/*******************************************************************************
- *    MODULARITY BOILERCODE
- ******************************************************************************/
+/* Function to retrieve InitOps */
 struct InitOps *get_init_ops(void);
 
 #endif // INIT_H

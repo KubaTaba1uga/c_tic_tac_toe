@@ -32,11 +32,6 @@ void setUp() {
   array_ops = get_array_utils_ops();
   config_priv_ops = get_config_priv_ops();
 
-  // Initialize subsystems
-  // Initialize subsystems
-  err = init_registration_utils_reg.data.init();
-  TEST_ASSERT_EQUAL_INT(0, err);
-
   err = init_config_reg.data.init();
   TEST_ASSERT_EQUAL_INT(0, err);
 }

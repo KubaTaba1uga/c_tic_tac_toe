@@ -1,16 +1,19 @@
-#include "utils/registration_utils.h"
+#include "static_array_lib.h"
+#include "utils/logging_utils.h"
 
-struct InitSubsystem {
-  struct Registrar registrar;
-};
+#define INIT_MAX_MODULES 100
+
+/* InitSubsystem containing static array for module registrations */
+typedef struct InitSubsystem {
+  SARRS_FIELD(modules, struct InitRegistration, INIT_MAX_MODULES);
+} InitSubsystem;
+
+SARRS_DECL(InitSubsystem, modules, struct InitRegistration, INIT_MAX_MODULES);
+
+static struct InitSubsystem init_subsystem;
 
 struct InitPrivateOps {
-  int (*init_registrar)(struct InitSubsystem *);
-  void (*destroy_registrar)(struct InitSubsystem *);
-  int (*register_modules)(struct InitSubsystem *);
-  int (*register_module)(struct InitSubsystem *, struct InitRegistration *);
-  int (*init_modules)(struct InitSubsystem *);
-  void (*destroy_modules)(struct InitSubsystem *);
+  int (*register_module)(struct InitRegistration);
 };
 
 struct InitPrivateOps *get_init_priv_ops(void);

@@ -1,284 +1,114 @@
 /*******************************************************************************
  * @file init.c
- * @brief Initialization subsystem for managing the setup and teardown of
- *        various application modules.
+ * @brief Initialization subsystem using SARR for managing modules.
  ******************************************************************************/
 
-/*******************************************************************************
- *    IMPORTS
- ******************************************************************************/
-// C standard library
+#include "init.h"
 #include <errno.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
-// Internal libraries
-#include "config/config.h"
-#include "init/init.h"
+/* SARR stands for Static Array */
+#include "static_array_lib.h"
 #include "utils/logging_utils.h"
-#include "utils/registration_utils.h"
 
-/*******************************************************************************
- *    PRIVATE DECLARATIONS & DEFINITIONS
- ******************************************************************************/
-#define MAX_REGISTRATIONS 100
+#define INIT_MAX_MODULES 100
 
-struct InitSubsystem {
-  struct Registrar registrar;
-};
+/* InitSubsystem containing static array for module registrations */
+typedef struct InitSubsystem {
+  SARRS_FIELD(modules, struct InitRegistration, INIT_MAX_MODULES);
+} InitSubsystem;
 
-struct InitPrivateOps {
-  int (*init_registrar)(struct InitSubsystem *);
-  void (*destroy_registrar)(struct InitSubsystem *);
-  int (*register_modules)(struct InitSubsystem *);
-  int (*register_module)(struct InitSubsystem *, struct InitRegistration *);
-  int (*init_modules)(struct InitSubsystem *);
-  void (*destroy_modules)(struct InitSubsystem *);
-};
+SARRS_DECL(InitSubsystem, modules, struct InitRegistration, INIT_MAX_MODULES);
 
-static struct RegistrationUtilsOps *reg_ops;
 static struct InitSubsystem init_subsystem;
 static struct LoggingUtilsOps *log_ops;
 
+// Ops
+struct InitPrivateOps {
+  int (*register_module)(struct InitRegistration);
+};
 static struct InitPrivateOps *init_priv_ops;
 struct InitPrivateOps *get_init_priv_ops(void);
-
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-int init_system(void) {
-  int err;
+static int init_init_system(void) {
+  int err = 0;
+  struct InitRegistration module;
 
-  reg_ops = get_registration_utils_ops();
-  init_priv_ops = get_init_priv_ops();
   log_ops = get_logging_utils_ops();
+  init_priv_ops = get_init_priv_ops();
 
-  err = init_priv_ops->init_registrar(&init_subsystem);
-
-  if (err) {
-    log_ops->log_err(__FILE_NAME__, "Unable to initialize registrar: %s",
-                     strerror(err));
-
-    return err;
+  /* Initialize all registered modules */
+  for (size_t i = 0; i < InitSubsystem_modules_length(&init_subsystem); i++) {
+    InitSubsystem_modules_get(&init_subsystem, i, &module);
+    if (module.init) {
+      err = module.init();
+      if (err) {
+        log_ops->log_err("INIT", "Failed to initialize module '%s': %s",
+                         module.display_name, strerror(err));
+        return err;
+      }
+      log_ops->log_info("INIT", "Initialized module: %s", module.display_name);
+    }
   }
 
-  err = init_priv_ops->register_modules(&init_subsystem);
-  if (err) {
-    log_ops->log_err(__FILE_NAME__, "Unable to register modules: %s",
-                     strerror(err));
-
-    return err;
-  }
-
-  err = init_priv_ops->init_modules(&init_subsystem);
-  if (err) {
-    log_ops->log_err(__FILE_NAME__, "Unable to init modules: %s",
-                     strerror(err));
-    return err;
-  }
-
-  log_ops->log_info(__FILE_NAME__, "Init finished");
-
+  log_ops->log_info("INIT", "All modules initialized successfully.");
   return 0;
 }
 
-void destroy_system(void) {
-  if (init_subsystem.registrar.registrations.data) {
-    init_priv_ops->destroy_modules(&init_subsystem);
-    init_priv_ops->destroy_registrar(&init_subsystem);
+static void init_destroy_system(void) {
+  struct InitRegistration module;
+
+  log_ops = get_logging_utils_ops();
+
+  /* Destroy all registered modules in reverse order */
+  for (size_t i = InitSubsystem_modules_length(&init_subsystem) - 1; i >= 0;
+       i--) {
+    InitSubsystem_modules_get(&init_subsystem, i, &module);
+    if (module.destroy) {
+      module.destroy();
+      log_ops->log_info("INIT", "Destroyed module: %s", module.display_name);
+    }
   }
 
-  log_ops->log_info(__FILE_NAME__, "Destroy finished");
+  log_ops->log_info("INIT", "All modules destroyed successfully.");
 }
 
 /*******************************************************************************
- *    PRIVATE FUNCTIONS
+ *    MODULE REGISTRATION
  ******************************************************************************/
-static int init_initialize_registrar(struct InitSubsystem *subsystem) {
-  int err;
-
-  if (!subsystem) {
-    return EINVAL;
-  }
-
-  err = init_registration_utils_reg.data.init();
+static int init_register_module(struct InitRegistration module) {
+  int err = InitSubsystem_modules_append(&init_subsystem, module);
   if (err) {
-    // Logging module has fallback to stdout/stderr if not initialized
-    //   that's why we can init it like all others modules.
-    log_ops->log_err(__FILE_NAME__,
-                     "Unable to initialize registration module: %s",
-                     strerror(err));
+    log_ops->log_err("INIT",
+                     "Module registration failed: Maximum modules reached.");
     return err;
   }
 
-  err = reg_ops->init(&subsystem->registrar, __FILE_NAME__, MAX_REGISTRATIONS);
-  if (err) {
-    log_ops->log_err(__FILE_NAME__, "Failed to initialize registrar: %s",
-                     strerror(err));
-    return err;
-  }
-
+  log_ops->log_info("INIT", "Registered module: %s", module.display_name);
   return 0;
-}
-
-static void init_destroy_registrar(struct InitSubsystem *subsystem) {
-  if (subsystem) {
-    reg_ops->destroy(&subsystem->registrar);
-  }
-}
-
-static int init_register_modules(struct InitSubsystem *subsystem) {
-  struct InitRegistration *init_registrations[] = {
-      &init_logging_reg,
-      &init_config_reg,
-  };
-  size_t i;
-  int err;
-
-  if (!subsystem) {
-    return EINVAL;
-  }
-
-  for (i = 0;
-       i < sizeof(init_registrations) / sizeof(struct InitRegistration *);
-       i++) {
-
-    err = init_priv_ops->register_module(subsystem, init_registrations[i]);
-    if (err) {
-      log_ops->log_err(__FILE_NAME__, "Failed to register module '%s': %s",
-                       init_registrations[i]->data.display_name, strerror(err));
-
-      return err;
-    }
-  }
-
-  return 0;
-}
-
-static int init_register_module(struct InitSubsystem *subsystem,
-                                struct InitRegistration *module) {
-  struct RegisterOutput output;
-  int err;
-
-  if (!subsystem || !module) {
-    return EINVAL;
-  }
-
-  err = reg_ops->registration_init(&module->registration,
-                                   module->data.display_name, module);
-  if (err) {
-    log_ops->log_err(__FILE_NAME__,
-                     "Failed to initialize module registration: %s",
-                     strerror(err));
-    return err;
-  }
-
-  module->data.display_name = module->registration.display_name;
-
-  err = reg_ops->register_module(
-      (struct RegisterInput){.registration = &module->registration,
-                             .registrar = &subsystem->registrar},
-      &output);
-  if (err) {
-    log_ops->log_err(__FILE_NAME__, "Failed to register module: %s",
-                     strerror(err));
-    return err;
-  }
-
-  log_ops->log_info(__FILE_NAME__, "Module '%s' registered successfully.",
-                    module->data.display_name);
-  return 0;
-}
-
-static int init_modules(struct InitSubsystem *subsystem) {
-  struct GetRegistrationOutput reg_output;
-  struct InitRegistrationData *module;
-  int err;
-
-  if (!subsystem) {
-    return EINVAL;
-  }
-
-  for (int i = 0; i < subsystem->registrar.registrations.length; i++) {
-    err = reg_ops->get_registration(
-        (struct GetRegistrationInput){.registrar = &subsystem->registrar,
-                                      .registration_id = i},
-        &reg_output);
-    if (err) {
-      log_ops->log_err(__FILE_NAME__,
-                       "Failed to get registration for module ID %d: %s", i,
-                       strerror(err));
-      return err;
-    }
-
-    module = reg_output.registration->private;
-    if (module->init) {
-      err = module->init();
-      if (err) {
-        log_ops->log_err(__FILE_NAME__, "Failed to initialize module '%s': %s",
-                         module->display_name, strerror(err));
-        return err;
-      }
-
-      log_ops->log_info(__FILE_NAME__, "Module '%s' initialized successfully.",
-                        module->display_name);
-    }
-  }
-
-  return 0;
-}
-
-static void destroy_modules(struct InitSubsystem *subsystem) {
-  struct GetRegistrationOutput reg_output;
-  struct InitRegistrationData *module;
-  int err;
-
-  if (!subsystem) {
-
-    return;
-  }
-
-  for (int i = subsystem->registrar.registrations.length - 1; i >= 0; i--) {
-    err = reg_ops->get_registration(
-        (struct GetRegistrationInput){.registrar = &subsystem->registrar,
-                                      .registration_id = i},
-        &reg_output);
-    if (err) {
-      log_ops->log_err(__FILE_NAME__,
-                       "Failed to get registration for module ID %d: %s", i,
-                       strerror(err));
-      return;
-    }
-
-    module = reg_output.registration->private;
-    if (module->destroy) {
-      module->destroy();
-    }
-
-    log_ops->log_info(__FILE_NAME__, "Module '%s' destroyed successfully.",
-                      module->display_name);
-  }
 }
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-static struct InitPrivateOps init_priv_ops_ = {
-    .init_registrar = init_initialize_registrar,
-    .destroy_registrar = init_destroy_registrar,
-    .register_modules = init_register_modules,
+static struct InitPrivateOps _init_priv_ops = {
     .register_module = init_register_module,
-    .destroy_modules = destroy_modules,
-    .init_modules = init_modules,
 };
 
 static struct InitOps init_ops = {
-    .initialize = init_system,
-    .destroy = destroy_system,
+    .initialize = init_init_system,
+    .destroy = init_destroy_system,
 };
 
-struct InitOps *get_init_ops(void) { return &init_ops; }
+struct InitOps *get_init_ops(void) {
+  ;
+  return &init_ops;
+}
 
-struct InitPrivateOps *get_init_priv_ops(void) { return &init_priv_ops_; }
+struct InitPrivateOps *get_init_priv_ops(void) {
+  ;
+  return &_init_priv_ops;
+}

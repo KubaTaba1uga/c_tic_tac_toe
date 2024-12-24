@@ -20,9 +20,12 @@ variables.
 #include <stdlib.h>
 #include <string.h>
 
+// Third party libs
+#include "static_array_lib.h"
+
 // App's internal libs
 #include "config/config.h"
-#include "init/init.h"
+/* #include "init/init.h" */
 #include "utils/array_utils.h"
 #include "utils/logging_utils.h"
 #include "utils/registration_utils.h"
@@ -31,16 +34,19 @@ variables.
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
+#define CONFIG_VARS_MAX 100
+
 struct ConfigSubsystem {
-  struct Registrar registrar;
+  SAARS_FIELD(vars, struct ConfigVariable, CONFIG_VARS_MAX);
 };
+
+SAARS_DECL(struct ConfigSubsystem, vars, struct ConfigVariable,
+           CONFIG_VARS_MAX);
 
 struct ConfigPrivateOps {
   int (*init)(struct ConfigSubsystem *);
-  void (*destroy)(struct ConfigSubsystem *);
-  int (*get_variable)(struct ConfigGetVarInput *, struct ConfigGetVarOutput *);
-  int (*register_variable)(struct ConfigRegisterVarInput *,
-                           struct ConfigRegisterVarOutput *);
+  int (*get_var)(struct ConfigGetVarInput *, struct ConfigGetVarOutput *);
+  int (*add_var)(struct ConfigAddVarInput *, struct ConfigAddVarOutput *);
 };
 
 static struct ArrayUtilsOps *array_ops;
@@ -75,17 +81,16 @@ static void config_destroy_system(void) {
   config_priv_ops->destroy(&config_subsystem);
 }
 
-static int
-config_register_variable_system(struct ConfigRegisterVarInput input,
-                                struct ConfigRegisterVarOutput *output) {
-  struct ConfigRegisterVarOutput local_output;
+static int config_add_variable_system(struct ConfigAddVarInput input,
+                                      struct ConfigAddVarOutput *output) {
+  struct ConfigAddVarOutput local_output;
 
   if (!output)
     output = &local_output;
 
   input.config = &config_subsystem;
 
-  return config_priv_ops->register_variable(&input, output);
+  return config_priv_ops->add_variable(&input, output);
 }
 
 static int config_get_variable_system(struct ConfigGetVarInput input,
@@ -104,16 +109,10 @@ static int config_get_variable_system(struct ConfigGetVarInput input,
  *    PRIVATE API
  ******************************************************************************/
 static int config_init(struct ConfigSubsystem *config) {
-  int err;
   if (!config)
     return EINVAL;
 
-  err = reg_ops->init(&config->registrar, __FILE_NAME__, max_registrations);
-  if (err) {
-    logging_ops->log_err(__FILE_NAME__, "Unable to create registrar: %s",
-                         strerror(err));
-    return err;
-  }
+  SAARS_INIT(*config, vars);
 
   return 0;
 }
@@ -121,68 +120,46 @@ static int config_init(struct ConfigSubsystem *config) {
 static void config_destroy(struct ConfigSubsystem *config) {
   if (!config)
     return;
-
-  reg_ops->destroy(&config->registrar);
 }
 
-static int config_registration_init(struct ConfigRegistration *registration,
-                                    char *var_name, char *default_value) {
-  int err;
-  if (!registration || !var_name) {
+static int config_var_init(struct ConfigVariable *var, char *var_name,
+                           char *default_value) {
+  if (!var || !var_name) {
     return EINVAL;
   }
 
-  err = reg_ops->registration_init(&registration->registration, var_name,
-                                   &registration->data);
-  if (err) {
-    logging_ops->log_err(__FILE_NAME__, "Unable to init '%s' registration",
-                         var_name);
-    return ENOMEM;
+  strncpy(var->var_name, var_name, CONFIG_VARIABLE_MAX - 1);
+  var->var_name[CONFIG_VARIABLE_MAX - 1] = 0;
+
+  if (default_value) {
+    strncpy(var->default_value, default_value, CONFIG_VARIABLE_MAX - 1);
+    var->var_name[CONFIG_VARIABLE_MAX - 1] = 0;
+  } else {
+    memset(var->default_value, 0, sizeof(char) * (CONFIG_VARIABLE_MAX - 1));
   }
-
-  registration->data.default_value = default_value;
-
-  // registration_init copy the var_name into display_name
-  //  so we need to sync pointers to point to one str.
-  registration->data.var_name = registration->registration.display_name;
 
   return 0;
 };
 
-static int config_register_variable(struct ConfigRegisterVarInput *input,
-                                    struct ConfigRegisterVarOutput *output) {
-  struct RegisterOutput reg_output;
-  struct ConfigSubsystem *config;
-  int err;
+static int config_add_variable(struct ConfigAddVarInput *input,
+                               struct ConfigAddVarOutput *output) {
+  /* struct ConfigSubsystem *config; */
+  /* int err; */
 
-  if (!input || !input->registration || !output) {
+  if (!input || !input->var || !output) {
     return EINVAL;
   }
 
-  output->registration_id = -1;
-  config = input->config;
-
-  err = reg_ops->register_module(
-      (struct RegisterInput){.registration = &input->registration->registration,
-                             .registrar = &config->registrar},
-      &reg_output);
-  if (err) {
-    logging_ops->log_err(__FILE_NAME__, "Unable to register module: %s",
-                         strerror(err));
-    return err;
-  }
-
-  output->registration_id = reg_output.registration_id;
+  output->var_id = -1;
+  /* config = input->config; */
 
   return 0;
 }
 
 static int config_get_variable(struct ConfigGetVarInput *input,
                                struct ConfigGetVarOutput *output) {
-  struct GetRegistrationOutput reg_output;
-  struct ConfigRegistrationData *data;
-  struct ConfigSubsystem *config;
-  int err;
+  /* struct ConfigSubsystem *config; */
+  /* int err; */
 
   if (!input || !output) {
     return EINVAL;
@@ -191,27 +168,13 @@ static int config_get_variable(struct ConfigGetVarInput *input,
   output->var_name = NULL;
   output->value = NULL;
 
-  config = input->config;
+  /* config = input->config; */
 
-  err = reg_ops->get_registration(
-      (struct GetRegistrationInput){.registration_id = input->registration_id,
-                                    .registrar = &config->registrar},
-      &reg_output);
-  if (err) {
-    logging_ops->log_err(__FILE_NAME__,
-                         "Unable to get"
-                         "'%i' registration: %s",
-                         input->registration_id, strerror(err));
-    return err;
-  }
+  /* output->var_name = data->var_name; */
+  /* output->value = getenv(data->var_name); */
 
-  data = reg_output.registration->private;
-
-  output->var_name = data->var_name;
-  output->value = getenv(data->var_name);
-
-  if (!output->value)
-    output->value = data->default_value;
+  /* if (!output->value) */
+  /*   output->value = data->default_value; */
 
   return 0;
 }
@@ -230,15 +193,14 @@ struct InitRegistration init_config_reg = {.data = {
  ******************************************************************************/
 static struct ConfigPrivateOps config_priv_ops_ = {
     .init = config_init,
-    .destroy = config_destroy,
-    .get_variable = config_get_variable,
-    .register_variable = config_register_variable,
+    .get_var = config_get_variable,
+    .add_var = config_add_variable,
 };
 
 static struct ConfigOps config_pub_ops = {
-    .registration_init = config_registration_init,
-    .get_system_var = config_get_variable_system,
-    .register_system_var = config_register_variable_system,
+    .init_var = config_var_init,
+    .get_var = config_get_variable_system,
+    .add_var = config_add_variable_system,
 };
 
 struct ConfigOps *get_config_ops(void) { return &config_pub_ops; }

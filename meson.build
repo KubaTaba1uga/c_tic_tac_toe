@@ -21,7 +21,7 @@ opt_var = cmake.subproject_options()
 #  compile errors. Overriding c11 to gnu11 fixes the errors.
 opt_var.set_override_option('c_std', 'gnu11')
 opt_var.set_override_option('werror', 'false')
-opt_var.set_override_option('werror', 'false')
+# opt_var.set_override_option('werror', 'false')
 # opt_var.set_override_option('debug', 'true')
 logging_proj = cmake.subproject('stumpless', options: opt_var)
 logging_dep = logging_proj.dependency('stumpless')
@@ -29,17 +29,25 @@ logging_dep = logging_proj.dependency('stumpless')
 # ******************************************************************************
 # *    Multi-threading
 # ******************************************************************************
-# Declare a dependency on the pthread library
 pthread_dep = dependency('threads')
+
+
+# ******************************************************************************
+# *    Static Array
+# ******************************************************************************
+static_array_subproject = subproject('static_array')
+static_array_dep = static_array_subproject.get_variable('static_array_lib')
 
 
 # ******************************************************************************
 # *    App
 # ******************************************************************************
-app_deps = [logging_dep, pthread_dep]
+app_deps = [logging_dep, pthread_dep, static_array_dep]
+app_includes = [include_directories('src')]
 subdir('src')
 
-main = executable('main', sources, dependencies: app_deps, include_directories: [join_paths('.', 'src')])
+main = executable('main', sources, dependencies: app_deps, include_directories: [app_includes])
+
 
 # ******************************************************************************
 # *    Tests

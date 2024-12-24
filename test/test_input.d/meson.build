@@ -15,8 +15,6 @@ test_keyboard_src = [test_keyboard_name,
                    keyboard / 'keyboard_registration.c',		   
                    input / 'input.c',
                    input / 'input_registration.c',
-		   utils / 'array_utils.c',
-		   utils / 'registration_utils.c',
 		   utils / 'std_lib_utils.c',
 		   utils / 'logging_utils.c',
    		   utils / 'terminal_utils.c'		
@@ -49,8 +47,6 @@ test_keyboard1_src = [test_keyboard1_name,
                       keyboard / 'keyboard_registration.c',		   
                       input / 'input.c',
                       input / 'input_registration.c',
-		      utils / 'array_utils.c',
-		      utils / 'registration_utils.c',
 		      utils / 'std_lib_utils.c',
 		      utils / 'logging_utils.c',
    		      utils / 'terminal_utils.c'		
@@ -80,8 +76,6 @@ test_input_name = 'test_input.c'
 test_input_src = [test_input_name,
                    input / 'input.c',
                    input / 'input_registration.c',		   
-		   utils / 'array_utils.c',
-		   utils / 'registration_utils.c',
 		   utils / 'std_lib_utils.c',
 		   utils / 'logging_utils.c']
 

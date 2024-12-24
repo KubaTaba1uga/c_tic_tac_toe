@@ -1,5 +1,5 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef INIT_H
+#define INIT_H
 /*******************************************************************************
  * @file config.h
  * @brief Header file for the configuration subsystem.
@@ -9,59 +9,23 @@
  * and retrieving configuration variables.
  *
  ******************************************************************************/
-/*******************************************************************************
- *    PUBLIC API
- ******************************************************************************/
-#include "utils/registration_utils.h"
 
-// Data
-#define PROJECT_NAME "c_tic_tac_toe"
+#include <stddef.h>
 
-struct ConfigRegistrationData {
-  char *var_name;
-  char *default_value;
+/* Data structure for initialization registration */
+struct InitRegistrationData {
+  int (*init)(void);
+  void (*destroy)(void);
+  const char *display_name;
 };
 
-struct ConfigRegistration {
-  struct ConfigRegistrationData data;
-  struct Registration registration;
+/* Operations for initialization */
+struct InitOps {
+  int (*initialize)(void);
+  void (*destroy)(void);
 };
 
-// Ops
-struct ConfigRegisterVarInput {
-  struct ConfigRegistration *registration;
-  void *config;
-};
+/* Function to retrieve InitOps */
+struct InitOps *get_init_ops(void);
 
-struct ConfigRegisterVarOutput {
-  int registration_id;
-};
-
-struct ConfigGetVarInput {
-  int registration_id;
-  void *config;
-};
-
-struct ConfigGetVarOutput {
-  char *var_name;
-  char *value;
-};
-
-struct ConfigOps {
-  int (*registration_init)(struct ConfigRegistration *, char *, char *);
-  int (*register_system_var)(struct ConfigRegisterVarInput,
-                             struct ConfigRegisterVarOutput *);
-  int (*get_system_var)(struct ConfigGetVarInput, struct ConfigGetVarOutput *);
-};
-
-/*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-extern struct InitRegistration init_config_reg;
-
-/*******************************************************************************
- *    MODULARITY BOILERCODE
- ******************************************************************************/
-struct ConfigOps *get_config_ops(void);
-
-#endif // CONFIG_H
+#endif // INIT_H
