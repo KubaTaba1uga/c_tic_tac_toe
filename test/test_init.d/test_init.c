@@ -1,40 +1,56 @@
 #include <errno.h>
 
+#include <string.h>
 #include <unity.h>
 
 #include "init/init.h"
-
 #include "init_wrapper.h"
+#include "utils/logging_utils.h"
 
+static void *game_init_mock;
 static struct InitOps *init_ops;
+static struct InitPrivateOps *priv_ops;
 
-int game_init_mock(void) { return ENOMEM; }
+static int game_init_mock_success(void) { return 0; }
+static int game_init_mock_err(void) { return ENOMEM; }
+static int init_register_modules_mock(void) {
+  struct InitRegistration game_mock_reg = {
+      .display_name = "game_mock",
+      .init = game_init_mock,
+      .destroy = NULL,
+  };
 
-void setUp() { init_ops = get_init_ops(); }
+  return priv_ops->register_module(game_mock_reg);
+};
+
+void setUp() {
+  int err;
+
+  priv_ops = get_init_priv_ops();
+  init_ops = get_init_ops();
+
+  priv_ops->register_modules = init_register_modules_mock;
+
+  err = init_logging_reg.init();
+  TEST_ASSERT_EQUAL(0, err);
+}
 
 void tearDown() { init_ops->destroy(); }
 
 void test_init_success(void) {
-  int result = init_ops->initialize();
+  int err;
 
-  TEST_ASSERT_EQUAL(0, result);
+  game_init_mock = game_init_mock_success;
+
+  err = init_ops->initialize();
+  TEST_ASSERT_EQUAL_STRING(strerror(0), strerror(err));
 }
 
 void test_init_failure(void) {
-  struct InitSubsystem test_subsystem;
+  int err;
 
-  struct InitRegistration game_mock_reg = {.data = {
-                                               .display_name = "game_mock",
-                                               .init = game_init_mock,
-                                               .destroy = NULL,
-                                           }};
+  game_init_mock = game_init_mock_err;
 
-  int reg_result = priv_ops->register_module(&test_subsystem, &game_mock_reg);
-  TEST_ASSERT_EQUAL(0, reg_result);
-
-  int result = priv_ops->init_modules(&test_subsystem);
-  TEST_ASSERT_EQUAL(ENOMEM, result);
-
-  priv_ops->destroy_modules(&test_subsystem);
-  priv_ops->destroy_registrar(&test_subsystem);
+  err = init_ops->initialize();
+  TEST_ASSERT_EQUAL_STRING(strerror(ENOMEM), strerror(err));
 }

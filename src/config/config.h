@@ -1,5 +1,5 @@
-#ifndef INIT_H
-#define INIT_H
+#ifndef CONFIG_H
+#define CONFIG_H
 /*******************************************************************************
  * @file config.h
  * @brief Header file for the configuration subsystem.
@@ -9,23 +9,61 @@
  * and retrieving configuration variables.
  *
  ******************************************************************************/
+/*******************************************************************************
+ *    PUBLIC API
+ ******************************************************************************/
+// Data
+#define PROJECT_NAME "c_tic_tac_toe"
 
-#include <stddef.h>
+#define CONFIG_VARIABLE_MAX 32
 
-/* Data structure for initialization registration */
-struct InitRegistrationData {
-  int (*init)(void);
-  void (*destroy)(void);
-  const char *display_name;
+struct ConfigVariable {
+  char var_name[CONFIG_VARIABLE_MAX];
+  char default_value[CONFIG_VARIABLE_MAX];
 };
 
-/* Operations for initialization */
-struct InitOps {
-  int (*initialize)(void);
-  void (*destroy)(void);
+// Ops
+struct ConfigAddVarInput {
+  struct ConfigVariable *var;
+  void *config;
 };
 
-/* Function to retrieve InitOps */
-struct InitOps *get_init_ops(void);
+struct ConfigAddVarOutput {
+  int var_id;
+};
 
-#endif // INIT_H
+enum ConfigGetVarMode {
+  CONFIG_GET_VAR_BY_ID,
+  CONFIG_GET_VAR_BY_NAME,
+};
+
+struct ConfigGetVarInput {
+  enum ConfigGetVarMode mode;
+  char *var_name;
+  int var_id;
+  void *config;
+};
+
+struct ConfigGetVarOutput {
+  char *var_name;
+  char *value;
+  int var_id;
+};
+
+struct ConfigOps {
+  int (*init_var)(struct ConfigVariable *, char *, char *);
+  int (*add_var)(struct ConfigAddVarInput, struct ConfigAddVarOutput *);
+  int (*get_var)(struct ConfigGetVarInput, struct ConfigGetVarOutput *);
+};
+
+/*******************************************************************************
+ *    INIT BOILERCODE
+ ******************************************************************************/
+extern struct InitRegistration init_config_reg;
+
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
+struct ConfigOps *get_config_ops(void);
+
+#endif // CONFIG_H

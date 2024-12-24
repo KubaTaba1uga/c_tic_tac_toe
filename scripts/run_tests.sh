@@ -8,7 +8,7 @@ then
     builddir="build"
 fi
 
-meson compile -C $builddir  
+meson compile -C $builddir $test_name
 exit_code=$?
 if [ $exit_code -ne 0 ]
 then
@@ -17,7 +17,7 @@ then
 fi
 
 
-meson test $test_name -C $builddir
+meson test -C $builddir $test_name
 
 exit_code=$?
 if [ $exit_code -ne 0 ]

@@ -10,10 +10,11 @@ typedef struct InitSubsystem {
 
 SARRS_DECL(InitSubsystem, modules, struct InitRegistration, INIT_MAX_MODULES);
 
-static struct InitSubsystem init_subsystem;
+/* struct InitSubsystem init_subsystem; */
 
 struct InitPrivateOps {
   int (*register_module)(struct InitRegistration);
+  int (*register_modules)(void);
 };
 
 struct InitPrivateOps *get_init_priv_ops(void);
