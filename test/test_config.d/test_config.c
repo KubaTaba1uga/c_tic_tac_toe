@@ -50,69 +50,62 @@ void test_config_var_init_success() {
 // Test Variable Addition
 void test_config_add_var_success() {
   struct ConfigVariable variable;
-  struct ConfigAddVarInput input;
   struct ConfigAddVarOutput output;
   int err;
 
-  // Initialize the configuration variable
   config_ops->init_var(&variable, TEST_VAR_NAME, TEST_DEFAULT_VALUE);
 
-  // Prepare input for adding the variable
-  input.var = &variable;
-
-  // Add the variable to the configuration
-  err = config_ops->add_var(input, &output);
+  err = config_ops->add_var((struct ConfigAddVarInput){.var = &variable},
+                            &output);
   TEST_ASSERT_EQUAL_INT(0, err);
-
-  // Verify the assigned variable ID
   TEST_ASSERT_GREATER_OR_EQUAL(0, output.var_id);
 }
 
 // Test Variable Retrieval by Name
+// Test Variable Retrieval by Name
 void test_config_get_var_by_name_success() {
   struct ConfigVariable variable;
-  struct ConfigAddVarInput add_input;
   struct ConfigAddVarOutput add_output;
-  struct ConfigGetVarInput get_input;
   struct ConfigGetVarOutput get_output;
   int err;
 
   // Initialize and add the variable
-  config_ops->init_var(&variable, TEST_VAR_NAME, TEST_DEFAULT_VALUE);
-  add_input.var = &variable;
-  config_ops->add_var(add_input, &add_output);
+  err = config_ops->init_var(&variable, TEST_VAR_NAME, TEST_DEFAULT_VALUE);
+  TEST_ASSERT_EQUAL_INT(0, err);
 
-  // Prepare input for retrieving the variable by name
-  get_input.mode = CONFIG_GET_VAR_BY_NAME;
-  get_input.var_name = TEST_VAR_NAME;
+  err = config_ops->add_var((struct ConfigAddVarInput){.var = &variable},
+                            &add_output);
+  TEST_ASSERT_EQUAL_INT(0, err);
 
-  // Retrieve the variable
-  err = config_ops->get_var(get_input, &get_output);
+  err = config_ops->get_var(
+      (struct ConfigGetVarInput){.mode = CONFIG_GET_VAR_BY_NAME,
+                                 .var_name = TEST_VAR_NAME},
+      &get_output);
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_EQUAL_STRING(TEST_VAR_NAME, get_output.var_name);
   TEST_ASSERT_EQUAL_STRING(TEST_DEFAULT_VALUE, get_output.value);
 }
 
 // Test Variable Retrieval by ID
+// Test Variable Retrieval by ID
 void test_config_get_var_by_id_success() {
   struct ConfigVariable variable;
-  struct ConfigAddVarInput add_input;
   struct ConfigAddVarOutput add_output;
-  struct ConfigGetVarInput get_input;
   struct ConfigGetVarOutput get_output;
   int err;
 
   // Initialize and add the variable
-  config_ops->init_var(&variable, TEST_VAR_NAME, TEST_DEFAULT_VALUE);
-  add_input.var = &variable;
-  config_ops->add_var(add_input, &add_output);
+  err = config_ops->init_var(&variable, TEST_VAR_NAME, TEST_DEFAULT_VALUE);
+  TEST_ASSERT_EQUAL_INT(0, err);
 
-  // Prepare input for retrieving the variable by ID
-  get_input.mode = CONFIG_GET_VAR_BY_ID;
-  get_input.var_id = add_output.var_id;
+  err = config_ops->add_var((struct ConfigAddVarInput){.var = &variable},
+                            &add_output);
+  TEST_ASSERT_EQUAL_INT(0, err);
 
-  // Retrieve the variable
-  err = config_ops->get_var(get_input, &get_output);
+  err = config_ops->get_var(
+      (struct ConfigGetVarInput){.mode = CONFIG_GET_VAR_BY_ID,
+                                 .var_id = add_output.var_id},
+      &get_output);
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_EQUAL_STRING(TEST_VAR_NAME, get_output.var_name);
   TEST_ASSERT_EQUAL_STRING(TEST_DEFAULT_VALUE, get_output.value);
@@ -120,30 +113,27 @@ void test_config_get_var_by_id_success() {
 
 // Test Variable Retrieval Failure (Invalid Name)
 void test_config_get_var_failure_invalid_name() {
-  struct ConfigGetVarInput get_input;
   struct ConfigGetVarOutput get_output;
   int err;
 
-  // Prepare input for invalid variable name
-  get_input.mode = CONFIG_GET_VAR_BY_NAME;
-  get_input.var_name = "non_existent_var";
+  err = config_ops->get_var(
+      (struct ConfigGetVarInput){.mode = CONFIG_GET_VAR_BY_NAME,
+                                 .var_name = "non_existent_var"},
+      &get_output);
 
-  // Attempt to retrieve the variable
-  err = config_ops->get_var(get_input, &get_output);
   TEST_ASSERT_EQUAL_INT(ENOENT, err);
 }
 
 // Test Variable Retrieval Failure (Invalid ID)
 void test_config_get_var_failure_invalid_id() {
-  struct ConfigGetVarInput get_input;
   struct ConfigGetVarOutput get_output;
   int err;
 
-  // Prepare input for invalid variable ID
-  get_input.mode = CONFIG_GET_VAR_BY_ID;
-  get_input.var_id = -1;
+  // Attempt to retrieve the variable using a compound literal for input
+  err = config_ops->get_var(
+      (struct ConfigGetVarInput){.mode = CONFIG_GET_VAR_BY_ID, .var_id = -1},
+      &get_output);
 
-  // Attempt to retrieve the variable
-  err = config_ops->get_var(get_input, &get_output);
+  // Assert failure due to invalid ID
   TEST_ASSERT_EQUAL_INT(ENOENT, err);
 }

@@ -151,11 +151,6 @@ static int get_var_by_id(struct ConfigGetVarInput *input,
   struct ConfigVariable var;
   int err;
 
-  if (input->var_id < 0 ||
-      input->var_id >= ConfigSubsystem_vars_length(&config_subsystem)) {
-    return ENOENT;
-  }
-
   err = ConfigSubsystem_vars_get(&config_subsystem, input->var_id, &var);
   if (err) {
     return err;
@@ -175,9 +170,15 @@ static int get_var_by_id(struct ConfigGetVarInput *input,
 static int get_var_by_name(struct ConfigGetVarInput *input,
                            struct ConfigGetVarOutput *output) {
   struct ConfigVariable var;
+  size_t i;
+  int err;
 
-  for (size_t i = 0; i < ConfigSubsystem_vars_length(&config_subsystem); i++) {
-    ConfigSubsystem_vars_get(&config_subsystem, i, &var);
+  for (i = 0; i < ConfigSubsystem_vars_length(&config_subsystem); i++) {
+    err = ConfigSubsystem_vars_get(&config_subsystem, i, &var);
+    if (err) {
+      return err;
+    }
+
     if (strcmp(var.var_name, input->var_name) == 0) {
       output->var_id = i;
       output->var_name = var.var_name;
