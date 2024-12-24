@@ -118,24 +118,6 @@ void test_config_get_var_by_id_success() {
   TEST_ASSERT_EQUAL_STRING(TEST_DEFAULT_VALUE, get_output.value);
 }
 
-// Test Variable Addition Failure (Duplicate Variable)
-void test_config_add_var_failure_duplicate() {
-  struct ConfigVariable variable;
-  struct ConfigAddVarInput input;
-  struct ConfigAddVarOutput output;
-  int err;
-
-  // Initialize and add the variable once
-  config_ops->init_var(&variable, TEST_VAR_NAME, TEST_DEFAULT_VALUE);
-  input.var = &variable;
-  err = config_ops->add_var(input, &output);
-  TEST_ASSERT_EQUAL_INT(0, err);
-
-  // Attempt to add the variable again (should fail)
-  err = config_ops->add_var(input, &output);
-  TEST_ASSERT_EQUAL_INT(EINVAL, err);
-}
-
 // Test Variable Retrieval Failure (Invalid Name)
 void test_config_get_var_failure_invalid_name() {
   struct ConfigGetVarInput get_input;

@@ -126,40 +126,88 @@ static int config_var_init(struct ConfigVariable *var, char *var_name,
 
 static int config_add_variable(struct ConfigAddVarInput *input,
                                struct ConfigAddVarOutput *output) {
-  /* struct ConfigSubsystem *config; */
-  /* int err; */
+  struct ConfigSubsystem *config;
+  int err;
 
   if (!input || !input->var || !output) {
     return EINVAL;
   }
 
   output->var_id = -1;
-  /* config = input->config; */
+  config = input->config;
+
+  err = ConfigSubsystem_vars_append(config, *input->var);
+  if (err) {
+    return err;
+  }
+
+  output->var_id = ConfigSubsystem_vars_length(config) - 1;
 
   return 0;
 }
 
+static int get_var_by_id(struct ConfigGetVarInput *input,
+                         struct ConfigGetVarOutput *output) {
+  struct ConfigVariable var;
+  int err;
+
+  if (input->var_id < 0 ||
+      input->var_id >= ConfigSubsystem_vars_length(&config_subsystem)) {
+    return ENOENT;
+  }
+
+  err = ConfigSubsystem_vars_get(&config_subsystem, input->var_id, &var);
+  if (err) {
+    return err;
+  }
+
+  output->var_id = input->var_id;
+  output->var_name = var.var_name;
+  output->value = getenv(var.var_name);
+
+  if (!output->value) {
+    output->value = var.default_value;
+  }
+
+  return 0;
+}
+
+static int get_var_by_name(struct ConfigGetVarInput *input,
+                           struct ConfigGetVarOutput *output) {
+  struct ConfigVariable var;
+
+  for (size_t i = 0; i < ConfigSubsystem_vars_length(&config_subsystem); i++) {
+    ConfigSubsystem_vars_get(&config_subsystem, i, &var);
+    if (strcmp(var.var_name, input->var_name) == 0) {
+      output->var_id = i;
+      output->var_name = var.var_name;
+      output->value = getenv(var.var_name);
+
+      if (!output->value) {
+        output->value = var.default_value;
+      }
+
+      return 0;
+    }
+  }
+
+  return ENOENT;
+}
+
 static int config_get_variable(struct ConfigGetVarInput *input,
                                struct ConfigGetVarOutput *output) {
-  /* struct ConfigSubsystem *config; */
-  /* int err; */
+  int (*get_var_funcs[])(struct ConfigGetVarInput *,
+                         struct ConfigGetVarOutput *) = {
+      [CONFIG_GET_VAR_BY_ID] = get_var_by_id,
+      [CONFIG_GET_VAR_BY_NAME] = get_var_by_name,
+  };
 
-  if (!input || !output) {
+  if (!input || !output || input->mode <= CONFIG_GET_VAR_NONE ||
+      input->mode >= CONFIG_GET_VAR_INVALID) {
     return EINVAL;
   }
 
-  output->var_name = NULL;
-  output->value = NULL;
-
-  /* config = input->config; */
-
-  /* output->var_name = data->var_name; */
-  /* output->value = getenv(data->var_name); */
-
-  /* if (!output->value) */
-  /*   output->value = data->default_value; */
-
-  return 0;
+  return get_var_funcs[input->mode](input, output);
 }
 
 /*******************************************************************************
