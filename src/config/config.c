@@ -25,10 +25,8 @@ variables.
 
 // App's internal libs
 #include "config/config.h"
-/* #include "init/init.h" */
-#include "utils/array_utils.h"
+#include "init/init.h"
 #include "utils/logging_utils.h"
-#include "utils/registration_utils.h"
 #include "utils/std_lib_utils.h"
 
 /*******************************************************************************
@@ -36,12 +34,11 @@ variables.
  ******************************************************************************/
 #define CONFIG_VARS_MAX 100
 
-struct ConfigSubsystem {
-  SAARS_FIELD(vars, struct ConfigVariable, CONFIG_VARS_MAX);
-};
+typedef struct ConfigSubsystem {
+  SARRS_FIELD(vars, struct ConfigVariable, CONFIG_VARS_MAX);
+} ConfigSubsystem;
 
-SAARS_DECL(struct ConfigSubsystem, vars, struct ConfigVariable,
-           CONFIG_VARS_MAX);
+SARRS_DECL(ConfigSubsystem, vars, struct ConfigVariable, CONFIG_VARS_MAX);
 
 struct ConfigPrivateOps {
   int (*init)(struct ConfigSubsystem *);
@@ -49,10 +46,7 @@ struct ConfigPrivateOps {
   int (*add_var)(struct ConfigAddVarInput *, struct ConfigAddVarOutput *);
 };
 
-static struct ArrayUtilsOps *array_ops;
 static struct LoggingUtilsOps *logging_ops;
-static struct RegistrationUtilsOps *reg_ops;
-static const size_t max_registrations = 100;
 static struct ConfigSubsystem config_subsystem;
 
 static struct ConfigPrivateOps *config_priv_ops;
@@ -64,9 +58,7 @@ struct ConfigPrivateOps *get_config_priv_ops(void);
 static int config_init_system(void) {
   int err;
 
-  array_ops = get_array_utils_ops();
   logging_ops = get_logging_utils_ops();
-  reg_ops = get_registration_utils_ops();
   config_priv_ops = get_config_priv_ops();
 
   err = config_priv_ops->init(&config_subsystem);
@@ -75,10 +67,6 @@ static int config_init_system(void) {
   }
 
   return 0;
-}
-
-static void config_destroy_system(void) {
-  config_priv_ops->destroy(&config_subsystem);
 }
 
 static int config_add_variable_system(struct ConfigAddVarInput input,
@@ -90,7 +78,7 @@ static int config_add_variable_system(struct ConfigAddVarInput input,
 
   input.config = &config_subsystem;
 
-  return config_priv_ops->add_variable(&input, output);
+  return config_priv_ops->add_var(&input, output);
 }
 
 static int config_get_variable_system(struct ConfigGetVarInput input,
@@ -102,7 +90,7 @@ static int config_get_variable_system(struct ConfigGetVarInput input,
 
   input.config = &config_subsystem;
 
-  return config_priv_ops->get_variable(&input, output);
+  return config_priv_ops->get_var(&input, output);
 }
 
 /*******************************************************************************
@@ -112,14 +100,9 @@ static int config_init(struct ConfigSubsystem *config) {
   if (!config)
     return EINVAL;
 
-  SAARS_INIT(*config, vars);
+  ConfigSubsystem_vars_init(config);
 
   return 0;
-}
-
-static void config_destroy(struct ConfigSubsystem *config) {
-  if (!config)
-    return;
 }
 
 static int config_var_init(struct ConfigVariable *var, char *var_name,
@@ -182,11 +165,11 @@ static int config_get_variable(struct ConfigGetVarInput *input,
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-struct InitRegistration init_config_reg = {.data = {
-                                               .display_name = __FILE_NAME__,
-                                               .init = config_init_system,
-                                               .destroy = config_destroy_system,
-                                           }};
+struct InitRegistration init_config_reg = {
+    .display_name = __FILE_NAME__,
+    .init = config_init_system,
+    .destroy = NULL,
+};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE

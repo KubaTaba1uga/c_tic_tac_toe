@@ -8,18 +8,17 @@
 #include <stdio.h>
 #include <string.h>
 
-/* SARR stands for Static Array */
 #include "static_array_lib.h"
 #include "utils/logging_utils.h"
 
-#define INIT_MAX_MODULES 100
+#define INIT_MODULES_MAX 100
 
 /* InitSubsystem containing static array for module registrations */
 typedef struct InitSubsystem {
-  SARRS_FIELD(modules, struct InitRegistration, INIT_MAX_MODULES);
+  SARRS_FIELD(modules, struct InitRegistration, INIT_MODULES_MAX);
 } InitSubsystem;
 
-SARRS_DECL(InitSubsystem, modules, struct InitRegistration, INIT_MAX_MODULES);
+SARRS_DECL(InitSubsystem, modules, struct InitRegistration, INIT_MODULES_MAX);
 
 static struct InitSubsystem init_subsystem;
 static struct LoggingUtilsOps *log_ops;

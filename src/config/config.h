@@ -33,8 +33,10 @@ struct ConfigAddVarOutput {
 };
 
 enum ConfigGetVarMode {
+  CONFIG_GET_VAR_NONE = 0,
   CONFIG_GET_VAR_BY_ID,
   CONFIG_GET_VAR_BY_NAME,
+  CONFIG_GET_VAR_INVALID
 };
 
 struct ConfigGetVarInput {
