@@ -6,174 +6,163 @@
 
 #include <unity.h>
 
+#include "init/init.h"
 #include "input/input.h"
-#include "input/input_registration.h"
 #include "utils/logging_utils.h"
-#include "utils/registration_utils.h"
 
-struct InputOps *input_ops;
-struct InputRegistrationOps *input_reg_ops;
-struct InputRegistration input_reg;
-
-// Mock Counters
+// Mock counters for callback and operation tracking
 static int mock_callback_counter = 0;
 static int mock_start_counter = 0;
 static int mock_stop_counter = 0;
 static int mock_wait_counter = 0;
 
-// Mock Functions
-static int mock_callback(enum InputEvents input_event) {
+// Mock callback and operations
+static int mock_callback(enum InputEvents event, input_device_id_t id) {
   mock_callback_counter++;
   return 0;
-};
+}
 
-static int mock_start() {
+static int mock_start(void) {
   mock_start_counter++;
   return 0;
 }
 
-static int mock_stop() {
+static int mock_stop(void) {
   mock_stop_counter++;
   return 0;
 }
 
-static int mock_wait() {
+static int mock_wait(void) {
   mock_wait_counter++;
   return 0;
 }
 
-// Test Setup
+// Test setup and teardown
 void setUp() {
-  // Initialize the input subsystem
   int err;
 
-  input_ops = get_input_ops();
-  input_reg_ops = get_input_reg_ops();
   mock_callback_counter = 0;
   mock_start_counter = 0;
   mock_stop_counter = 0;
   mock_wait_counter = 0;
 
-  err = init_logging_reg.data.init();
+  err = init_logging_reg.init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
-  err = init_registration_utils_reg.data.init();
-  TEST_ASSERT_EQUAL_INT(0, err);
-
-  err = init_input_reg.data.init();
+  err = init_input_reg.init();
   TEST_ASSERT_EQUAL_INT(0, err);
 }
 
-// Test Teardown
-void tearDown() {
-  // Destroy the input subsystem
-  init_input_reg.data.destroy();
+void tearDown() { init_input_reg.destroy(); }
+
+// Test successful module registration
+void test_input_register_module_success() {
+  struct InputDevice device = {.wait = mock_wait,
+                               .start = mock_start,
+                               .stop = mock_stop,
+                               .display_name = "Mock Device",
+                               .callback = NULL};
+
+  struct InputAddDeviceInput input = {.device = &device};
+
+  struct InputAddDeviceOutput output;
+  struct InputOps *ops = get_input_ops();
+
+  int err = ops->register_module(input, &output);
+  TEST_ASSERT_EQUAL_INT(0, err);
+  TEST_ASSERT_GREATER_OR_EQUAL(0, output.device_id);
 }
 
-// Test Module Registration - Success
-void test_input_register_module_system_success() {
-  struct InputRegisterInput reg_input = {.registration = &input_reg};
-  struct InputRegisterOutput reg_output;
-  int err;
+// Test failed module registration due to invalid input
+void test_input_register_module_failure_invalid_input() {
+  struct InputAddDeviceInput input = {.device = NULL};
+  struct InputAddDeviceOutput output;
 
-  err = input_reg_ops->init(&input_reg, "dummy_input", mock_wait, mock_start,
-                            mock_stop);
-  TEST_ASSERT_EQUAL_INT(0, err);
+  struct InputOps *ops = get_input_ops();
+  int err = ops->register_module(input, &output);
 
-  err = input_ops->register_module(reg_input, &reg_output);
-  TEST_ASSERT_EQUAL_INT(0, err);
-  TEST_ASSERT_GREATER_OR_EQUAL(0, reg_output.registration_id);
-}
-
-// Test Module Registration - Failure (Invalid Input)
-void test_input_register_module_system_failure_invalid_input() {
-  struct InputRegisterInput reg_input = {.registration = NULL, .input = NULL};
-  struct InputRegisterOutput reg_output;
-  int err;
-
-  err = input_ops->register_module(reg_input, &reg_output);
   TEST_ASSERT_EQUAL_INT(EINVAL, err);
 }
 
-// Test Setting Callback - Success
-void test_input_set_registration_callback_system_success() {
-  struct InputRegisterInput reg_input = {.registration = &input_reg};
-  struct InputRegisterOutput reg_output;
-  int err;
+// Test setting a callback successfully
+void test_input_set_registration_callback_success() {
+  struct InputDevice device = {.wait = mock_wait,
+                               .start = mock_start,
+                               .stop = mock_stop,
+                               .display_name = "Mock Device",
+                               .callback = NULL};
 
-  err = input_reg_ops->init(&input_reg, "dummy_input", mock_wait, mock_start,
-                            mock_stop);
+  struct InputAddDeviceInput input = {.device = &device};
+  struct InputAddDeviceOutput output;
+
+  struct InputOps *ops = get_input_ops();
+
+  int err = ops->register_module(input, &output);
   TEST_ASSERT_EQUAL_INT(0, err);
 
-  err = input_ops->register_module(reg_input, &reg_output);
-  TEST_ASSERT_EQUAL_INT(0, err);
+  struct InputSetCallbackInput callback_input = {.callback = mock_callback,
+                                                 .device_id = output.device_id};
 
-  struct InputSetRegistrationCallbackInput callback_input = {
-      .callback = mock_callback,
-      .registration_id = reg_output.registration_id,
-      .input = NULL};
-  struct InputSetRegistrationCallbackOutput callback_output;
+  struct InputSetCallbackOutput callback_output;
 
-  err = input_ops->set_callback(callback_input, &callback_output);
+  err = ops->set_callback(callback_input, &callback_output);
   TEST_ASSERT_EQUAL_INT(0, err);
 }
 
-// Test Start/Stop/Wait System - Success
-void test_input_start_stop_wait_system_success() {
-  struct InputRegisterInput reg_input = {.registration = &input_reg};
-  struct InputRegisterOutput reg_output;
-  int err;
+// Test the start, stop, and wait operations
+void test_input_start_stop_wait_operations() {
+  struct InputDevice device = {.wait = mock_wait,
+                               .start = mock_start,
+                               .stop = mock_stop,
+                               .display_name = "Mock Device",
+                               .callback = mock_callback};
 
-  err = input_reg_ops->init(&input_reg, "dummy_input", mock_wait, mock_start,
-                            mock_stop);
+  struct InputAddDeviceInput input = {.device = &device};
+  struct InputAddDeviceOutput output;
+
+  struct InputOps *ops = get_input_ops();
+
+  int err = ops->register_module(input, &output);
   TEST_ASSERT_EQUAL_INT(0, err);
 
-  err = input_ops->register_module(reg_input, &reg_output);
-  TEST_ASSERT_EQUAL_INT(0, err);
-
-  struct InputSetRegistrationCallbackInput callback_input = {
-      .callback = mock_callback,
-      .registration_id = reg_output.registration_id,
-      .input = NULL};
-  struct InputSetRegistrationCallbackOutput callback_output;
-
-  err = input_ops->set_callback(callback_input, &callback_output);
-  TEST_ASSERT_EQUAL_INT(0, err);
-
-  err = input_ops->start();
+  err = ops->start();
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_EQUAL_INT(1, mock_start_counter);
 
-  err = input_ops->wait();
+  err = ops->wait();
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_EQUAL_INT(1, mock_wait_counter);
 
-  err = input_ops->stop();
+  err = ops->stop();
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_EQUAL_INT(1, mock_stop_counter);
 }
 
-void test_input_start_stop_wait_system_failure() {
-  struct InputRegisterInput reg_input = {.registration = &input_reg};
-  struct InputRegisterOutput reg_output;
-  int err;
+// Test failed operations due to missing callback
+void test_input_start_stop_wait_failure() {
+  struct InputDevice device = {.wait = mock_wait,
+                               .start = mock_start,
+                               .stop = mock_stop,
+                               .display_name = "Mock Device",
+                               .callback = NULL};
 
-  err = input_reg_ops->init(&input_reg, "dummy_input", mock_wait, mock_start,
-                            mock_stop);
+  struct InputAddDeviceInput input = {.device = &device};
+  struct InputAddDeviceOutput output;
+
+  struct InputOps *ops = get_input_ops();
+
+  int err = ops->register_module(input, &output);
   TEST_ASSERT_EQUAL_INT(0, err);
 
-  err = input_ops->register_module(reg_input, &reg_output);
-  TEST_ASSERT_EQUAL_INT(0, err);
-
-  err = input_ops->start();
+  err = ops->start();
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_EQUAL_INT(0, mock_start_counter);
 
-  err = input_ops->wait();
+  err = ops->wait();
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_EQUAL_INT(0, mock_wait_counter);
 
-  err = input_ops->stop();
+  err = ops->stop();
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_EQUAL_INT(0, mock_stop_counter);
 }

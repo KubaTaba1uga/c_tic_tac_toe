@@ -35,7 +35,6 @@ typedef struct InputSubsystem {
 SARRS_DECL(InputSubsystem, devices, struct InputDevice, INPUT_DEVICES_MAX);
 
 static struct LoggingUtilsOps *log_ops;
-static struct RegistrationUtilsOps *reg_ops;
 static struct InputSubsystem input_subsystem;
 
 struct InputPrivateOps {
@@ -112,6 +111,8 @@ input_set_registration_callback_system(struct InputSetCallbackInput input,
     return EINVAL;
 
   log_ops->log_info(__FILE_NAME__, "Setting a registration callback.");
+
+  input.private = &input_subsystem;
 
   err = input_private_ops->set_registration_callback(&input, output);
   if (err) {
@@ -214,7 +215,7 @@ input_set_registration_callback(struct InputSetCallbackInput *input,
 
   input_sys = input->private;
 
-  err = InputSubsystem_devices_get(input_sys, input->device_id, device);
+  err = InputSubsystem_devices_get(input_sys, input->device_id, &device);
   if (err) {
     log_ops->log_err(__FILE_NAME__, "Failed to retrieve device for ID %d: %s",
                      input->device_id, strerror(err));
@@ -229,7 +230,7 @@ input_set_registration_callback(struct InputSetCallbackInput *input,
 }
 
 static int input_start(struct InputSubsystem *subsystem) {
-  struct InputDevice device;
+  struct InputDevice *device;
   size_t i;
   int err;
 
@@ -247,25 +248,25 @@ static int input_start(struct InputSubsystem *subsystem) {
     }
 
     // If there is no callback set for device there is no point in starting it.
-    if (!device.callback)
+    if (!device->callback)
       continue;
 
-    err = device.start();
+    err = device->start();
     if (err) {
       log_ops->log_err(__FILE_NAME__, "Failed to start device '%d:%s': %s", i,
-                       device.display_name, strerror(err));
+                       device->display_name, strerror(err));
       return err;
     }
 
     log_ops->log_err(__FILE_NAME__, "Started device '%d:%s'", i,
-                     device.display_name);
+                     device->display_name);
   }
 
   return 0;
 }
 
 static int input_stop(struct InputSubsystem *subsystem) {
-  struct InputDevice device;
+  struct InputDevice *device;
   size_t i;
   int err;
 
@@ -282,29 +283,29 @@ static int input_stop(struct InputSubsystem *subsystem) {
       return err;
     }
 
-    if (!device.callback)
+    if (!device->callback)
       continue;
 
-    err = device.stop();
+    err = device->stop();
     if (err) {
       log_ops->log_err(__FILE_NAME__, "Failed to stop device '%d:%s': %s", i,
-                       device.display_name, strerror(err));
+                       device->display_name, strerror(err));
       return err;
     }
 
     // Once device is stopped we want to deregister callback.
     // This indicates that device stopped running.
-    device.callback = NULL;
+    device->callback = NULL;
 
     log_ops->log_err(__FILE_NAME__, "Stoped device '%d:%s'", i,
-                     device.display_name);
+                     device->display_name);
   }
 
   return 0;
 }
 
 static int input_wait(struct InputSubsystem *subsystem) {
-  struct InputDevice device;
+  struct InputDevice *device;
   size_t i;
   int err;
 
@@ -321,18 +322,18 @@ static int input_wait(struct InputSubsystem *subsystem) {
       return err;
     }
 
-    if (!device.callback)
+    if (!device->callback)
       continue;
 
-    err = device.wait();
+    err = device->wait();
     if (err) {
       log_ops->log_err(__FILE_NAME__, "Failed to wait for device '%d:%s': %s",
-                       i, device.display_name, strerror(err));
+                       i, device->display_name, strerror(err));
       return err;
     }
 
     log_ops->log_err(__FILE_NAME__, "Waited for device '%d:%s'", i,
-                     device.display_name);
+                     device->display_name);
   }
 
   return 0;
