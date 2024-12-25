@@ -19,14 +19,14 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "input/input_common.h"
-#include "input/keyboard/keyboard_keys_mapping.h"
 #include "static_array_lib.h"
 
 // App's internal libs
 #include "init/init.h"
 #include "input/input.h"
+#include "input/input_common.h"
 #include "input/keyboard/keyboard.h"
+#include "input/keyboard/keyboard_keys_mapping.h"
 #include "utils/logging_utils.h"
 #include "utils/terminal_utils.h"
 
@@ -61,7 +61,6 @@ struct KeyboardPrivateOps {
 };
 
 static struct InputOps *input_ops;
-static struct RegistrationUtilsOps *reg_ops;
 static const char module_id[] = "keyboard";
 static struct LoggingUtilsOps *logging_ops;
 static struct TerminalUtilsOps *terminal_ops;
@@ -88,10 +87,6 @@ static int keyboard_init_intrfc(void) {
   }
 
   return 0;
-}
-
-static void keyboard_destroy_intrfc(void) {
-  keyboard_priv_ops->destroy(&keyboard_subsystem);
 }
 
 static int keyboard_start_thread_intrfc(void) {
@@ -161,6 +156,21 @@ static int keyboard_wait_intrfc(void) {
   logging_ops->log_info(module_id,
                         "Keyboard thread has finished successfully.");
   return 0;
+}
+
+static void keyboard_destroy_intrfc(void) {
+  // Check if the keyboard subsystem is initialized
+  if (keyboard_subsystem.is_initialized) {
+    // Stop the keyboard thread if running
+    keyboard_stop_thread_intrfc();
+  }
+
+  // Perform any additional cleanup using private destroy function
+  keyboard_priv_ops->destroy(&keyboard_subsystem);
+
+  // Log the successful destruction
+  logging_ops->log_info(module_id,
+                        "Keyboard subsystem destroyed successfully.");
 }
 
 /*******************************************************************************
@@ -348,7 +358,7 @@ keyboard_add_keys_mapping(struct KeyboardAddKeysMappingInput *input,
   return 0;
 }
 
-void keyboard_signal_handler(int sig) {
+static void keyboard_signal_handler(int sig) {
   // You can use SIGUSR1 to interrupt or terminate all input threads.
   if (sig == SIGUSR1) {
     logging_ops->log_info(module_id,
@@ -386,6 +396,8 @@ static void *keyboard_process_stdin(struct KeyboardSubsystem *keyboard) {
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 static struct KeyboardOps keyboard_ops = {
+    .init = keyboard_init_intrfc,
+    .destroy = keyboard_destroy_intrfc,
     .wait = keyboard_wait_intrfc,
     .stop = keyboard_stop_thread_intrfc,
     .start = keyboard_start_thread_intrfc,

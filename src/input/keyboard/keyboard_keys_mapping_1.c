@@ -29,7 +29,6 @@ static int keyboard_keys_mapping1_init(void) {
   struct KeyboardKeysMapping keyboard_keys_mapping;
   struct InputAddDeviceOutput add_device_output;
   struct InputDeviceOps *input_device_ops;
-
   struct KeyboardOps *keyboard_ops;
   struct InputDevice input_device;
   int err;
@@ -73,7 +72,7 @@ static int keyboard_keys_mapping1_init(void) {
   }
 
   err = keyboard_ops->add_keys_mapping(
-      &(const struct KeyboardAddKeysMappingInput){
+      &(struct KeyboardAddKeysMappingInput){
           .keys_mapping = &keyboard_keys_mapping,
       },
       &add_keys_output);
@@ -95,18 +94,16 @@ static int keyboard_keys_mapping1_callback(
   enum InputEvents input_event;
   size_t i;
 
-  input_event = INPUT_EVENT_NONE;
-
   for (i = 0; i < input->n; i++) {
     switch (input->buffer[i]) {
     case 'w':
       input_event = INPUT_EVENT_UP;
       break;
-    case 'a':
-      input_event = INPUT_EVENT_LEFT;
-      break;
     case 's':
       input_event = INPUT_EVENT_DOWN;
+      break;
+    case 'a':
+      input_event = INPUT_EVENT_LEFT;
       break;
     case 'd':
       input_event = INPUT_EVENT_RIGHT;
@@ -118,6 +115,7 @@ static int keyboard_keys_mapping1_callback(
       input_event = INPUT_EVENT_EXIT;
       break;
     default:
+      input_event = INPUT_EVENT_NONE;
       break;
     }
   }

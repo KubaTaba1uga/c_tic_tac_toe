@@ -222,7 +222,7 @@ static int input_get_device(struct InputGetDeviceInput *input,
   struct InputSubsystem *input_sys;
   int err;
 
-  if (!output || !input->device) {
+  if (!output) {
     return EINVAL;
   }
 

@@ -27,11 +27,11 @@ struct KeyboardAddKeysMappingOutput {
 
 struct KeyboardOps {
   int (*init)(void);
-  void (*destruct)(void);
+  void (*destroy)(void);
   int (*wait)(void);
   int (*stop)(void);
   int (*start)(void);
-  int (*add_keys_mapping)(const struct KeyboardAddKeysMappingInput *,
+  int (*add_keys_mapping)(struct KeyboardAddKeysMappingInput *,
                           struct KeyboardAddKeysMappingOutput *);
 };
 
