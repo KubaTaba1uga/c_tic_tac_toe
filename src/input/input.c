@@ -12,42 +12,46 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
-#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "static_array_lib.h"
+
 // App's internal libs
 #include "input/input.h"
 #include "utils/logging_utils.h"
-#include "utils/registration_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-struct InputSubsystem {
-  struct Registrar registrar;
-};
+#define INPUT_DEVICES_MAX 100
+
+typedef struct InputSubsystem {
+  SARRS_FIELD(devices, struct InputDevice, INPUT_DEVICES_MAX);
+} InputSubsystem;
+
+SARRS_DECL(InputSubsystem, devices, struct InputDevice, INPUT_DEVICES_MAX);
 
 static struct LoggingUtilsOps *log_ops;
 static struct RegistrationUtilsOps *reg_ops;
 static struct InputSubsystem input_subsystem;
 
 struct InputPrivateOps {
-  int (*init_registrar)(struct InputSubsystem *);
+  int (*init)(struct InputSubsystem *);
   void (*destroy_registrar)(struct InputSubsystem *);
-  int (*register_module)(struct InputRegisterInput,
-                         struct InputRegisterOutput *);
-  int (*set_registration_callback)(struct InputSetRegistrationCallbackInput,
-                                   struct InputSetRegistrationCallbackOutput *);
+  int (*register_module)(struct InputAddDeviceInput *,
+                         struct InputAddDeviceOutput *);
+  int (*set_registration_callback)(struct InputSetCallbackInput *,
+                                   struct InputSetCallbackOutput *);
   int (*start)(struct InputSubsystem *);
   int (*stop)(struct InputSubsystem *);
   int (*wait)(struct InputSubsystem *);
 };
 
-static struct InputPrivateOps *private_ops;
-struct InputPrivateOps *get_private_ops(void);
+static struct InputPrivateOps *input_private_ops;
+struct InputPrivateOps *get_input_private_ops(void);
 
 /*******************************************************************************
  *    PUBLIC API
@@ -56,12 +60,11 @@ static int input_init_system(void) {
   int err;
 
   log_ops = get_logging_utils_ops();
-  reg_ops = get_registration_utils_ops();
-  private_ops = get_private_ops();
+  input_private_ops = get_input_private_ops();
 
   log_ops->log_info(__FILE_NAME__, "Initializing input subsystem.");
 
-  err = private_ops->init_registrar(&input_subsystem);
+  err = input_private_ops->init(&input_subsystem);
   if (err) {
     log_ops->log_err(__FILE_NAME__, "Failed to initialize registrar: %s",
                      strerror(err));
@@ -75,21 +78,23 @@ static int input_init_system(void) {
 
 static void input_destroy_system(void) {
   log_ops->log_info(__FILE_NAME__, "Destroying input subsystem.");
-  private_ops->destroy_registrar(&input_subsystem);
+  input_private_ops->destroy_registrar(&input_subsystem);
   log_ops->log_info(__FILE_NAME__, "Input subsystem destroyed successfully.");
 }
 
-static int input_register_module_system(struct InputRegisterInput input,
-                                        struct InputRegisterOutput *output) {
+static int input_register_module_system(struct InputAddDeviceInput input,
+                                        struct InputAddDeviceOutput *output) {
   int err;
 
-  if (!output || !input.registration)
+  if (!output || !input.device)
     return EINVAL;
 
-  log_ops->log_info(__FILE_NAME__, "Registering a module.");
+  input.private = &input_subsystem;
 
-  err = private_ops->register_module(input, output);
+  err = input_private_ops->register_module(&input, output);
   if (err) {
+    log_ops->log_info(__FILE_NAME__, "Module registration failed for: %s.",
+                      input.device->display_name);
     return err;
   }
 
@@ -98,9 +103,9 @@ static int input_register_module_system(struct InputRegisterInput input,
   return 0;
 }
 
-static int input_set_registration_callback_system(
-    struct InputSetRegistrationCallbackInput input,
-    struct InputSetRegistrationCallbackOutput *output) {
+static int
+input_set_registration_callback_system(struct InputSetCallbackInput input,
+                                       struct InputSetCallbackOutput *output) {
   int err;
 
   if (!output || !input.callback)
@@ -108,7 +113,7 @@ static int input_set_registration_callback_system(
 
   log_ops->log_info(__FILE_NAME__, "Setting a registration callback.");
 
-  err = private_ops->set_registration_callback(input, output);
+  err = input_private_ops->set_registration_callback(&input, output);
   if (err) {
     return err;
   }
@@ -123,7 +128,7 @@ static int input_start_system(void) {
 
   log_ops->log_info(__FILE_NAME__, "Starting input subsystem.");
 
-  err = private_ops->start(&input_subsystem);
+  err = input_private_ops->start(&input_subsystem);
   if (err) {
     return err;
   }
@@ -137,7 +142,7 @@ static int input_stop_system(void) {
 
   log_ops->log_info(__FILE_NAME__, "Stopping input subsystem.");
 
-  err = private_ops->stop(&input_subsystem);
+  err = input_private_ops->stop(&input_subsystem);
   if (err) {
     return err;
   }
@@ -151,7 +156,7 @@ static int input_wait_system(void) {
 
   log_ops->log_info(__FILE_NAME__, "Waiting for input subsystem.");
 
-  err = private_ops->wait(&input_subsystem);
+  err = input_private_ops->wait(&input_subsystem);
   if (err) {
     return err;
   }
@@ -163,188 +168,171 @@ static int input_wait_system(void) {
 /*******************************************************************************
  *    PRIVATE FUNCTIONS
  ******************************************************************************/
-static int input_init_registrar(struct InputSubsystem *subsystem) {
-  log_ops->log_info(__FILE_NAME__, "Initializing registrar.");
-  return reg_ops->init(&subsystem->registrar, __FILE_NAME__, 10);
-}
-
-static void input_destroy_registrar(struct InputSubsystem *subsystem) {
-  log_ops->log_info(__FILE_NAME__, "Destroying registrar.");
-  if (subsystem->registrar.registrations.data) {
-    reg_ops->destroy(&subsystem->registrar);
-  }
-}
-
-static int input_register_module(struct InputRegisterInput input,
-                                 struct InputRegisterOutput *output) {
-  struct RegisterOutput reg_output;
-  int err;
-
-  log_ops->log_info(__FILE_NAME__, "Starting module registration.");
-
-  if (!output) {
-    log_ops->log_err(__FILE_NAME__, "Output structure is NULL.");
-    return EINVAL;
-  }
-
-  err = reg_ops->register_module(
-      (struct RegisterInput){.registration = &input.registration->registration,
-                             .registrar = &input_subsystem.registrar},
-      &reg_output);
-  if (err) {
-    log_ops->log_err(__FILE_NAME__, "Failed to register module: %s",
-                     strerror(err));
-    return err;
-  }
-
-  output->registration_id = reg_output.registration_id;
-
-  log_ops->log_info(__FILE_NAME__, "Module registered successfully with ID: %d",
-                    output->registration_id);
+static int input_init_input(struct InputSubsystem *subsystem) {
+  InputSubsystem_devices_init(subsystem);
 
   return 0;
 }
 
-static int input_set_registration_callback(
-    struct InputSetRegistrationCallbackInput input,
-    struct InputSetRegistrationCallbackOutput *output) {
-  struct GetRegistrationOutput get_output;
+static void input_destroy_registrar(struct InputSubsystem *subsystem) {}
+
+static int input_register_module(struct InputAddDeviceInput *input,
+                                 struct InputAddDeviceOutput *output) {
+  struct InputSubsystem *input_sys;
   int err;
 
-  log_ops->log_info(__FILE_NAME__, "Setting registration callback.");
-
-  if (!output) {
-    log_ops->log_err(__FILE_NAME__, "Output structure is NULL.");
+  if (!output || !input->device) {
     return EINVAL;
   }
 
-  err = reg_ops->get_registration(
-      (struct GetRegistrationInput){
-          .registrar = &input_subsystem.registrar,
-          .registration_id = input.registration_id,
-      },
-      &get_output);
+  output->device_id = -1;
+  input_sys = input->private;
+
+  err = InputSubsystem_devices_append(input_sys, *input->device);
   if (err) {
-    log_ops->log_err(__FILE_NAME__,
-                     "Failed to retrieve registration for ID %d: %s",
-                     input.registration_id, strerror(err));
     return err;
   }
 
-  struct InputRegistrationData *reg_data = get_output.registration->private;
-  reg_data->callback = input.callback;
+  output->device_id = InputSubsystem_devices_length(input_sys) - 1;
 
-  log_ops->log_info(__FILE_NAME__, "Callback set successfully for ID %d.",
-                    input.registration_id);
+  log_ops->log_info(__FILE_NAME__, "Module registered successfully with ID: %d",
+                    output->device_id);
+
+  return 0;
+}
+
+static int
+input_set_registration_callback(struct InputSetCallbackInput *input,
+                                struct InputSetCallbackOutput *output) {
+  struct InputSubsystem *input_sys;
+  struct InputDevice *device;
+  int err;
+
+  if (!input || !output || !input->callback) {
+    return EINVAL;
+  }
+
+  input_sys = input->private;
+
+  err = InputSubsystem_devices_get(input_sys, input->device_id, device);
+  if (err) {
+    log_ops->log_err(__FILE_NAME__, "Failed to retrieve device for ID %d: %s",
+                     input->device_id, strerror(err));
+    return err;
+  }
+
+  device->callback = input->callback;
+
+  log_ops->log_info(__FILE_NAME__, "Callback set successfully for ID %d",
+                    input->device_id);
   return 0;
 }
 
 static int input_start(struct InputSubsystem *subsystem) {
-  struct GetRegistrationOutput get_output;
-  struct InputRegistrationData *reg_data;
+  struct InputDevice device;
+  size_t i;
   int err;
 
   if (!subsystem) {
     return EINVAL;
   }
 
-  for (int i = 0; i < subsystem->registrar.registrations.length; i++) {
-    err = reg_ops->get_registration(
-        (struct GetRegistrationInput){.registration_id = i,
-                                      .registrar = &subsystem->registrar},
-        &get_output);
+  for (i = 0; i < InputSubsystem_devices_length(subsystem); i++) {
+    err = InputSubsystem_devices_get(subsystem, i, &device);
     if (err) {
       log_ops->log_err(__FILE_NAME__,
-                       "Failed to get registration for module ID %d: %s", i,
+                       "Failed to get device for module ID %d: %s", i,
                        strerror(err));
       return err;
     }
 
-    reg_data = get_output.registration->private;
-    if (!reg_data->callback)
+    // If there is no callback set for device there is no point in starting it.
+    if (!device.callback)
       continue;
 
-    err = reg_data->start();
+    err = device.start();
     if (err) {
-      log_ops->log_err(__FILE_NAME__,
-                       "Failed to start registration for module  '%d:%s': %s",
-                       i, reg_data->display_name, strerror(err));
+      log_ops->log_err(__FILE_NAME__, "Failed to start device '%d:%s': %s", i,
+                       device.display_name, strerror(err));
       return err;
     }
+
+    log_ops->log_err(__FILE_NAME__, "Started device '%d:%s'", i,
+                     device.display_name);
   }
 
   return 0;
 }
 
 static int input_stop(struct InputSubsystem *subsystem) {
-  struct GetRegistrationOutput get_output;
-  struct InputRegistrationData *reg_data;
+  struct InputDevice device;
+  size_t i;
   int err;
 
   if (!subsystem) {
     return EINVAL;
   }
 
-  for (int i = 0; i < subsystem->registrar.registrations.length; i++) {
-    err = reg_ops->get_registration(
-        (struct GetRegistrationInput){.registration_id = i,
-                                      .registrar = &subsystem->registrar},
-        &get_output);
+  for (i = 0; i < InputSubsystem_devices_length(subsystem); i++) {
+    err = InputSubsystem_devices_get(subsystem, i, &device);
     if (err) {
       log_ops->log_err(__FILE_NAME__,
-                       "Failed to get registration for module ID %d: %s", i,
+                       "Failed to get device for module ID %d: %s", i,
                        strerror(err));
       return err;
     }
 
-    reg_data = get_output.registration->private;
-    if (!reg_data->callback)
+    if (!device.callback)
       continue;
 
-    err = reg_data->stop();
+    err = device.stop();
     if (err) {
-      log_ops->log_err(__FILE_NAME__, "Failed to stop module '%d:%s': %s", i,
-                       reg_data->display_name, strerror(err));
+      log_ops->log_err(__FILE_NAME__, "Failed to stop device '%d:%s': %s", i,
+                       device.display_name, strerror(err));
       return err;
     }
 
-    reg_data->callback = NULL;
+    // Once device is stopped we want to deregister callback.
+    // This indicates that device stopped running.
+    device.callback = NULL;
+
+    log_ops->log_err(__FILE_NAME__, "Stoped device '%d:%s'", i,
+                     device.display_name);
   }
 
   return 0;
 }
 
 static int input_wait(struct InputSubsystem *subsystem) {
-  struct GetRegistrationOutput get_output;
-  struct InputRegistrationData *reg_data;
+  struct InputDevice device;
+  size_t i;
   int err;
 
   if (!subsystem) {
     return EINVAL;
   }
 
-  for (int i = 0; i < subsystem->registrar.registrations.length; i++) {
-    err = reg_ops->get_registration(
-        (struct GetRegistrationInput){.registration_id = i,
-                                      .registrar = &subsystem->registrar},
-        &get_output);
+  for (i = 0; i < InputSubsystem_devices_length(subsystem); i++) {
+    err = InputSubsystem_devices_get(subsystem, i, &device);
     if (err) {
       log_ops->log_err(__FILE_NAME__,
-                       "Failed to get registration for module ID %d: %s", i,
+                       "Failed to get device for module ID %d: %s", i,
                        strerror(err));
       return err;
     }
 
-    reg_data = get_output.registration->private;
-    if (!reg_data->callback)
+    if (!device.callback)
       continue;
 
-    err = reg_data->wait();
+    err = device.wait();
     if (err) {
-      log_ops->log_err(__FILE_NAME__, "Failed to wait for module '%d:%s': %s",
-                       i, reg_data->display_name, strerror(err));
+      log_ops->log_err(__FILE_NAME__, "Failed to wait for device '%d:%s': %s",
+                       i, device.display_name, strerror(err));
       return err;
     }
+
+    log_ops->log_err(__FILE_NAME__, "Waited for device '%d:%s'", i,
+                     device.display_name);
   }
 
   return 0;
@@ -354,9 +342,10 @@ static int input_wait(struct InputSubsystem *subsystem) {
  *    INIT BOILERCODE
  ******************************************************************************/
 struct InitRegistration init_input_reg = {
-    .data = {.display_name = __FILE_NAME__,
-             .init = input_init_system,
-             .destroy = input_destroy_system}};
+    .display_name = __FILE_NAME__,
+    .init = input_init_system,
+    .destroy = input_destroy_system,
+};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
@@ -369,15 +358,17 @@ static struct InputOps input_ops = {
     .set_callback = input_set_registration_callback_system,
 };
 
-static struct InputPrivateOps private_ops_ = {
+static struct InputPrivateOps input_private_ops_ = {
     .start = input_start,
     .stop = input_stop,
     .wait = input_wait,
-    .init_registrar = input_init_registrar,
+    .init = input_init_input,
     .destroy_registrar = input_destroy_registrar,
     .register_module = input_register_module,
     .set_registration_callback = input_set_registration_callback};
 
 struct InputOps *get_input_ops(void) { return &input_ops; }
 
-struct InputPrivateOps *get_private_ops(void) { return &private_ops_; }
+struct InputPrivateOps *get_input_private_ops(void) {
+  return &input_private_ops_;
+}

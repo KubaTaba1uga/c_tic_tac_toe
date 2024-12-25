@@ -13,41 +13,64 @@
 #include <stddef.h>
 
 #include "init/init.h"
-#include "input/input_common.h"
-#include "input/input_registration.h"
 #include "utils/logging_utils.h"
-#include "utils/registration_utils.h"
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
 
-// Ops
-struct InputSetRegistrationCallbackInput {
+// Data
+enum InputEvents {
+  INPUT_EVENT_NONE = 0,
+  INPUT_EVENT_UP,
+  INPUT_EVENT_DOWN,
+  INPUT_EVENT_LEFT,
+  INPUT_EVENT_RIGHT,
+  INPUT_EVENT_SELECT,
+  INPUT_EVENT_EXIT,
+  INPUT_EVENT_INVALID,
+};
+
+typedef int input_device_id_t;
+typedef int (*input_wait_func_t)(void);
+typedef int (*input_stop_func_t)(void);
+typedef int (*input_start_func_t)(void);
+typedef int (*input_callback_func_t)(enum InputEvents, input_device_id_t);
+
+struct InputDevice {
+  input_wait_func_t wait;
+  input_stop_func_t stop;
+  input_start_func_t start;
+  const char *display_name;
   input_callback_func_t callback;
-  int registration_id;
-  void *input;
 };
 
-struct InputSetRegistrationCallbackOutput {};
-
-struct InputRegisterInput {
-  struct InputRegistration *registration;
-  void *input;
+// Ops
+struct InputSetCallbackInput {
+  input_callback_func_t callback;
+  input_device_id_t device_id;
+  void *private;
 };
 
-struct InputRegisterOutput {
-  int registration_id;
+struct InputSetCallbackOutput {};
+
+struct InputAddDeviceInput {
+  struct InputDevice *device;
+  void *private;
+};
+
+struct InputAddDeviceOutput {
+  input_device_id_t device_id;
 };
 
 struct InputOps {
   int (*start)(void);
   int (*stop)(void);
   int (*wait)(void);
-  int (*set_callback)(struct InputSetRegistrationCallbackInput,
-                      struct InputSetRegistrationCallbackOutput *);
-  int (*register_module)(struct InputRegisterInput,
-                         struct InputRegisterOutput *);
+  int (*set_callback)(struct InputSetCallbackInput,
+                      struct InputSetCallbackOutput *);
+  int (*register_module)(struct InputAddDeviceInput,
+                         struct InputAddDeviceOutput *);
 };
 
 /*******************************************************************************

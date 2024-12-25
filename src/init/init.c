@@ -2,7 +2,6 @@
  * @file init.c
  * @brief Initialization subsystem using SARR for managing modules.
  ******************************************************************************/
-
 #include "init.h"
 #include <errno.h>
 #include <stdio.h>
@@ -13,7 +12,6 @@
 
 #define INIT_MODULES_MAX 100
 
-/* InitSubsystem containing static array for module registrations */
 typedef struct InitSubsystem {
   SARRS_FIELD(modules, struct InitRegistration, INIT_MODULES_MAX);
 } InitSubsystem;
@@ -30,11 +28,12 @@ struct InitPrivateOps {
 };
 static struct InitPrivateOps *init_priv_ops;
 struct InitPrivateOps *get_init_priv_ops(void);
+
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
 static int init_init_system(void) {
-  struct InitRegistration module;
+  struct InitRegistration *module;
   int err;
 
   InitSubsystem_modules_init(&init_subsystem);
@@ -61,18 +60,18 @@ static int init_init_system(void) {
       return err;
     }
 
-    if (!module.init) {
+    if (!module->init) {
       continue;
     }
 
-    err = module.init();
+    err = module->init();
     if (err) {
       log_ops->log_err("INIT", "Failed to initialize module '%s': %s",
-                       module.display_name, strerror(err));
+                       module->display_name, strerror(err));
       return err;
     }
 
-    log_ops->log_info("INIT", "Initialized module: %s", module.display_name);
+    log_ops->log_info("INIT", "Initialized module: %s", module->display_name);
   }
 
   log_ops->log_info("INIT", "All modules initialized successfully.");
@@ -80,16 +79,16 @@ static int init_init_system(void) {
 }
 
 static void init_destroy_system(void) {
-  struct InitRegistration module;
+  struct InitRegistration *module;
 
   log_ops = get_logging_utils_ops();
 
   /* Destroy all registered modules in reverse order */
   for (size_t i = InitSubsystem_modules_length(&init_subsystem); i > 0; i--) {
     InitSubsystem_modules_get(&init_subsystem, i - 1, &module);
-    if (module.destroy) {
-      module.destroy();
-      log_ops->log_info("INIT", "Destroyed module: %s", module.display_name);
+    if (module->destroy) {
+      module->destroy();
+      log_ops->log_info("INIT", "Destroyed module: %s", module->display_name);
     }
   }
 
@@ -114,7 +113,7 @@ static int init_register_multiple_modules(void) {
     }
   }
 
-  log_ops->log_info("INIT", "Successfully registered all hardcoded modules.");
+  log_ops->log_info("INIT", "Successfully registered all modules.");
   return 0;
 }
 
@@ -125,8 +124,7 @@ static int init_register_module(struct InitRegistration module) {
 
   err = InitSubsystem_modules_append(&init_subsystem, module);
   if (err) {
-    log_ops->log_err("INIT",
-                     "Module registration failed: Maximum modules reached.");
+    log_ops->log_err("INIT", "Module registration failed: %s", strerror(err));
     return err;
   }
 

@@ -148,7 +148,7 @@ static int config_add_variable(struct ConfigAddVarInput *input,
 
 static int get_var_by_id(struct ConfigGetVarInput *input,
                          struct ConfigGetVarOutput *output) {
-  struct ConfigVariable var;
+  struct ConfigVariable *var;
   int err;
 
   err = ConfigSubsystem_vars_get(&config_subsystem, input->var_id, &var);
@@ -157,11 +157,11 @@ static int get_var_by_id(struct ConfigGetVarInput *input,
   }
 
   output->var_id = input->var_id;
-  output->var_name = var.var_name;
-  output->value = getenv(var.var_name);
+  output->var_name = var->var_name;
+  output->value = getenv(var->var_name);
 
   if (!output->value) {
-    output->value = var.default_value;
+    output->value = var->default_value;
   }
 
   return 0;
@@ -169,7 +169,7 @@ static int get_var_by_id(struct ConfigGetVarInput *input,
 
 static int get_var_by_name(struct ConfigGetVarInput *input,
                            struct ConfigGetVarOutput *output) {
-  struct ConfigVariable var;
+  struct ConfigVariable *var;
   size_t i;
   int err;
 
@@ -179,13 +179,13 @@ static int get_var_by_name(struct ConfigGetVarInput *input,
       return err;
     }
 
-    if (strcmp(var.var_name, input->var_name) == 0) {
+    if (strcmp(var->var_name, input->var_name) == 0) {
       output->var_id = i;
-      output->var_name = var.var_name;
-      output->value = getenv(var.var_name);
+      output->var_name = var->var_name;
+      output->value = getenv(var->var_name);
 
       if (!output->value) {
-        output->value = var.default_value;
+        output->value = var->default_value;
       }
 
       return 0;
