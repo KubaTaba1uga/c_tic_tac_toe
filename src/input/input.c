@@ -42,6 +42,9 @@ struct InputPrivateOps {
   void (*destroy_registrar)(struct InputSubsystem *);
   int (*add_device)(struct InputAddDeviceInput *,
                     struct InputAddDeviceOutput *);
+  int (*get_device)(struct InputGetDeviceInput *,
+                    struct InputGetDeviceOutput *);
+
   int (*set_device_callback)(struct InputSetCallbackInput *,
                              struct InputSetCallbackOutput *);
   int (*start)(struct InputSubsystem *);
@@ -92,6 +95,27 @@ static int input_add_device_intrfc(struct InputAddDeviceInput input,
   }
 
   log_ops->log_info(__FILE_NAME__, "Module registered successfully.");
+
+  return 0;
+}
+
+static int input_get_device_intrfc(struct InputGetDeviceInput input,
+                                   struct InputGetDeviceOutput *output) {
+  int err;
+
+  if (!output)
+    return EINVAL;
+
+  input.private = &input_subsystem;
+
+  err = input_private_ops->get_device(&input, output);
+  if (err) {
+    log_ops->log_info(__FILE_NAME__, "Module retrieving failed for: %d.",
+                      input.device_id);
+    return err;
+  }
+
+  log_ops->log_info(__FILE_NAME__, "Module retrieved successfully.");
 
   return 0;
 }
@@ -189,6 +213,27 @@ static int input_add_device(struct InputAddDeviceInput *input,
 
   log_ops->log_info(__FILE_NAME__, "Module registered successfully with ID: %d",
                     output->device_id);
+
+  return 0;
+}
+
+static int input_get_device(struct InputGetDeviceInput *input,
+                            struct InputGetDeviceOutput *output) {
+  struct InputSubsystem *input_sys;
+  int err;
+
+  if (!output || !input->device) {
+    return EINVAL;
+  }
+
+  output->device = NULL;
+  input_sys = input->private;
+
+  err =
+      InputSubsystem_devices_get(input_sys, input->device_id, &output->device);
+  if (err) {
+    return err;
+  }
 
   return 0;
 }
@@ -334,20 +379,23 @@ static int input_wait(struct InputSubsystem *subsystem) {
  ******************************************************************************/
 static struct InputOps input_ops = {
     .init = input_init_intrfc,
-    .start = input_start_intrfc,
     .stop = input_stop_intrfc,
     .wait = input_wait_intrfc,
+    .start = input_start_intrfc,
     .add_device = input_add_device_intrfc,
+    .get_device = input_get_device_intrfc,
     .set_callback = input_set_callback_intrfc,
 };
 
 static struct InputPrivateOps input_private_ops_ = {
-    .start = input_start,
+    .init = input_init,
     .stop = input_stop,
     .wait = input_wait,
-    .init = input_init,
+    .start = input_start,
     .add_device = input_add_device,
-    .set_device_callback = input_set_callback};
+    .get_device = input_get_device,
+    .set_device_callback = input_set_callback,
+};
 
 struct InputOps *get_input_ops(void) { return &input_ops; }
 

@@ -7,6 +7,7 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <asm-generic/errno.h>
 #include <errno.h>
 #include <poll.h>
 #include <pthread.h>
@@ -18,6 +19,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "input/input_common.h"
+#include "input/keyboard/keyboard_keys_mapping.h"
 #include "static_array_lib.h"
 
 // App's internal libs
@@ -53,10 +56,11 @@ struct KeyboardPrivateOps {
   void (*stop_thread)(struct KeyboardSubsystem *);
   void *(*process_stdin)(struct KeyboardSubsystem *);
   void (*execute_callbacks)(struct KeyboardSubsystem *);
-  int (*register_callback)(struct KeyboardAddKeysMappingInput *,
-                           struct KeyboardAddKeysMappingOutput *);
+  int (*add_keys_mapping)(struct KeyboardAddKeysMappingInput *,
+                          struct KeyboardAddKeysMappingOutput *);
 };
 
+static struct InputOps *input_ops;
 static struct RegistrationUtilsOps *reg_ops;
 static const char module_id[] = "keyboard";
 static struct LoggingUtilsOps *logging_ops;
@@ -68,7 +72,7 @@ struct KeyboardPrivateOps *get_keyboard_priv_ops(void);
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-static int keyboard_init_system(void) {
+static int keyboard_init_intrfc(void) {
   int err;
 
   terminal_ops = get_terminal_ops();
@@ -86,12 +90,11 @@ static int keyboard_init_system(void) {
   return 0;
 }
 
-static void keyboard_destroy_system(void) {
-
+static void keyboard_destroy_intrfc(void) {
   keyboard_priv_ops->destroy(&keyboard_subsystem);
 }
 
-static int keyboard_start_thread_system(void) {
+static int keyboard_start_thread_intrfc(void) {
   int err;
 
   err = keyboard_priv_ops->start_thread(&keyboard_subsystem);
@@ -105,36 +108,38 @@ static int keyboard_start_thread_system(void) {
   return 0;
 }
 
-static void keyboard_stop_thread_system(void) {
+static int keyboard_stop_thread_intrfc(void) {
   keyboard_priv_ops->stop_thread(&keyboard_subsystem);
 
   logging_ops->log_info(module_id, "Keyboard thread stopped.");
+
+  return 0;
 }
 
 static int
-keyboard_register_callback_system(struct KeyboardAddKeysMappingInput input,
-                                  struct KeyboardAddKeysMappingOutput *output) {
+keyboard_add_keys_mapping_intrfc(struct KeyboardAddKeysMappingInput *input,
+                                 struct KeyboardAddKeysMappingOutput *output) {
   int err;
 
   if (!output)
     return EINVAL;
 
-  input.keyboard = &keyboard_subsystem;
+  input->private = &keyboard_subsystem;
 
-  err = keyboard_priv_ops->register_callback(&input, output);
+  err = keyboard_priv_ops->add_keys_mapping(input, output);
   if (err) {
-    logging_ops->log_err(module_id, "Failed to register callback for %s: %s.",
-                         input.registration->registration.display_name,
-                         strerror(err));
+    logging_ops->log_err(module_id,
+                         "Failed to add keys mapping callback for %s: %s",
+                         input->keys_mapping->display_name, strerror(err));
     return err;
   }
 
-  logging_ops->log_info(module_id, "Registered callback for %s.",
-                        input.registration->registration.display_name);
+  logging_ops->log_info(module_id, "Added keys mapping %s",
+                        input->keys_mapping->display_name);
   return 0;
 }
 
-static int keyboard_wait_system(void) {
+static int keyboard_wait_intrfc(void) {
   if (!keyboard_subsystem.is_initialized) {
     logging_ops->log_info(
         module_id, "Keyboard subsystem is not running. Nothing to wait for.");
@@ -162,18 +167,10 @@ static int keyboard_wait_system(void) {
  *    PRIVATE API
  ******************************************************************************/
 static int keyboard_init(struct KeyboardSubsystem *keyboard) {
-  int err;
-
   if (!keyboard)
     return EINVAL;
 
-  err =
-      reg_ops->init(&keyboard->registrar, __FILE_NAME__, KEYBOARD_CALLBACK_MAX);
-  if (err) {
-    logging_ops->log_err(module_id, "Unable to initialize registrar: %s",
-                         strerror(err));
-    return err;
-  }
+  KeyboardSubsystem_keys_mappings_init(keyboard);
 
   keyboard->is_initialized = false;
 
@@ -186,7 +183,6 @@ static void keyboard_destroy(struct KeyboardSubsystem *keyboard) {
   if (!keyboard || !keyboard->is_initialized)
     return;
 
-  reg_ops->destroy(&keyboard->registrar);
   keyboard->is_initialized = false;
 
   terminal_ops->enable_canonical_mode(STDIN_FILENO);
@@ -250,66 +246,104 @@ static void keyboard_read_stdin(struct KeyboardSubsystem *keyboard) {
 }
 
 static void keyboard_execute_callbacks(struct KeyboardSubsystem *keyboard) {
-  struct GetRegistrationInput input;
-  struct GetRegistrationOutput output;
-  struct KeyboardRegistrationData *reg_data;
+  struct KeyboardKeysMappingCallbackOutput keyboard_callback_output;
+  struct InputGetDeviceOutput get_device_output;
+  struct KeyboardKeysMapping *keys_mapping;
   size_t i;
   int err;
 
   if (!keyboard || !keyboard->is_initialized)
     return;
 
-  input.registrar = &keyboard->registrar;
-
-  for (i = 0; i < input.registrar->registrations.length; i++) {
-    input.registration_id = i;
-
-    err = reg_ops->get_registration(input, &output);
+  for (i = 0; i < KeyboardSubsystem_keys_mappings_length(keyboard); i++) {
+    err = KeyboardSubsystem_keys_mappings_get(keyboard, i, &keys_mapping);
     if (err) {
-      logging_ops->log_err(module_id, "Unable find callback for keyboard: %s",
-                           strerror(err));
+      logging_ops->log_err(module_id, "Unable to find keys mapping for %d: %s",
+                           i, strerror(err));
       return;
     }
 
-    reg_data = output.registration->private;
-    err = reg_data->callback(keyboard->stdin_buffer_count,
-                             keyboard->stdin_buffer);
+    memset(&get_device_output, 0, sizeof(struct InputGetDeviceOutput));
+
+    err = input_ops->get_device(
+        (struct InputGetDeviceInput){.device_id = keys_mapping->device_id},
+        &get_device_output);
     if (err) {
-      logging_ops->log_err(module_id,
-                           "Unable to execute callback for keyboard: %s",
-                           strerror(err));
+      logging_ops->log_err(module_id, "Getting input device failed for %s: %s",
+                           keys_mapping->display_name, strerror(err));
       return;
     }
 
-    logging_ops->log_info(module_id, "Executed callback for %s",
-                          output.registration->display_name);
-  };
+    if (!get_device_output.device->callback) {
+      logging_ops->log_info(module_id, "No input callback in keys mappings %s",
+                            keys_mapping->display_name);
+      continue;
+    }
+
+    memset(&keyboard_callback_output, 0,
+           sizeof(struct KeyboardKeysMappingCallbackOutput));
+
+    err = keys_mapping->callback(
+        &(struct KeyboardKeysMappingCallbackInput){
+            .buffer = keyboard->stdin_buffer,
+            .n = keyboard->stdin_buffer_count},
+        &keyboard_callback_output);
+    if (err) {
+      logging_ops->log_err(
+          module_id,
+          "Unable to process keyboard callback for keys mappings %s: %s",
+          keys_mapping->display_name, strerror(err));
+
+      return;
+    }
+
+    logging_ops->log_info(module_id, "Executed keyboard callback for %s",
+                          keys_mapping->display_name);
+
+    if (keyboard_callback_output.input_event == INPUT_EVENT_NONE) {
+      logging_ops->log_info(module_id,
+                            "No input event in keys mappings %s callback",
+                            keys_mapping->display_name);
+      continue;
+    }
+
+    err = get_device_output.device->callback(
+        keyboard_callback_output.input_event, keys_mapping->device_id);
+    if (err) {
+      logging_ops->log_err(
+          module_id, "Unable to process input callback for keys mapping %s: %s",
+          keys_mapping->display_name, strerror(err));
+      return;
+    }
+
+    logging_ops->log_info(module_id, "Executed input callback for %s",
+                          keys_mapping->display_name);
+  }
 
   logging_ops->log_info(module_id, "Executed all callbacks");
 
   return;
 }
 
-static int keyboard_register_callback(
-    struct KeyboardAddKeysMappingInput *keyboard_input,
-    struct KeyboardAddKeysMappingOutput *keyboard_output) {
+static int
+keyboard_add_keys_mapping(struct KeyboardAddKeysMappingInput *input,
+                          struct KeyboardAddKeysMappingOutput *output) {
   struct KeyboardSubsystem *keyboard;
-  struct RegisterOutput reg_output;
-
   int err;
 
-  keyboard = keyboard_input->keyboard;
+  if (!input || !input->keys_mapping || !output) {
+    return EINVAL;
+  }
 
-  err = reg_ops->register_module(
-      (struct RegisterInput){.registration =
-                                 &keyboard_input->registration->registration,
-                             .registrar = &keyboard->registrar},
-      &reg_output);
+  keyboard = input->private;
+
+  err = KeyboardSubsystem_keys_mappings_append(keyboard, *input->keys_mapping);
   if (err) {
     return err;
   }
 
-  keyboard_output->registration_id = reg_output.registration_id;
+  output->keys_mapping_id =
+      KeyboardSubsystem_keys_mappings_length(keyboard) - 1;
 
   return 0;
 }
@@ -349,21 +383,13 @@ static void *keyboard_process_stdin(struct KeyboardSubsystem *keyboard) {
 }
 
 /*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-struct InitRegistration init_keyboard_reg = {
-    .data = {.display_name = __FILE_NAME__,
-             .init = keyboard_init_system,
-             .destroy = keyboard_destroy_system}};
-
-/*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 static struct KeyboardOps keyboard_ops = {
-    .wait = keyboard_wait_system,
-    .stop = keyboard_stop_thread_system,
-    .start = keyboard_start_thread_system,
-    .register_callback = keyboard_register_callback_system,
+    .wait = keyboard_wait_intrfc,
+    .stop = keyboard_stop_thread_intrfc,
+    .start = keyboard_start_thread_intrfc,
+    .add_keys_mapping = keyboard_add_keys_mapping_intrfc,
 };
 
 static struct KeyboardPrivateOps keyboard_priv_ops_ = {
@@ -374,7 +400,7 @@ static struct KeyboardPrivateOps keyboard_priv_ops_ = {
     .start_thread = keyboard_start_thread,
     .process_stdin = keyboard_process_stdin,
     .execute_callbacks = keyboard_execute_callbacks,
-    .register_callback = keyboard_register_callback,
+    .add_keys_mapping = keyboard_add_keys_mapping,
 };
 
 struct KeyboardPrivateOps *get_keyboard_priv_ops(void) {

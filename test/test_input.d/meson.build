@@ -12,7 +12,6 @@ test_keyboard_name = 'test_keyboard.c'
 
 test_keyboard_src = [test_keyboard_name,
                    keyboard / 'keyboard.c',
-                   keyboard / 'keyboard_registration.c',		   
                    input / 'input.c',
 		   utils / 'std_lib_utils.c',
 		   utils / 'logging_utils.c',
@@ -41,9 +40,9 @@ test('test_keyboard', test_keyboard_exe)
 test_keyboard1_name = 'test_keyboard1.c'
 
 test_keyboard1_src = [test_keyboard1_name,
-                      keyboard / 'keyboard1.c',
                       keyboard / 'keyboard.c',
-                      keyboard / 'keyboard_registration.c',		   
+		      keyboard / 'keyboard_keys_mapping.c',
+                      keyboard / 'keyboard_keys_mapping_1.c',		   		   
                       input / 'input.c',
 		      utils / 'std_lib_utils.c',
 		      utils / 'logging_utils.c',

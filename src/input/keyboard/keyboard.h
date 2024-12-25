@@ -29,7 +29,7 @@ struct KeyboardOps {
   int (*init)(void);
   void (*destruct)(void);
   int (*wait)(void);
-  void (*stop)(void);
+  int (*stop)(void);
   int (*start)(void);
   int (*add_keys_mapping)(const struct KeyboardAddKeysMappingInput *,
                           struct KeyboardAddKeysMappingOutput *);

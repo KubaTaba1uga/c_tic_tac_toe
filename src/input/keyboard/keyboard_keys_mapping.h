@@ -6,6 +6,8 @@
 #include <stddef.h>
 
 #include "input/input.h"
+#include "input/input_common.h"
+#include "input/input_device.h"
 
 /*******************************************************************************
  *    PUBLIC API
@@ -32,6 +34,7 @@ struct KeyboardKeysMapping {
 struct KeyboardKeysMappingOps {
   int (*init_keys_mapping)(struct KeyboardKeysMapping *,
                            keyboard_key_mapping_callback_t callback,
+                           input_device_id_t device_id,
                            const char *display_name);
 };
 
