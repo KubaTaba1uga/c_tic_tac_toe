@@ -55,7 +55,7 @@ struct InputPrivateOps *get_input_private_ops(void);
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-static int input_init_system(void) {
+static int input_init_intrfc(void) {
   int err;
 
   log_ops = get_logging_utils_ops();
@@ -75,14 +75,14 @@ static int input_init_system(void) {
   return 0;
 }
 
-static void input_destroy_system(void) {
+static void input_destroy_intrfc(void) {
   log_ops->log_info(__FILE_NAME__, "Destroying input subsystem.");
   input_private_ops->destroy_registrar(&input_subsystem);
   log_ops->log_info(__FILE_NAME__, "Input subsystem destroyed successfully.");
 }
 
-static int input_register_module_system(struct InputAddDeviceInput input,
-                                        struct InputAddDeviceOutput *output) {
+static int input_add_device_intrfc(struct InputAddDeviceInput input,
+                                   struct InputAddDeviceOutput *output) {
   int err;
 
   if (!output || !input.device)
@@ -102,9 +102,8 @@ static int input_register_module_system(struct InputAddDeviceInput input,
   return 0;
 }
 
-static int
-input_set_registration_callback_system(struct InputSetCallbackInput input,
-                                       struct InputSetCallbackOutput *output) {
+static int input_set_callback_intrfc(struct InputSetCallbackInput input,
+                                     struct InputSetCallbackOutput *output) {
   int err;
 
   if (!output || !input.callback)
@@ -124,7 +123,7 @@ input_set_registration_callback_system(struct InputSetCallbackInput input,
   return 0;
 }
 
-static int input_start_system(void) {
+static int input_start_intrfc(void) {
   int err;
 
   log_ops->log_info(__FILE_NAME__, "Starting input subsystem.");
@@ -138,7 +137,7 @@ static int input_start_system(void) {
   return 0;
 }
 
-static int input_stop_system(void) {
+static int input_stop_intrfc(void) {
   int err;
 
   log_ops->log_info(__FILE_NAME__, "Stopping input subsystem.");
@@ -152,7 +151,7 @@ static int input_stop_system(void) {
   return 0;
 }
 
-static int input_wait_system(void) {
+static int input_wait_intrfc(void) {
   int err;
 
   log_ops->log_info(__FILE_NAME__, "Waiting for input subsystem.");
@@ -169,16 +168,16 @@ static int input_wait_system(void) {
 /*******************************************************************************
  *    PRIVATE FUNCTIONS
  ******************************************************************************/
-static int input_init_input(struct InputSubsystem *subsystem) {
+static int input_init(struct InputSubsystem *subsystem) {
   InputSubsystem_devices_init(subsystem);
 
   return 0;
 }
 
-static void input_destroy_registrar(struct InputSubsystem *subsystem) {}
+static void input_destroy(struct InputSubsystem *subsystem) {}
 
-static int input_register_module(struct InputAddDeviceInput *input,
-                                 struct InputAddDeviceOutput *output) {
+static int input_add_device(struct InputAddDeviceInput *input,
+                            struct InputAddDeviceOutput *output) {
   struct InputSubsystem *input_sys;
   int err;
 
@@ -202,9 +201,8 @@ static int input_register_module(struct InputAddDeviceInput *input,
   return 0;
 }
 
-static int
-input_set_registration_callback(struct InputSetCallbackInput *input,
-                                struct InputSetCallbackOutput *output) {
+static int input_set_callback(struct InputSetCallbackInput *input,
+                              struct InputSetCallbackOutput *output) {
   struct InputSubsystem *input_sys;
   struct InputDevice *device;
   int err;
@@ -344,29 +342,29 @@ static int input_wait(struct InputSubsystem *subsystem) {
  ******************************************************************************/
 struct InitRegistration init_input_reg = {
     .display_name = __FILE_NAME__,
-    .init = input_init_system,
-    .destroy = input_destroy_system,
+    .init = input_init_intrfc,
+    .destroy = input_destroy_intrfc,
 };
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 static struct InputOps input_ops = {
-    .start = input_start_system,
-    .stop = input_stop_system,
-    .wait = input_wait_system,
-    .register_module = input_register_module_system,
-    .set_callback = input_set_registration_callback_system,
+    .start = input_start_intrfc,
+    .stop = input_stop_intrfc,
+    .wait = input_wait_intrfc,
+    .register_module = input_add_device_intrfc,
+    .set_callback = input_set_callback_intrfc,
 };
 
 static struct InputPrivateOps input_private_ops_ = {
     .start = input_start,
     .stop = input_stop,
     .wait = input_wait,
-    .init = input_init_input,
-    .destroy_registrar = input_destroy_registrar,
-    .register_module = input_register_module,
-    .set_registration_callback = input_set_registration_callback};
+    .init = input_init,
+    .destroy_registrar = input_destroy,
+    .register_module = input_add_device,
+    .set_registration_callback = input_set_callback};
 
 struct InputOps *get_input_ops(void) { return &input_ops; }
 
