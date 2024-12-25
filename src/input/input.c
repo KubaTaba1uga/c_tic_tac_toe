@@ -202,6 +202,7 @@ static int input_add_device(struct InputAddDeviceInput *input,
   }
 
   output->device_id = -1;
+  input->device->callback = NULL;
   input_sys = input->private;
 
   err = InputSubsystem_devices_append(input_sys, *input->device);

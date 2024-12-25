@@ -42,6 +42,10 @@ static_array_dep = static_array_subproject.get_variable('static_array_lib')
 # ******************************************************************************
 # *    App
 # ******************************************************************************
+# Enable sanitizers
+# add_project_arguments('-fsanitize=address,undefined', language: 'c')
+
+
 app_deps = [logging_dep, pthread_dep, static_array_dep]
 app_includes = [include_directories('src')]
 subdir('src')
@@ -49,7 +53,9 @@ subdir('src')
 main = executable('main', sources, dependencies: app_deps, include_directories: [app_includes])
 
 
+
 # ******************************************************************************
 # *    Tests
 # ******************************************************************************
+
 subdir('test')

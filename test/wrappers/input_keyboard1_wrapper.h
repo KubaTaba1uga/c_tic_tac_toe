@@ -1,10 +1,7 @@
-#include <stdlib.h>
+#include "input/keyboard/keyboard_keys_mapping.h"
 
-struct Keyboard1PrivateOps {
-  int (*start)(void);
-  int (*stop)(void);
-  int (*wait)(void);
-  int (*callback)(size_t n, char buffer[n]);
+struct KeyboardKeysMapping1PrivOps {
+  keyboard_key_mapping_callback_t keyboard_callback;
 };
 
-struct Keyboard1PrivateOps *get_keyboard1_priv_ops(void);
+struct KeyboardKeysMapping1PrivOps *get_keyboard_keys_mapping_1_priv_ops(void);

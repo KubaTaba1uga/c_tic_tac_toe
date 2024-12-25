@@ -7,7 +7,6 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
-#include <asm-generic/errno.h>
 #include <errno.h>
 #include <poll.h>
 #include <pthread.h>
@@ -77,6 +76,7 @@ static int keyboard_init_intrfc(void) {
   terminal_ops = get_terminal_ops();
   logging_ops = get_logging_utils_ops();
   keyboard_priv_ops = get_keyboard_priv_ops();
+  input_ops = get_input_ops();
 
   err = keyboard_priv_ops->init(&keyboard_subsystem);
   if (err) {
@@ -266,6 +266,8 @@ static void keyboard_execute_callbacks(struct KeyboardSubsystem *keyboard) {
     return;
 
   for (i = 0; i < KeyboardSubsystem_keys_mappings_length(keyboard); i++) {
+    logging_ops->log_info(module_id, "I: %i", i);
+
     err = KeyboardSubsystem_keys_mappings_get(keyboard, i, &keys_mapping);
     if (err) {
       logging_ops->log_err(module_id, "Unable to find keys mapping for %d: %s",

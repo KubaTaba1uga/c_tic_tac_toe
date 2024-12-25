@@ -1,23 +1,33 @@
-#include <pthread.h> // For pthread_t and thread management
-#include <stdbool.h> // For bool type
-#include <stddef.h>  // For size_t type
+// C standard library
+#include <pthread.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "static_array_lib.h"
 
 // App's internal libs
+#include "input/input.h"
+#include "input/input_common.h"
 #include "input/keyboard/keyboard.h"
+#include "input/keyboard/keyboard_keys_mapping.h"
 
-#define KEYBOARD_CALLBACK_MAX 10
+/*******************************************************************************
+ *    PRIVATE DECLARATIONS & DEFINITIONS
+ ******************************************************************************/
+#define KEYBOARD_KEYS_MAPPINGS_MAX 10
 #define KEYBOARD_STDIN_BUFFER_MAX 10
 
-struct KeyboardSubsystem {
+typedef struct KeyboardSubsystem {
   pthread_t thread;
   bool is_initialized;
-  struct Registrar registrar;
-  // Stdin buffer is not using array abstraction as array
-  //   abstraction uses void * to provide genericness.
-  //   We want to store pure chars in the array no ptrs to chars.
   size_t stdin_buffer_count;
   char stdin_buffer[KEYBOARD_STDIN_BUFFER_MAX];
-};
+  SARRS_FIELD(keys_mappings, struct KeyboardKeysMapping,
+              KEYBOARD_KEYS_MAPPINGS_MAX);
+} KeyboardSubsystem;
+
+SARRS_DECL(KeyboardSubsystem, keys_mappings, struct KeyboardKeysMapping,
+           KEYBOARD_KEYS_MAPPINGS_MAX);
 
 struct KeyboardPrivateOps {
   int (*init)(struct KeyboardSubsystem *);
@@ -27,8 +37,8 @@ struct KeyboardPrivateOps {
   void (*stop_thread)(struct KeyboardSubsystem *);
   void *(*process_stdin)(struct KeyboardSubsystem *);
   void (*execute_callbacks)(struct KeyboardSubsystem *);
-  int (*register_callback)(struct KeyboardRegisterInput *,
-                           struct KeyboardRegisterOutput *);
+  int (*add_keys_mapping)(struct KeyboardAddKeysMappingInput *,
+                          struct KeyboardAddKeysMappingOutput *);
 };
 
 struct KeyboardPrivateOps *get_keyboard_priv_ops(void);

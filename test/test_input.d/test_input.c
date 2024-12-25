@@ -8,6 +8,7 @@
 
 #include "init/init.h"
 #include "input/input.h"
+#include "input/input_common.h"
 #include "utils/logging_utils.h"
 
 // Mock counters for callback and operation tracking
@@ -116,11 +117,12 @@ void test_input_set_registration_callback_success() {
 
 // Test the start, stop, and wait operations
 void test_input_start_stop_wait_operations() {
-  struct InputDevice device = {.wait = mock_wait,
-                               .start = mock_start,
-                               .stop = mock_stop,
-                               .display_name = "Mock Device",
-                               .callback = mock_callback};
+  struct InputDevice device = {
+      .wait = mock_wait,
+      .start = mock_start,
+      .stop = mock_stop,
+      .display_name = "Mock Device",
+  };
 
   struct InputAddDeviceInput input = {.device = &device};
   struct InputAddDeviceOutput output;
@@ -128,6 +130,12 @@ void test_input_start_stop_wait_operations() {
   struct InputOps *ops = get_input_ops();
 
   int err = ops->add_device(input, &output);
+  TEST_ASSERT_EQUAL_INT(0, err);
+
+  err = ops->set_callback(
+      (struct InputSetCallbackInput){.callback = mock_callback,
+                                     .device_id = output.device_id},
+      &(struct InputSetCallbackOutput){});
   TEST_ASSERT_EQUAL_INT(0, err);
 
   err = ops->start();
