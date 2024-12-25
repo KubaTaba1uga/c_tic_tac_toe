@@ -18,32 +18,32 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "static_array_lib.h"
+
 // App's internal libs
 #include "init/init.h"
 #include "input/input.h"
 #include "input/keyboard/keyboard.h"
-#include "input/keyboard/keyboard_registration.h"
-#include "keyboard.h"
 #include "utils/logging_utils.h"
-#include "utils/registration_utils.h"
 #include "utils/terminal_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-#define KEYBOARD_CALLBACK_MAX 10
+#define KEYBOARD_KEYS_MAPPINGS_MAX 10
 #define KEYBOARD_STDIN_BUFFER_MAX 10
 
-struct KeyboardSubsystem {
+typedef struct KeyboardSubsystem {
   pthread_t thread;
   bool is_initialized;
-  struct Registrar registrar;
-  // Stdin buffer is not using array abstraction as array
-  //   abstraction uses void * to provide genericness.
-  //   We want to store pure chars in the array no ptrs to chars.
   size_t stdin_buffer_count;
   char stdin_buffer[KEYBOARD_STDIN_BUFFER_MAX];
-};
+  SARRS_FIELD(keys_mappings, struct KeyboardKeysMapping,
+              KEYBOARD_KEYS_MAPPINGS_MAX);
+} KeyboardSubsystem;
+
+SARRS_DECL(KeyboardSubsystem, keys_mappings, struct KeyboardKeysMapping,
+           KEYBOARD_KEYS_MAPPINGS_MAX);
 
 struct KeyboardPrivateOps {
   int (*init)(struct KeyboardSubsystem *);
@@ -53,18 +53,15 @@ struct KeyboardPrivateOps {
   void (*stop_thread)(struct KeyboardSubsystem *);
   void *(*process_stdin)(struct KeyboardSubsystem *);
   void (*execute_callbacks)(struct KeyboardSubsystem *);
-  int (*register_callback)(struct KeyboardRegisterInput *,
-                           struct KeyboardRegisterOutput *);
+  int (*register_callback)(struct KeyboardAddKeysMappingInput *,
+                           struct KeyboardAddKeysMappingOutput *);
 };
 
 static struct RegistrationUtilsOps *reg_ops;
 static const char module_id[] = "keyboard";
 static struct LoggingUtilsOps *logging_ops;
 static struct TerminalUtilsOps *terminal_ops;
-static struct RegistrationUtilsOps *reg_ops;
 static struct KeyboardSubsystem keyboard_subsystem;
-static struct KeyboardRegistrationOps *keyboard_reg_ops;
-
 static struct KeyboardPrivateOps *keyboard_priv_ops;
 struct KeyboardPrivateOps *get_keyboard_priv_ops(void);
 
@@ -76,9 +73,7 @@ static int keyboard_init_system(void) {
 
   terminal_ops = get_terminal_ops();
   logging_ops = get_logging_utils_ops();
-  reg_ops = get_registration_utils_ops();
   keyboard_priv_ops = get_keyboard_priv_ops();
-  keyboard_reg_ops = get_keyboard_registration_ops();
 
   err = keyboard_priv_ops->init(&keyboard_subsystem);
   if (err) {
@@ -117,8 +112,8 @@ static void keyboard_stop_thread_system(void) {
 }
 
 static int
-keyboard_register_callback_system(struct KeyboardRegisterInput input,
-                                  struct KeyboardRegisterOutput *output) {
+keyboard_register_callback_system(struct KeyboardAddKeysMappingInput input,
+                                  struct KeyboardAddKeysMappingOutput *output) {
   int err;
 
   if (!output)
@@ -295,9 +290,9 @@ static void keyboard_execute_callbacks(struct KeyboardSubsystem *keyboard) {
   return;
 }
 
-static int
-keyboard_register_callback(struct KeyboardRegisterInput *keyboard_input,
-                           struct KeyboardRegisterOutput *keyboard_output) {
+static int keyboard_register_callback(
+    struct KeyboardAddKeysMappingInput *keyboard_input,
+    struct KeyboardAddKeysMappingOutput *keyboard_output) {
   struct KeyboardSubsystem *keyboard;
   struct RegisterOutput reg_output;
 

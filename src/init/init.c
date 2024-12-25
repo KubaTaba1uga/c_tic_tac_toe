@@ -8,6 +8,8 @@
 #include <string.h>
 
 #include "config/config.h"
+#include "input/input.h"
+#include "input/keyboard/keyboard_keys_mapping_1.h"
 #include "static_array_lib.h"
 #include "utils/logging_utils.h"
 
@@ -108,11 +110,15 @@ static void init_destroy(void) {
 static int init_register_multiple_modules(void) {
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   struct ConfigOps *config_ops = get_config_ops();
+  struct InputOps *input_ops = get_input_ops();
+
   struct InitRegistration modules[] = {
       {.init = logging_ops->init,
        .destroy = logging_ops->destroy,
        .display_name = "logging_utils"},
       {.init = config_ops->init, .destroy = NULL, .display_name = "config"},
+      {.init = input_ops->init, .destroy = NULL, .display_name = "input"},
+
   };
   int num_modules = sizeof(modules) / sizeof(struct InitRegistration);
   int err;

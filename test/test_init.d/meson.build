@@ -3,12 +3,14 @@ src = join_paths(root, 'src')
 utils = join_paths(src, 'utils')
 init = join_paths(src, 'init')
 config = join_paths(src, 'config')
+input = join_paths(src, 'input')
 
 test_init_name = 'test_init.c'
 
 test_init_src = [test_init_name,
                  init / 'init.c',
 		 config / 'config.c',
+		 input / 'input.c',		 
 		 utils / 'std_lib_utils.c',
 		 utils / 'logging_utils.c']
 

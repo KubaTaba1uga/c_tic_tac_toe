@@ -40,10 +40,10 @@ static struct InputSubsystem input_subsystem;
 struct InputPrivateOps {
   int (*init)(struct InputSubsystem *);
   void (*destroy_registrar)(struct InputSubsystem *);
-  int (*register_module)(struct InputAddDeviceInput *,
-                         struct InputAddDeviceOutput *);
-  int (*set_registration_callback)(struct InputSetCallbackInput *,
-                                   struct InputSetCallbackOutput *);
+  int (*add_device)(struct InputAddDeviceInput *,
+                    struct InputAddDeviceOutput *);
+  int (*set_device_callback)(struct InputSetCallbackInput *,
+                             struct InputSetCallbackOutput *);
   int (*start)(struct InputSubsystem *);
   int (*stop)(struct InputSubsystem *);
   int (*wait)(struct InputSubsystem *);
@@ -75,12 +75,6 @@ static int input_init_intrfc(void) {
   return 0;
 }
 
-static void input_destroy_intrfc(void) {
-  log_ops->log_info(__FILE_NAME__, "Destroying input subsystem.");
-  input_private_ops->destroy_registrar(&input_subsystem);
-  log_ops->log_info(__FILE_NAME__, "Input subsystem destroyed successfully.");
-}
-
 static int input_add_device_intrfc(struct InputAddDeviceInput input,
                                    struct InputAddDeviceOutput *output) {
   int err;
@@ -90,7 +84,7 @@ static int input_add_device_intrfc(struct InputAddDeviceInput input,
 
   input.private = &input_subsystem;
 
-  err = input_private_ops->register_module(&input, output);
+  err = input_private_ops->add_device(&input, output);
   if (err) {
     log_ops->log_info(__FILE_NAME__, "Module registration failed for: %s.",
                       input.device->display_name);
@@ -113,7 +107,7 @@ static int input_set_callback_intrfc(struct InputSetCallbackInput input,
 
   input.private = &input_subsystem;
 
-  err = input_private_ops->set_registration_callback(&input, output);
+  err = input_private_ops->set_device_callback(&input, output);
   if (err) {
     return err;
   }
@@ -173,8 +167,6 @@ static int input_init(struct InputSubsystem *subsystem) {
 
   return 0;
 }
-
-static void input_destroy(struct InputSubsystem *subsystem) {}
 
 static int input_add_device(struct InputAddDeviceInput *input,
                             struct InputAddDeviceOutput *output) {
@@ -342,11 +334,10 @@ static int input_wait(struct InputSubsystem *subsystem) {
  ******************************************************************************/
 static struct InputOps input_ops = {
     .init = input_init_intrfc,
-    .destroy = input_destroy_intrfc,
     .start = input_start_intrfc,
     .stop = input_stop_intrfc,
     .wait = input_wait_intrfc,
-    .register_module = input_add_device_intrfc,
+    .add_device = input_add_device_intrfc,
     .set_callback = input_set_callback_intrfc,
 };
 
@@ -355,9 +346,8 @@ static struct InputPrivateOps input_private_ops_ = {
     .stop = input_stop,
     .wait = input_wait,
     .init = input_init,
-    .destroy_registrar = input_destroy,
-    .register_module = input_add_device,
-    .set_registration_callback = input_set_callback};
+    .add_device = input_add_device,
+    .set_device_callback = input_set_callback};
 
 struct InputOps *get_input_ops(void) { return &input_ops; }
 

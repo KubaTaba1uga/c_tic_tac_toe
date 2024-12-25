@@ -71,13 +71,9 @@ struct InputOps {
   int (*wait)(void);
   int (*set_callback)(struct InputSetCallbackInput,
                       struct InputSetCallbackOutput *);
-  int (*register_module)(struct InputAddDeviceInput,
-                         struct InputAddDeviceOutput *);
+  int (*add_device)(struct InputAddDeviceInput, struct InputAddDeviceOutput *);
 };
 
-/*******************************************************************************
- *    MODULARITY BOILERCODE
- ******************************************************************************/
 struct InputOps *get_input_ops(void);
 
 #endif // INPUT_H

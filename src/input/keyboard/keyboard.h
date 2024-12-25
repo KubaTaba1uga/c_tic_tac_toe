@@ -11,38 +11,33 @@
 /*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
-#include <stddef.h>
-
-#include "input/keyboard/keyboard_registration.h"
+#include "input/keyboard/keyboard_keys_mapping.h"
 
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct KeyboardRegisterInput {
-  struct KeyboardRegistration *registration;
-  void *keyboard;
+struct KeyboardAddKeysMappingInput {
+  struct KeyboardKeysMapping *keys_mapping;
+  void *private;
 };
 
-struct KeyboardRegisterOutput {
-  int registration_id;
+struct KeyboardAddKeysMappingOutput {
+  int keys_mapping_id;
 };
 
 struct KeyboardOps {
+  int (*init)(void);
+  void (*destruct)(void);
   int (*wait)(void);
   void (*stop)(void);
   int (*start)(void);
-  int (*register_callback)(struct KeyboardRegisterInput,
-                           struct KeyboardRegisterOutput *);
+  int (*add_keys_mapping)(const struct KeyboardAddKeysMappingInput *,
+                          struct KeyboardAddKeysMappingOutput *);
 };
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 struct KeyboardOps *get_keyboard_ops(void);
-
-/*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-extern struct InitRegistration init_keyboard_reg;
 
 #endif // KEYBOARD_H

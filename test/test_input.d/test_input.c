@@ -58,15 +58,10 @@ void setUp() {
   TEST_ASSERT_EQUAL_INT(0, err);
 }
 
-void tearDown() {
-  struct InputOps *input_ops;
-  input_ops = get_input_ops();
-
-  input_ops->destroy();
-}
+void tearDown() {}
 
 // Test successful module registration
-void test_input_register_module_success() {
+void test_input_add_device_success() {
   struct InputDevice device = {.wait = mock_wait,
                                .start = mock_start,
                                .stop = mock_stop,
@@ -78,18 +73,18 @@ void test_input_register_module_success() {
   struct InputAddDeviceOutput output;
   struct InputOps *ops = get_input_ops();
 
-  int err = ops->register_module(input, &output);
+  int err = ops->add_device(input, &output);
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_GREATER_OR_EQUAL(0, output.device_id);
 }
 
 // Test failed module registration due to invalid input
-void test_input_register_module_failure_invalid_input() {
+void test_input_add_device_failure_invalid_input() {
   struct InputAddDeviceInput input = {.device = NULL};
   struct InputAddDeviceOutput output;
 
   struct InputOps *ops = get_input_ops();
-  int err = ops->register_module(input, &output);
+  int err = ops->add_device(input, &output);
 
   TEST_ASSERT_EQUAL_INT(EINVAL, err);
 }
@@ -107,7 +102,7 @@ void test_input_set_registration_callback_success() {
 
   struct InputOps *ops = get_input_ops();
 
-  int err = ops->register_module(input, &output);
+  int err = ops->add_device(input, &output);
   TEST_ASSERT_EQUAL_INT(0, err);
 
   struct InputSetCallbackInput callback_input = {.callback = mock_callback,
@@ -132,7 +127,7 @@ void test_input_start_stop_wait_operations() {
 
   struct InputOps *ops = get_input_ops();
 
-  int err = ops->register_module(input, &output);
+  int err = ops->add_device(input, &output);
   TEST_ASSERT_EQUAL_INT(0, err);
 
   err = ops->start();
@@ -161,7 +156,7 @@ void test_input_start_stop_wait_failure() {
 
   struct InputOps *ops = get_input_ops();
 
-  int err = ops->register_module(input, &output);
+  int err = ops->add_device(input, &output);
   TEST_ASSERT_EQUAL_INT(0, err);
 
   err = ops->start();
