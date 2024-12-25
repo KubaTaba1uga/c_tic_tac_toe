@@ -7,10 +7,17 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "config/config.h"
 #include "static_array_lib.h"
 #include "utils/logging_utils.h"
 
 #define INIT_MODULES_MAX 100
+
+struct InitRegistration {
+  int (*init)(void);
+  void (*destroy)(void);
+  const char *display_name;
+};
 
 typedef struct InitSubsystem {
   SARRS_FIELD(modules, struct InitRegistration, INIT_MODULES_MAX);
@@ -32,7 +39,7 @@ struct InitPrivateOps *get_init_priv_ops(void);
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-static int init_init_system(void) {
+static int init_init(void) {
   struct InitRegistration *module;
   int err;
 
@@ -78,7 +85,7 @@ static int init_init_system(void) {
   return 0;
 }
 
-static void init_destroy_system(void) {
+static void init_destroy(void) {
   struct InitRegistration *module;
 
   log_ops = get_logging_utils_ops();
@@ -99,16 +106,23 @@ static void init_destroy_system(void) {
  *    MODULE REGISTRATION
  ******************************************************************************/
 static int init_register_multiple_modules(void) {
-  struct InitRegistration *modules[] = {};
-
-  int num_modules = sizeof(modules) / sizeof(struct InitRegistration *);
+  struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
+  struct ConfigOps *config_ops = get_config_ops();
+  struct InitRegistration modules[] = {
+      {.init = logging_ops->init,
+       .destroy = logging_ops->destroy,
+       .display_name = "logging_utils"},
+      {.init = config_ops->init, .destroy = NULL, .display_name = "config"},
+  };
+  int num_modules = sizeof(modules) / sizeof(struct InitRegistration);
   int err;
+  int i;
 
-  for (int i = 0; i < num_modules; i++) {
-    err = init_priv_ops->register_module(*modules[i]);
+  for (i = 0; i < num_modules; i++) {
+    err = init_priv_ops->register_module(modules[i]);
     if (err) {
       log_ops->log_err("INIT", "Failed to register module: %s",
-                       modules[i]->display_name);
+                       modules[i].display_name);
       return err;
     }
   }
@@ -142,8 +156,8 @@ static struct InitPrivateOps _init_priv_ops = {
 };
 
 static struct InitOps init_ops = {
-    .initialize = init_init_system,
-    .destroy = init_destroy_system,
+    .initialize = init_init,
+    .destroy = init_destroy,
 };
 
 struct InitOps *get_init_ops(void) { return &init_ops; }

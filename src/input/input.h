@@ -64,6 +64,8 @@ struct InputAddDeviceOutput {
 };
 
 struct InputOps {
+  int (*init)(void);
+  void (*destroy)(void);
   int (*start)(void);
   int (*stop)(void);
   int (*wait)(void);
@@ -72,11 +74,6 @@ struct InputOps {
   int (*register_module)(struct InputAddDeviceInput,
                          struct InputAddDeviceOutput *);
 };
-
-/*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-extern struct InitRegistration init_input_reg;
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE

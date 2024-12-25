@@ -3,13 +3,6 @@
 
 #include <stddef.h>
 
-/* Data structure for initialization registration */
-struct InitRegistration {
-  int (*init)(void);
-  void (*destroy)(void);
-  const char *display_name;
-};
-
 /* Operations for initialization */
 struct InitOps {
   int (*initialize)(void);

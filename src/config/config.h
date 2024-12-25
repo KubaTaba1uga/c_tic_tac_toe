@@ -53,15 +53,11 @@ struct ConfigGetVarOutput {
 };
 
 struct ConfigOps {
+  int (*init)(void);
   int (*init_var)(struct ConfigVariable *, char *, char *);
   int (*add_var)(struct ConfigAddVarInput, struct ConfigAddVarOutput *);
   int (*get_var)(struct ConfigGetVarInput, struct ConfigGetVarOutput *);
 };
-
-/*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-extern struct InitRegistration init_config_reg;
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE

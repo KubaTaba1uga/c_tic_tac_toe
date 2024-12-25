@@ -55,7 +55,7 @@ struct ConfigPrivateOps *get_config_priv_ops(void);
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-static int config_init_system(void) {
+static int config_init_intrfc(void) {
   int err;
 
   logging_ops = get_logging_utils_ops();
@@ -69,7 +69,7 @@ static int config_init_system(void) {
   return 0;
 }
 
-static int config_add_variable_system(struct ConfigAddVarInput input,
+static int config_add_variable_intrfc(struct ConfigAddVarInput input,
                                       struct ConfigAddVarOutput *output) {
   struct ConfigAddVarOutput local_output;
 
@@ -81,7 +81,7 @@ static int config_add_variable_system(struct ConfigAddVarInput input,
   return config_priv_ops->add_var(&input, output);
 }
 
-static int config_get_variable_system(struct ConfigGetVarInput input,
+static int config_get_variable_intrfc(struct ConfigGetVarInput input,
                                       struct ConfigGetVarOutput *output) {
   struct ConfigGetVarOutput local_output;
 
@@ -91,18 +91,6 @@ static int config_get_variable_system(struct ConfigGetVarInput input,
   input.config = &config_subsystem;
 
   return config_priv_ops->get_var(&input, output);
-}
-
-/*******************************************************************************
- *    PRIVATE API
- ******************************************************************************/
-static int config_init(struct ConfigSubsystem *config) {
-  if (!config)
-    return EINVAL;
-
-  ConfigSubsystem_vars_init(config);
-
-  return 0;
 }
 
 static int config_var_init(struct ConfigVariable *var, char *var_name,
@@ -123,6 +111,18 @@ static int config_var_init(struct ConfigVariable *var, char *var_name,
 
   return 0;
 };
+
+/*******************************************************************************
+ *    PRIVATE API
+ ******************************************************************************/
+static int config_init(struct ConfigSubsystem *config) {
+  if (!config)
+    return EINVAL;
+
+  ConfigSubsystem_vars_init(config);
+
+  return 0;
+}
 
 static int config_add_variable(struct ConfigAddVarInput *input,
                                struct ConfigAddVarOutput *output) {
@@ -212,15 +212,6 @@ static int config_get_variable(struct ConfigGetVarInput *input,
 }
 
 /*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-struct InitRegistration init_config_reg = {
-    .display_name = __FILE_NAME__,
-    .init = config_init_system,
-    .destroy = NULL,
-};
-
-/*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 static struct ConfigPrivateOps config_priv_ops_ = {
@@ -230,9 +221,10 @@ static struct ConfigPrivateOps config_priv_ops_ = {
 };
 
 static struct ConfigOps config_pub_ops = {
+    .init = config_init_intrfc,
     .init_var = config_var_init,
-    .get_var = config_get_variable_system,
-    .add_var = config_add_variable_system,
+    .get_var = config_get_variable_intrfc,
+    .add_var = config_add_variable_intrfc,
 };
 
 struct ConfigOps *get_config_ops(void) { return &config_pub_ops; }

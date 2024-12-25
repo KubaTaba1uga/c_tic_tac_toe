@@ -166,7 +166,7 @@ static int input_wait_intrfc(void) {
 }
 
 /*******************************************************************************
- *    PRIVATE FUNCTIONS
+ *    PRIVATE API
  ******************************************************************************/
 static int input_init(struct InputSubsystem *subsystem) {
   InputSubsystem_devices_init(subsystem);
@@ -338,18 +338,11 @@ static int input_wait(struct InputSubsystem *subsystem) {
 }
 
 /*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-struct InitRegistration init_input_reg = {
-    .display_name = __FILE_NAME__,
-    .init = input_init_intrfc,
-    .destroy = input_destroy_intrfc,
-};
-
-/*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 static struct InputOps input_ops = {
+    .init = input_init_intrfc,
+    .destroy = input_destroy_intrfc,
     .start = input_start_intrfc,
     .stop = input_stop_intrfc,
     .wait = input_wait_intrfc,

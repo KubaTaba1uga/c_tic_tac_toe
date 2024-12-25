@@ -18,15 +18,17 @@ struct ConfigOps *config_ops;
 
 // Test Setup
 void setUp() {
+  struct LoggingUtilsOps *log_ops;
   int err;
 
   config_ops = get_config_ops();
+  log_ops = get_logging_utils_ops();
 
   // Initialize logging and configuration
-  err = init_logging_reg.init();
+  err = log_ops->init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
-  err = init_config_reg.init();
+  err = config_ops->init();
   TEST_ASSERT_EQUAL_INT(0, err);
 }
 

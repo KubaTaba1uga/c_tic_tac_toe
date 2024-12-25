@@ -24,15 +24,10 @@ static int init_register_modules_mock(void) {
 };
 
 void setUp() {
-  int err;
-
   priv_ops = get_init_priv_ops();
   init_ops = get_init_ops();
 
   priv_ops->register_modules = init_register_modules_mock;
-
-  err = init_logging_reg.init();
-  TEST_ASSERT_EQUAL(0, err);
 }
 
 void tearDown() { init_ops->destroy(); }

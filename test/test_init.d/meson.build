@@ -8,7 +8,7 @@ test_init_name = 'test_init.c'
 
 test_init_src = [test_init_name,
                  init / 'init.c',
-		 # config / 'config.c',
+		 config / 'config.c',
 		 utils / 'std_lib_utils.c',
 		 utils / 'logging_utils.c']
 

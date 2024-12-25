@@ -75,24 +75,15 @@ static struct LoggingUtilsPrivateOps logging_utils_priv_ops = {
 };
 
 static struct LoggingUtilsOps logging_utils_ops = {
-    .init_loggers = init_loggers,
-    .destroy_loggers = destroy_loggers,
+    .init = init_loggers,
+    .destroy = destroy_loggers,
     .log_info = log_info,
     .log_err = log_err,
-    .private = &logging_utils_priv_ops};
+};
 
 struct LoggingUtilsOps *get_logging_utils_ops(void) {
   return &logging_utils_ops;
 }
-
-/*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-struct InitRegistration init_logging_reg = {
-    .display_name = LOGGING_MODULE_ID,
-    .init = init_loggers,
-    .destroy = destroy_loggers,
-};
 
 /*******************************************************************************
  *    PRIVATE API

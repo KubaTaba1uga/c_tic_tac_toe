@@ -39,21 +39,31 @@ static int mock_wait(void) {
 
 // Test setup and teardown
 void setUp() {
+  struct LoggingUtilsOps *log_ops;
+  struct InputOps *input_ops;
   int err;
+
+  log_ops = get_logging_utils_ops();
+  input_ops = get_input_ops();
 
   mock_callback_counter = 0;
   mock_start_counter = 0;
   mock_stop_counter = 0;
   mock_wait_counter = 0;
 
-  err = init_logging_reg.init();
+  err = log_ops->init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
-  err = init_input_reg.init();
+  err = input_ops->init();
   TEST_ASSERT_EQUAL_INT(0, err);
 }
 
-void tearDown() { init_input_reg.destroy(); }
+void tearDown() {
+  struct InputOps *input_ops;
+  input_ops = get_input_ops();
+
+  input_ops->destroy();
+}
 
 // Test successful module registration
 void test_input_register_module_success() {
