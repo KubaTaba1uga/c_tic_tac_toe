@@ -1,7 +1,7 @@
-#ifndef KEYBOARD1_H
-#define KEYBOARD1_H
+#ifndef KEYBOARD_H
+#define KEYBOARD_H
 /*******************************************************************************
- * @file keyboard1.h
+ * @file keyboard.h
  * @brief TO-DO
  *
  * TO-DO
@@ -9,18 +9,35 @@
  ******************************************************************************/
 
 /*******************************************************************************
+ *    IMPORTS
+ ******************************************************************************/
+#include "input/keyboard/keyboard_keys_mapping.h"
+
+/*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-struct Keyboard1Ops {};
+struct KeyboardAddKeysMappingInput {
+  struct KeyboardKeysMapping *keys_mapping;
+  void *private;
+};
+
+struct KeyboardAddKeysMappingOutput {
+  int keys_mapping_id;
+};
+
+struct KeyboardOps {
+  int (*init)(void);
+  void (*destruct)(void);
+  int (*wait)(void);
+  void (*stop)(void);
+  int (*start)(void);
+  int (*add_keys_mapping)(const struct KeyboardAddKeysMappingInput *,
+                          struct KeyboardAddKeysMappingOutput *);
+};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-struct Keyboard1Ops *get_keyboard1_ops(void);
+struct KeyboardOps *get_keyboard_ops(void);
 
-/*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-extern struct InitRegistration init_keyboard1_reg;
-
-#endif // KEYBOARD1_H
+#endif // KEYBOARD_H

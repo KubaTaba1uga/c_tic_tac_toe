@@ -1,6 +1,5 @@
 sources += files(
   'keyboard.c', 'keyboard.h',
-  'keyboard1.c', 'keyboard1.h',
-  'keyboard2.c', 'keyboard2.h',
-  'keyboard_registration.c', 'keyboard_registration.h',  
+  'keyboard_keys_mapping.h',   'keyboard_keys_mapping.c',
+  'keyboard_keys_mapping_1.h',   'keyboard_keys_mapping_1.c',  
 )
