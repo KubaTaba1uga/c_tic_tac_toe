@@ -59,7 +59,7 @@ void tearDown(void) {
 }
 
 void test_keyboard1_event_up(void) {
-  char *test_strings[] = {"w", "ww", "www", "wwww"};
+  char *test_strings[] = {"w", "klkw123w", "klwklwklwkl", "12w12w12w12w12"};
   struct KeyboardKeysMappingCallbackOutput output;
 
   for (int i = 0; i < sizeof(test_strings) / sizeof(test_strings[0]); i++) {
@@ -73,7 +73,7 @@ void test_keyboard1_event_up(void) {
 }
 
 void test_keyboard1_event_down(void) {
-  char *test_strings[] = {"s", "ss", "sss", "ssss"};
+  char *test_strings[] = {"s", "12s12s", "21s12s12s", "s12s12s12s12"};
   struct KeyboardKeysMappingCallbackOutput output;
 
   for (int i = 0; i < sizeof(test_strings) / sizeof(test_strings[0]); i++) {
@@ -87,7 +87,7 @@ void test_keyboard1_event_down(void) {
 }
 
 void test_keyboard1_event_left(void) {
-  char *test_strings[] = {"a", "aa", "aaa", "aaaa"};
+  char *test_strings[] = {"a", "1a12a", "12a12a12a", "12a12a12a12a12"};
   struct KeyboardKeysMappingCallbackOutput output;
 
   for (int i = 0; i < sizeof(test_strings) / sizeof(test_strings[0]); i++) {
@@ -101,7 +101,7 @@ void test_keyboard1_event_left(void) {
 }
 
 void test_keyboard1_event_right(void) {
-  char *test_strings[] = {"d", "dd", "ddd", "dddd"};
+  char *test_strings[] = {"d", "12d12d", "12d12d12d", "12d12d12d12d12"};
   struct KeyboardKeysMappingCallbackOutput output;
 
   for (int i = 0; i < sizeof(test_strings) / sizeof(test_strings[0]); i++) {

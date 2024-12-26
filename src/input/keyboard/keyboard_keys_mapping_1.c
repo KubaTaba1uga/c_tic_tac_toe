@@ -94,6 +94,8 @@ static int keyboard_keys_mapping1_callback(
   enum InputEvents input_event;
   size_t i;
 
+  input_event = INPUT_EVENT_NONE;
+
   for (i = 0; i < input->n; i++) {
     switch (input->buffer[i]) {
     case 'w':
@@ -115,7 +117,6 @@ static int keyboard_keys_mapping1_callback(
       input_event = INPUT_EVENT_EXIT;
       break;
     default:
-      input_event = INPUT_EVENT_NONE;
       break;
     }
   }

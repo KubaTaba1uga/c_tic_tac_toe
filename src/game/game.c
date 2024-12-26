@@ -128,14 +128,14 @@ int game_process(enum InputEvents input_event) {
 /* } */
 
 /* int game_init(void) { */
-/*   /\* struct LoggingUtilsOps *logging_ops; *\/ */
-/*   /\* struct ConfigOps *config_ops; *\/ */
-/*   /\* struct InputOps *input_ops; *\/ */
-/*   /\* int err; *\/ */
+/*   struct LoggingUtilsOps *logging_ops; */
+/*   struct ConfigOps *config_ops; */
+/*   struct InputOps *input_ops; */
+/*   int err; */
 
-/*   /\* logging_ops = get_logging_utils_ops(); *\/ */
-/*   /\* config_ops = get_config_ops(); *\/ */
-/*   /\* input_ops = get_input_ops(); *\/ */
+/*   logging_ops = get_logging_utils_ops(); */
+/*   config_ops = get_config_ops(); */
+/*   input_ops = get_input_ops(); */
 
 /*   return 0; */
 /* } */
