@@ -216,3 +216,8 @@ int validate_input_event(enum InputEvents input_event) {
   /* return (input_event <= INPUT_EVENT_NONE) || (input_event >=
    * INPUT_EVENT_MAX); */
 }
+
+/* int game_process(enum InputEvents input_event, input_device_id_t device_id) {
+ */
+/*   return game_priv_ops.(input_event, UserNone); */
+/* } */
