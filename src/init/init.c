@@ -116,7 +116,6 @@ static int init_register_multiple_modules(void) {
   struct ConfigOps *config_ops = get_config_ops();
   struct InputOps *input_ops = get_input_ops();
   struct GameOps *game_ops = get_game_ops();
-
   struct InitRegistration modules[] = {
       {.init = logging_ops->init,
        .destroy = logging_ops->destroy,

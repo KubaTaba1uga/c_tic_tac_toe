@@ -239,6 +239,57 @@ static int input_get_device(struct InputGetDeviceInput *input,
   return 0;
 }
 
+static int get_device_by_id(struct InputGetDeviceExtendedInput *input,
+                            struct InputGetDeviceExtendedOutput *output) {
+  struct InputDevice *device;
+  int err;
+
+  err = InputSubsystem_devices_get(&input_subsystem, input->device_id, &device);
+  if (err) {
+    return err;
+  }
+
+  output->device = device;
+  output->device_id = input->device_id;
+  output->device_name = (char *)device->display_name;
+
+  return 0;
+}
+
+static int get_device_by_name(struct InputGetDeviceExtendedInput *input,
+                              struct InputGetDeviceExtendedOutput *output) {
+  struct InputDevice *device;
+  size_t i;
+
+  for (i = 0; i < InputSubsystem_devices_length(&input_subsystem); i++) {
+    if (InputSubsystem_devices_get(&input_subsystem, i, &device) == 0 &&
+        strcmp(device->display_name, input->device_name) == 0) {
+      output->device = device;
+      output->device_id = i;
+      output->device_name = (char *)device->display_name;
+      return 0;
+    }
+  }
+
+  return ENOENT;
+}
+
+static int
+input_get_device_extended(struct InputGetDeviceExtendedInput *input,
+                          struct InputGetDeviceExtendedOutput *output) {
+  int (*get_device_funcs[])(struct InputGetDeviceExtendedInput *,
+                            struct InputGetDeviceExtendedOutput *) = {
+      [INPUT_GET_DEVICE_BY_ID] = get_device_by_id,
+      [INPUT_GET_DEVICE_BY_NAME] = get_device_by_name,
+  };
+
+  if (!input || !output || input->mode <= INPUT_GET_DEVICE_NONE ||
+      input->mode >= INPUT_GET_DEVICE_INVALID) {
+    return EINVAL;
+  }
+
+  return get_device_funcs[input->mode](input, output);
+}
 static int input_set_callback(struct InputSetCallbackInput *input,
                               struct InputSetCallbackOutput *output) {
   struct InputSubsystem *input_sys;
@@ -378,15 +429,15 @@ static int input_wait(struct InputSubsystem *subsystem) {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-static struct InputOps input_ops = {
-    .init = input_init_intrfc,
-    .stop = input_stop_intrfc,
-    .wait = input_wait_intrfc,
-    .start = input_start_intrfc,
-    .add_device = input_add_device_intrfc,
-    .get_device = input_get_device_intrfc,
-    .set_callback = input_set_callback_intrfc,
-};
+static struct InputOps input_ops = {.init = input_init_intrfc,
+                                    .stop = input_stop_intrfc,
+                                    .wait = input_wait_intrfc,
+                                    .start = input_start_intrfc,
+                                    .add_device = input_add_device_intrfc,
+                                    .get_device = input_get_device_intrfc,
+                                    .set_callback = input_set_callback_intrfc,
+                                    .get_device_extended =
+                                        input_get_device_extended};
 
 static struct InputPrivateOps input_private_ops_ = {
     .init = input_init,

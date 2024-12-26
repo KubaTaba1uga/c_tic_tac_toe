@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "game_user.h"
+#include "game/game_state_machine/game_user.h"
 
 static int init_game_user(struct GameUser *user, const char *display_name,
                           input_device_id_t device_id) {
@@ -11,7 +11,7 @@ static int init_game_user(struct GameUser *user, const char *display_name,
   }
 
   user->device_id = device_id;
-  user->display_name = display_name;
+  strncpy(user->display_name, display_name, GAME_USER_DISP_NAME_MAX);
 
   return 0;
 }

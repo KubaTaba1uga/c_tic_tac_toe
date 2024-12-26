@@ -11,8 +11,11 @@
 /*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
+#include "static_array_lib.h"
+
 #include "game/game_state_machine/game_states.h"
-#include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
+#include "game/game_state_machine/game_user.h"
+#include "game/game_state_machine/user_move.h"
 #include "input/input.h"
 
 /*******************************************************************************
@@ -22,31 +25,25 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-#define MAX_USERS_MOVES 100
+#define MAX_USERS_MOVES 1000
+#define MAX_USERS 10
 
 struct GameStateMachineInput {
   enum InputEvents input_event;
-  enum Users input_user;
+  input_device_id_t device_id;
 };
 
 struct GameStateMachineState {
-  struct UserMove users_moves_data[MAX_USERS_MOVES];
+  SARRS_FIELD(users_moves, struct UserMove, MAX_USERS_MOVES);
+  game_user_id_t current_user;
   enum GameStates current_state;
-  size_t users_moves_count;
-  enum Users current_user;
 };
 
-struct GameStateMachineOps {
-  int (*step)(enum InputEvents input_event, enum Users input_user);
-  struct GameStateMachineState *(*get_state_machine)(void);
-  void (*quit)(void);
-};
-
-extern struct InitRegistrationData init_game_sm_reg;
+struct GameStateMachineOps {};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct GameStateMachineOps game_sm_ops;
+struct GameStateMachineOps *get_game_state_machine_ops(void);
 
 #endif // GAME_STATE_MACHINE_H

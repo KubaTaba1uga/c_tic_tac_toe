@@ -4,8 +4,12 @@
 #include "input/input.h"
 #include "input/input_common.h"
 
+typedef int game_user_id_t;
+
+#define GAME_USER_DISP_NAME_MAX 32
+
 struct GameUser {
-  const char *display_name;
+  char display_name[GAME_USER_DISP_NAME_MAX];
   input_device_id_t device_id;
 };
 
