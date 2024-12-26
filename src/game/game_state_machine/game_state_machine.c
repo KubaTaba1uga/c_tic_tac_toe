@@ -12,12 +12,13 @@
 // C standard library
 #include <errno.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <string.h>
 
 // App's internal libs
 #include "config/config.h"
 #include "game/game.h"
-#include "game/game_state_machine/game_sm_subsystem.h"
+/* #include "game/game_state_machine/game_sm_subsystem.h" */
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/game_states.h"
 #include "init/init.h"
@@ -59,15 +60,6 @@ struct GameStateMachineOps game_sm_ops = {.step = game_sm_step,
                                               game_sm_get_state_machine};
 
 /*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-/* struct InitRegistrationData init_game_sm_reg = { */
-/*     .id = gsm_module_id, */
-/*     .init = game_sm_init, */
-/*     .destroy = NULL, */
-/* }; */
-
-/*******************************************************************************
  *    API
  ******************************************************************************/
 int game_sm_init(void) {
@@ -77,12 +69,10 @@ int game_sm_init(void) {
 
   game_sm.users_moves_count = 0;
   game_sm.current_state = GameStatePlay;
-  game_sm.current_user = User1;
+  game_sm.current_user = 0;
 
   return 0;
 }
-
-#include <stdio.h>
 
 void display_game_state(const struct GameStateMachineState *state) {
   if (!state) {

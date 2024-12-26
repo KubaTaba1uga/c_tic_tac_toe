@@ -33,17 +33,20 @@ static struct LoggingUtilsOps *logging_ops;
 /*******************************************************************************
  *    API
  ******************************************************************************/
+int game_init(void) {
+  input_ops = get_input_ops();
+  logging_ops = get_logging_utils_ops();
+
+  return 0;
+}
+
 /**
  * @brief Starts the game by entering the main game loop.
  *
  * @return 0 on success, or an error code on failure.
  */
-int start_game(void) {
+int game_start(void) {
   int err;
-
-  // Fetch subsystem operation handles
-  input_ops = get_input_ops();
-  logging_ops = get_logging_utils_ops();
 
   // Start the input subsystem
   logging_ops->log_info(__FILE_NAME__, "Starting input subsystem...");
@@ -73,22 +76,23 @@ int start_game(void) {
 /**
  * @brief Quits the game, performing necessary cleanup and shutdown.
  */
-void quit_game(void) {
+void game_stop(void) {
   logging_ops = get_logging_utils_ops();
 
-  logging_ops->log_info(__FILE_NAME__, "Quitting game...");
+  logging_ops->log_info(__FILE_NAME__, "Stopping game...");
 
   input_ops->stop();
 
-  logging_ops->log_info(__FILE_NAME__, "Game quit successfully.");
+  logging_ops->log_info(__FILE_NAME__, "Game stopped successfully.");
 }
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 struct GameOps game_ops = {
-    .start = start_game,
-    .quit = quit_game,
+    .init = game_init,
+    .start = game_start,
+    .stop = game_stop,
 };
 
 struct GameOps *get_game_ops(void) { return &game_ops; }

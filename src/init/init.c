@@ -8,7 +8,9 @@
 #include <string.h>
 
 #include "config/config.h"
+#include "game/game.h"
 #include "input/input.h"
+#include "input/keyboard/keyboard.h"
 #include "input/keyboard/keyboard_keys_mapping_1.h"
 #include "static_array_lib.h"
 #include "utils/logging_utils.h"
@@ -108,9 +110,12 @@ static void init_destroy(void) {
  *    MODULE REGISTRATION
  ******************************************************************************/
 static int init_register_multiple_modules(void) {
+  struct KeyboardKeysMapping1Ops *km1_ops = get_keyboard_keys_mapping_1_ops();
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
+  struct KeyboardOps *keyboard_ops = get_keyboard_ops();
   struct ConfigOps *config_ops = get_config_ops();
   struct InputOps *input_ops = get_input_ops();
+  struct GameOps *game_ops = get_game_ops();
 
   struct InitRegistration modules[] = {
       {.init = logging_ops->init,
@@ -118,7 +123,13 @@ static int init_register_multiple_modules(void) {
        .display_name = "logging_utils"},
       {.init = config_ops->init, .destroy = NULL, .display_name = "config"},
       {.init = input_ops->init, .destroy = NULL, .display_name = "input"},
-
+      {.init = keyboard_ops->init,
+       .destroy = keyboard_ops->destroy,
+       .display_name = "keyboard"},
+      {.init = km1_ops->init,
+       .destroy = NULL,
+       .display_name = KEYBOARD_KEYS_MAPPING_1_DISP_NAME},
+      {.init = game_ops->init, .destroy = NULL, .display_name = "game"},
   };
   int num_modules = sizeof(modules) / sizeof(struct InitRegistration);
   int err;
