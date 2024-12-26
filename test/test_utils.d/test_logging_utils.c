@@ -72,15 +72,15 @@ void test_create_log_entry_variadic_function(void) {
 
 void setUp(void) {
   logging_ops = get_logging_utils_ops();
-  logging_priv_ops = logging_ops->private;
+  logging_priv_ops = get_logging_utils_private_ops();
 
-  logging_ops->init_loggers();
+  logging_ops->init();
 
   create_log_entry_orig = logging_priv_ops->create_log_entry;
   logging_priv_ops->create_log_entry = create_log_entry_mock;
 }
 
 void tearDown(void) {
-  logging_ops->destroy_loggers();
+  logging_ops->destroy();
   logging_priv_ops->create_log_entry = create_log_entry_orig;
 }

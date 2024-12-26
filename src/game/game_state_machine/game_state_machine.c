@@ -61,11 +61,11 @@ struct GameStateMachineOps game_sm_ops = {.step = game_sm_step,
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-struct InitRegistrationData init_game_sm_reg = {
-    .id = gsm_module_id,
-    .init = game_sm_init,
-    .destroy = NULL,
-};
+/* struct InitRegistrationData init_game_sm_reg = { */
+/*     .id = gsm_module_id, */
+/*     .init = game_sm_init, */
+/*     .destroy = NULL, */
+/* }; */
 
 /*******************************************************************************
  *    API
@@ -212,5 +212,7 @@ int validate_input_user(enum Users input_user) {
 }
 
 int validate_input_event(enum InputEvents input_event) {
-  return (input_event <= INPUT_EVENT_NONE) || (input_event >= INPUT_EVENT_MAX);
+  return 0;
+  /* return (input_event <= INPUT_EVENT_NONE) || (input_event >=
+   * INPUT_EVENT_MAX); */
 }

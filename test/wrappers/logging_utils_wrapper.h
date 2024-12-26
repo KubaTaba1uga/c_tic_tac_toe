@@ -10,3 +10,5 @@ struct LoggingUtilsPrivateOps {
   void (*print_errno)(void);
   void (*print_error)(char *error);
 };
+
+struct LoggingUtilsPrivateOps *get_logging_utils_private_ops(void);

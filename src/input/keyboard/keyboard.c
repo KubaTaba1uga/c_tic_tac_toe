@@ -266,8 +266,6 @@ static void keyboard_execute_callbacks(struct KeyboardSubsystem *keyboard) {
     return;
 
   for (i = 0; i < KeyboardSubsystem_keys_mappings_length(keyboard); i++) {
-    logging_ops->log_info(module_id, "I: %i", i);
-
     err = KeyboardSubsystem_keys_mappings_get(keyboard, i, &keys_mapping);
     if (err) {
       logging_ops->log_err(module_id, "Unable to find keys mapping for %d: %s",

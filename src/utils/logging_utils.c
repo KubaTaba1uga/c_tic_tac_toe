@@ -85,6 +85,10 @@ struct LoggingUtilsOps *get_logging_utils_ops(void) {
   return &logging_utils_ops;
 }
 
+struct LoggingUtilsPrivateOps *get_logging_utils_private_ops(void) {
+  return &logging_utils_priv_ops;
+}
+
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/

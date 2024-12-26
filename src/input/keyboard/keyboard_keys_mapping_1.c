@@ -19,6 +19,7 @@ struct KeyboardKeysMapping1PrivOps {
 static struct InputOps *input_ops;
 static struct LoggingUtilsOps *logging_ops;
 static struct KeyboardKeysMapping1Subsystem keys_mapping1;
+
 static struct KeyboardKeysMapping1PrivOps *priv_ops;
 struct KeyboardKeysMapping1PrivOps *get_keyboard_keys_mapping_1_priv_ops(void);
 

@@ -8,9 +8,11 @@ int input_wait_mock(void) { return 0; };
 
 void setUp() {
   struct InputOps *input_ops = get_input_ops();
+  /* struct InitOps *init_ops = get_init_ops();   */
   // Disable game init and destroy
-  init_game_reg.init = NULL;
-  init_game_reg.destroy = NULL;
+  /* init_game_reg.init = NULL; */
+  /* init_game_reg.destroy = NULL; */
+
   input_ops->wait = input_wait_mock;
 }
 

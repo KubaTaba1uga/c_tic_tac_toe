@@ -10,7 +10,9 @@ test_config_src = [test_config_name,
 		   config / 'config.c',
 		   init / 'init.c',		   
 		   utils / 'std_lib_utils.c',
-		   utils / 'logging_utils.c']
+		   utils / 'logging_utils.c',
+		   # Next files are required by init
+		   src / 'input' / 'input.c']
 
 test_config_exe = executable('test_config',
   sources: [

@@ -47,6 +47,7 @@ test_keyboard1_src = [test_keyboard1_name,
 		      keyboard / 'keyboard_keys_mapping.c',
                       keyboard / 'keyboard_keys_mapping_1.c',		   		   
                       input / 'input.c',
+                      input / 'input_device.c',		      
 		      utils / 'std_lib_utils.c',
 		      utils / 'logging_utils.c',
    		      utils / 'terminal_utils.c'		

@@ -19,25 +19,25 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-#define GAME_USERS_MAX 10
-
-struct GameUser {
-  int input_registration_id;
+enum Users {
+  UserNone = 0,
+  User1,
+  User2,
+  UserMax,
 };
 
 struct GameOps {
-  int play(void);
+  void *private_ops;
 };
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-
 struct GameOps *get_game_ops(void);
 
 /*******************************************************************************
  *    INIT BOILERCODE
  ******************************************************************************/
-extern struct InitRegistration init_game_reg;
+/* extern struct InitRegistrationData *init_game_reg_p; */
 
 #endif // GAME_H

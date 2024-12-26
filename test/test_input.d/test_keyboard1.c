@@ -1,52 +1,39 @@
 #include <string.h>
 #include <unity.h>
 
-#include "init/init.h"
 #include "input/input.h"
-#include "input/input_registration.h"
 #include "input/keyboard/keyboard.h"
-#include "input/keyboard/keyboard1.h"
+#include "input/keyboard/keyboard_keys_mapping.h"
+#include "input/keyboard/keyboard_keys_mapping_1.h"
 #include "utils/logging_utils.h"
-#include "utils/terminal_utils.h"
 
 #include "input_keyboard1_wrapper.h"
 
-enum InputEvents mock_input_event;
-int mock_callback_counter;
+static enum InputEvents mock_input_event;
+static int mock_callback_counter;
 static struct InputOps *input_ops;
-static struct InputRegistrationOps *input_reg_ops;
 static struct KeyboardOps *keyboard_ops;
-static struct LoggingUtilsOps *logging_ops;
-static struct TerminalUtilsOps *terminal_ops;
-static struct Keyboard1PrivateOps *keyboard1_priv_ops;
-struct InputRegistration input_reg;
-
-static int mock_keyboard1_callback(enum InputEvents local_input_event);
+static struct KeyboardKeysMappingOps *keys_mapping_ops;
+static struct KeyboardKeysMapping1Ops *keyboard1_ops;
+static struct KeyboardKeysMapping1PrivOps *keyboard1_priv_ops;
 
 void setUp(void) {
   int err;
 
   input_ops = get_input_ops();
-  input_reg_ops = get_input_reg_ops();
   keyboard_ops = get_keyboard_ops();
-  logging_ops = get_logging_utils_ops();
-  terminal_ops = get_terminal_ops();
-  keyboard1_priv_ops = get_keyboard1_priv_ops();
+  keys_mapping_ops = get_keyboard_keys_mapping_ops();
+  keyboard1_ops = get_keyboard_keys_mapping_1_ops();
+  keyboard1_priv_ops = get_keyboard_keys_mapping_1_priv_ops();
 
-  // Initialize required modules
-  err = init_logging_reg.data.init();
+  // Initialize input and keyboard subsystems
+  err = input_ops->init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
-  err = init_registration_utils_reg.data.init();
+  err = keyboard_ops->init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
-  err = init_input_reg.data.init();
-  TEST_ASSERT_EQUAL_INT(0, err);
-
-  err = init_keyboard_reg.data.init();
-  TEST_ASSERT_EQUAL_INT(0, err);
-
-  err = init_keyboard1_reg.data.init();
+  err = keyboard1_ops->init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
   mock_callback_counter = 0;
@@ -54,149 +41,75 @@ void setUp(void) {
 }
 
 void tearDown(void) {
-
-  // Destroy initialized modules
-  if (init_keyboard_reg.data.destroy) {
-    init_keyboard_reg.data.destroy();
+  if (keyboard_ops->stop) {
+    keyboard_ops->stop();
   }
 
-  if (init_input_reg.data.destroy) {
-    init_input_reg.data.destroy();
+  if (input_ops->stop) {
+    input_ops->stop();
   }
 
-  if (init_registration_utils_reg.data.destroy) {
-    init_registration_utils_reg.data.destroy();
+  if (keyboard_ops->destroy) {
+    keyboard_ops->destroy();
   }
 
-  if (init_logging_reg.data.destroy) {
-    init_logging_reg.data.destroy();
+  if (input_ops->destroy) {
+    input_ops->destroy();
   }
 }
 
-void test_keyboard1_logic_up(void) {
-  char test_str[] = "xyzuw";
-  int err;
+void test_keyboard1_event_up(void) {
+  char *test_strings[] = {"w", "ww", "www", "wwww"};
+  struct KeyboardKeysMappingCallbackOutput output;
 
-  err = input_ops->set_callback(
-      (struct InputSetRegistrationCallbackInput){
-          .callback = mock_keyboard1_callback, .registration_id = 0},
-      &(struct InputSetRegistrationCallbackOutput){});
-  if (err != 0) {
-    TEST_FAIL_MESSAGE("Setting keyboard1_callback failed");
+  for (int i = 0; i < sizeof(test_strings) / sizeof(test_strings[0]); i++) {
+    struct KeyboardKeysMappingCallbackInput input = {
+        .buffer = test_strings[i], .n = strlen(test_strings[i])};
+
+    int err = keyboard1_priv_ops->keyboard_callback(&input, &output);
+    TEST_ASSERT_EQUAL_INT(0, err);
+    TEST_ASSERT_EQUAL_INT(INPUT_EVENT_UP, output.input_event);
   }
-
-  err = keyboard1_priv_ops->callback(strlen(test_str), test_str);
-  if (err != 0) {
-    TEST_FAIL_MESSAGE("keyboard1_callback failed");
-  }
-
-  TEST_ASSERT_EQUAL_INT(INPUT_EVENT_UP, mock_input_event);
 }
 
-void test_keyboard1_logic_down(void) {
-  char test_str[] = "abcsm";
-  int err;
+void test_keyboard1_event_down(void) {
+  char *test_strings[] = {"s", "ss", "sss", "ssss"};
+  struct KeyboardKeysMappingCallbackOutput output;
 
-  err = input_ops->set_callback(
-      (struct InputSetRegistrationCallbackInput){
-          .callback = mock_keyboard1_callback, .registration_id = 0},
-      &(struct InputSetRegistrationCallbackOutput){});
-  if (err != 0) {
-    TEST_FAIL_MESSAGE("Setting keyboard1_callback failed");
+  for (int i = 0; i < sizeof(test_strings) / sizeof(test_strings[0]); i++) {
+    struct KeyboardKeysMappingCallbackInput input = {
+        .buffer = test_strings[i], .n = strlen(test_strings[i])};
+
+    int err = keyboard1_priv_ops->keyboard_callback(&input, &output);
+    TEST_ASSERT_EQUAL_INT(0, err);
+    TEST_ASSERT_EQUAL_INT(INPUT_EVENT_DOWN, output.input_event);
   }
-
-  err = keyboard1_priv_ops->callback(strlen(test_str), test_str);
-  if (err != 0) {
-    TEST_FAIL_MESSAGE("keyboard1_callback failed");
-  }
-
-  TEST_ASSERT_EQUAL_INT(INPUT_EVENT_DOWN, mock_input_event);
 }
 
-void test_keyboard1_logic_left(void) {
-  char test_str[] = "nmddal";
-  int err;
+void test_keyboard1_event_left(void) {
+  char *test_strings[] = {"a", "aa", "aaa", "aaaa"};
+  struct KeyboardKeysMappingCallbackOutput output;
 
-  err = input_ops->set_callback(
-      (struct InputSetRegistrationCallbackInput){
-          .callback = mock_keyboard1_callback, .registration_id = 0},
-      &(struct InputSetRegistrationCallbackOutput){});
-  if (err != 0) {
-    TEST_FAIL_MESSAGE("Setting keyboard1_callback failed");
+  for (int i = 0; i < sizeof(test_strings) / sizeof(test_strings[0]); i++) {
+    struct KeyboardKeysMappingCallbackInput input = {
+        .buffer = test_strings[i], .n = strlen(test_strings[i])};
+
+    int err = keyboard1_priv_ops->keyboard_callback(&input, &output);
+    TEST_ASSERT_EQUAL_INT(0, err);
+    TEST_ASSERT_EQUAL_INT(INPUT_EVENT_LEFT, output.input_event);
   }
-
-  err = keyboard1_priv_ops->callback(strlen(test_str), test_str);
-  if (err != 0) {
-    TEST_FAIL_MESSAGE("keyboard1_callback failed");
-  }
-
-  TEST_ASSERT_EQUAL_INT(INPUT_EVENT_LEFT, mock_input_event);
 }
 
-void test_keyboard1_logic_right(void) {
-  char test_str[] = "qwertyd";
-  int err;
+void test_keyboard1_event_right(void) {
+  char *test_strings[] = {"d", "dd", "ddd", "dddd"};
+  struct KeyboardKeysMappingCallbackOutput output;
 
-  err = input_ops->set_callback(
-      (struct InputSetRegistrationCallbackInput){
-          .callback = mock_keyboard1_callback, .registration_id = 0},
-      &(struct InputSetRegistrationCallbackOutput){});
-  if (err != 0) {
-    TEST_FAIL_MESSAGE("Setting keyboard1_callback failed");
+  for (int i = 0; i < sizeof(test_strings) / sizeof(test_strings[0]); i++) {
+    struct KeyboardKeysMappingCallbackInput input = {
+        .buffer = test_strings[i], .n = strlen(test_strings[i])};
+
+    int err = keyboard1_priv_ops->keyboard_callback(&input, &output);
+    TEST_ASSERT_EQUAL_INT(0, err);
+    TEST_ASSERT_EQUAL_INT(INPUT_EVENT_RIGHT, output.input_event);
   }
-
-  err = keyboard1_priv_ops->callback(strlen(test_str), test_str);
-  if (err != 0) {
-    TEST_FAIL_MESSAGE("keyboard1_callback failed");
-  }
-
-  TEST_ASSERT_EQUAL_INT(INPUT_EVENT_RIGHT, mock_input_event);
-}
-
-void test_keyboard1_logic_select(void) {
-  char test_str[] = "helloworld\n";
-  int err;
-
-  err = input_ops->set_callback(
-      (struct InputSetRegistrationCallbackInput){
-          .callback = mock_keyboard1_callback, .registration_id = 0},
-      &(struct InputSetRegistrationCallbackOutput){});
-  if (err != 0) {
-    TEST_FAIL_MESSAGE("Setting keyboard1_callback failed");
-  }
-
-  err = keyboard1_priv_ops->callback(strlen(test_str), test_str);
-  if (err != 0) {
-    TEST_FAIL_MESSAGE("keyboard1_callback failed");
-  }
-
-  TEST_ASSERT_EQUAL_INT(INPUT_EVENT_SELECT, mock_input_event);
-}
-
-void test_keyboard1_logic_quit(void) {
-  char test_str[] = "goodbyeq";
-  int err;
-
-  err = input_ops->set_callback(
-      (struct InputSetRegistrationCallbackInput){
-          .callback = mock_keyboard1_callback, .registration_id = 0},
-      &(struct InputSetRegistrationCallbackOutput){});
-  if (err != 0) {
-    TEST_FAIL_MESSAGE("Setting keyboard1_callback failed");
-  }
-
-  err = keyboard1_priv_ops->callback(strlen(test_str), test_str);
-  if (err != 0) {
-    TEST_FAIL_MESSAGE("keyboard1_callback failed");
-  }
-
-  TEST_ASSERT_EQUAL_INT(INPUT_EVENT_EXIT, mock_input_event);
-}
-
-int mock_keyboard1_callback(enum InputEvents local_input_event) {
-  logging_ops->log_info("mock_keyboard1_callback",
-                        "Callback executed for event: %d", local_input_event);
-  mock_callback_counter++;
-  mock_input_event = local_input_event;
-  return 0;
 }

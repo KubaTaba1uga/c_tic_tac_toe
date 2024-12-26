@@ -56,7 +56,7 @@ int main(void)
   input_ops = get_input_ops();
   init_ops = get_init_ops();
 
-  err = init_ops->initialize_system();
+  err = init_ops->initialize();
   if (err) {
     logging_ops->log_err(main_id, "Unable to initialize game: %s.",
                          strerror(err));
@@ -70,7 +70,7 @@ int main(void)
 
   logging_ops->log_info(main_id, "Game finished");
 
-  init_ops->destroy_system();
+  init_ops->destroy();
 
   return 0;
 }
