@@ -10,6 +10,7 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -19,195 +20,139 @@
 #include "config/config.h"
 #include "game/game.h"
 /* #include "game/game_state_machine/game_sm_subsystem.h" */
+#include "game/game_config.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/game_states.h"
+#include "game/game_user.h"
+#include "game/user_move.h"
 #include "init/init.h"
 #include "input/input.h"
+#include "input/input_common.h"
+#include "static_array_lib.h"
 #include "utils/logging_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
+typedef struct GameStateMachineState GSMState;
+
+SARRS_DECL(GSMState, users_moves, struct UserMove, MAX_USERS_MOVES);
+
+struct GameStateMachinePrivOps {
+  int (*validate_device_id)(input_device_id_t device_id);
+  int (*validate_input_event)(enum InputEvents input_event);
+};
+
+static struct GameOps *game_ops;
 static struct InputOps *input_ops;
 static struct LoggingUtilsOps *logging_ops;
+static struct GameConfigOps *game_config_ops;
 static struct GameStateMachineState game_sm;
-static struct GameSmSubsystemOps *gsm_sub_ops;
 static char gsm_module_id[] = "game_state_machine";
 
-static int game_sm_init(void);
-static void game_sm_quit(void);
-static int validate_input_user(enum Users input_user);
-static int validate_input_event(enum InputEvents input_event);
-static int game_sm_step(enum InputEvents input_event, enum Users input_user);
-static struct GameStateMachineState *game_sm_get_state_machine(void);
-
-/*******************************************************************************
- *    MODULARITY BOILERCODE
- ******************************************************************************/
-struct GameStateMachinePrivOps {
-  int (*is_input_user_valid)(enum Users input_user);
-  int (*is_input_event_valid)(enum InputEvents input_event);
-};
-
-static struct GameStateMachinePrivOps game_sm_priv_ops = {
-    .is_input_event_valid = validate_input_event,
-    .is_input_user_valid = validate_input_user,
-};
-
-struct GameStateMachineOps game_sm_ops = {.step = game_sm_step,
-                                          .quit = game_sm_quit,
-                                          .get_state_machine =
-                                              game_sm_get_state_machine};
+static struct GameStateMachinePrivOps *gsm_priv_ops;
+struct GameStateMachinePrivOps *get_game_state_machine_priv_ops(void);
 
 /*******************************************************************************
  *    API
  ******************************************************************************/
+
 int game_sm_init(void) {
-  gsm_sub_ops = get_game_sm_subsystem_ops();
+
   logging_ops = get_logging_utils_ops();
   input_ops = get_input_ops();
+  game_config_ops = get_game_config_ops();
+  game_ops = get_game_ops();
 
-  game_sm.users_moves_count = 0;
+  GSMState_users_moves_init(&game_sm);
   game_sm.current_state = GameStatePlay;
   game_sm.current_user = 0;
 
   return 0;
 }
 
-void display_game_state(const struct GameStateMachineState *state) {
-  if (!state) {
-    printf("Invalid state pointer!\n");
-    return;
-  }
-
-  // Display current state
-  printf("Current State: ");
-  switch (state->current_state) {
-  case GameStatePlay:
-    printf("Play\n");
-    break;
-  case GameStateQuitting:
-    printf("Quitting\n");
-    break;
-  case GameStateQuit:
-    printf("Quit\n");
-    break;
-  case GameStateWin:
-    printf("Win\n");
-    break;
-  default:
-    printf("Unknown State\n");
-    break;
-  }
-
-  // Display current user
-  printf("Current User: ");
-  switch (state->current_user) {
-  case UserNone:
-    printf("None\n");
-    break;
-  case User1:
-    printf("User 1 (X)\n");
-    break;
-  case User2:
-    printf("User 2 (O)\n");
-    break;
-  default:
-    printf("Unknown User\n");
-    break;
-  }
-
-  // Display user moves
-  printf("Total Moves: %zu\n", state->users_moves_count);
-  for (size_t i = 0; i < state->users_moves_count; i++) {
-    printf("Move %zu: User ", i + 1);
-    switch (state->users_moves_data[i].user) {
-    case User1:
-      printf("1 (X)");
-      break;
-    case User2:
-      printf("2 (O)");
-      break;
-    default:
-      printf("Unknown");
-      break;
-    }
-    printf(", Type: ");
-    switch (state->users_moves_data[i].type) {
-    case USER_MOVE_TYPE_HIGHLIGHT:
-      printf("Highlight");
-      break;
-    case USER_MOVE_TYPE_SELECT_VALID:
-      printf("Select Valid");
-      break;
-    case USER_MOVE_TYPE_SELECT_INVALID:
-      printf("Select Invalid");
-      break;
-    case USER_MOVE_TYPE_QUIT:
-      printf("Quit");
-      break;
-    default:
-      printf("Unknown");
-      break;
-    }
-    printf(", Coordinates: (%d, %d)\n",
-           state->users_moves_data[i].coordinates[0],
-           state->users_moves_data[i].coordinates[1]);
-  }
-}
-
-int game_sm_step(enum InputEvents input_event, enum Users input_user) {
+int game_sm_step(enum InputEvents input_event, input_device_id_t device_id) {
   struct GameStateMachineInput data;
   int err;
 
-  if (game_sm_priv_ops.is_input_event_valid(input_event) != 0 ||
-      game_sm_priv_ops.is_input_user_valid(input_user) != 0)
-    return EINVAL;
-
   logging_ops->log_info(gsm_module_id, "Event %d User %d", input_event,
-                        input_user);
+                        game_sm.current_user);
 
-  data.input_event = input_event;
-  data.input_user = input_user;
-
-  err = gsm_sub_ops->next_state(data, &game_sm);
+  err = gsm_priv_ops->validate_input_event(input_event);
   if (err) {
-    logging_ops->log_err(gsm_module_id,
-                         "Quitting the game, because of an error %s.",
+    logging_ops->log_err(gsm_module_id, "Invalid input event: %s",
                          strerror(err));
-
-    game_sm_ops.quit();
-
     return err;
   }
-  display_game_state(&game_sm);
+
+  err = gsm_priv_ops->validate_device_id(device_id);
+  if (err) {
+    logging_ops->log_err(gsm_module_id, "Invalid device id %d for user %d: %s",
+                         device_id, game_sm.current_user, strerror(err));
+    return err;
+  }
+
+  data.input_event = input_event;
+  data.device_id = device_id;
+
+  // Make compiler happy
+  (void)data;
+  /* err = gsm_sub_ops->next_state(data, &game_sm); */
+  /* if (err) { */
+  /*   logging_ops->log_err(gsm_module_id, "Unable to get next gsm state: %s",
+   */
+  /*                        strerror(err)); */
+
+  /*   game_ops->stop(); */
+
+  /*   return err; */
+  /* } */
 
   return 0;
 }
 
-void game_sm_quit(void) { input_ops->stop(); }
+static int validate_input_event(enum InputEvents input_event) {
+  if ((input_event <= INPUT_EVENT_NONE) || (input_event >= INPUT_EVENT_INVALID))
+    return EINVAL;
 
-struct GameStateMachineState *game_sm_get_state_machine(void) {
-  return &game_sm;
+  return 0;
+}
+
+static int validate_device_id(input_device_id_t device_id) {
+  struct GameGetUserOutput get_user;
+  int err;
+
+  err = game_config_ops->get_user(
+      &(struct GameGetUserInput){.user_id = game_sm.current_user}, &get_user);
+  if (err) {
+    logging_ops->log_err(gsm_module_id, "Unable to get user %d: %s",
+                         game_sm.current_user, strerror(err));
+    return err;
+  }
+
+  if (device_id != get_user.user->device_id) {
+    return EINVAL;
+  }
+
+  return 0;
+}
+
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
+static struct GameStateMachinePrivOps game_sm_priv_ops = {
+    .validate_input_event = validate_input_event,
+    .validate_device_id = validate_device_id,
 };
 
-int validate_input_user(enum Users input_user) {
-  enum Users valid_values[] = {game_sm.current_user, UserNone};
-  size_t i;
-  for (i = 0; i < sizeof(valid_values) / sizeof(enum Users); i++) {
-    if (input_user == valid_values[i])
-      return 0;
-  }
-  return 1;
+struct GameStateMachineOps game_sm_ops = {
+    .step = game_sm_step,
+};
+
+struct GameStateMachinePrivOps *get_game_state_machine_priv_ops(void) {
+  return &game_sm_priv_ops;
 }
 
-int validate_input_event(enum InputEvents input_event) {
-  return 0;
-  /* return (input_event <= INPUT_EVENT_NONE) || (input_event >=
-   * INPUT_EVENT_MAX); */
+struct GameStateMachineOps *get_game_state_machine_ops(void) {
+  return &game_sm_ops;
 }
-
-/* int game_process(enum InputEvents input_event, input_device_id_t device_id) {
- */
-/*   return game_priv_ops.(input_event, UserNone); */
-/* } */

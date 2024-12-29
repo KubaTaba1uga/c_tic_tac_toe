@@ -32,6 +32,7 @@ static GameConfig game_config;
 static int game_config_init(void) {
   struct ConfigVariable config_var = {.var_name = "users_amount",
                                       .default_value = "2"};
+  struct GameStateMachineOps *gsm_ops = get_game_state_machine_ops();
   struct InputGetDeviceExtendedOutput get_device;
   struct ConfigAddVarOutput add_var;
   struct ConfigGetVarOutput get_var;
@@ -47,7 +48,6 @@ static int game_config_init(void) {
   GameConfig_users_init(&game_config);
   game_config.display_id = 0;
 
-  // TO-DO: get display id
   // Add users_amount config variable
   err = config_ops->add_var((struct ConfigAddVarInput){.var = &config_var},
                             &add_var);
@@ -71,6 +71,13 @@ static int game_config_init(void) {
 
   users_amount = atoi(get_var.value);
   log_ops->log_info(__FILE_NAME__, "Users amount: %i", users_amount);
+
+  if (users_amount > MAX_USERS) {
+    log_ops->log_err(__FILE_NAME__,
+                     "Invalid users_amount value, maximum users amount is %d",
+                     MAX_USERS);
+    return err;
+  }
 
   for (i = 0; i < users_amount; i++) {
     // Add user input config variable
@@ -106,6 +113,17 @@ static int game_config_init(void) {
       return err;
     }
 
+    err = input_ops->set_callback(
+        (struct InputSetCallbackInput){.callback = gsm_ops->step,
+                                       .device_id = get_device.device_id},
+        &(struct InputSetCallbackOutput){});
+    if (err) {
+      log_ops->log_err(__FILE_NAME__,
+                       "Unable to set callback for %s input device: %s",
+                       get_var.value, strerror(err));
+      return err;
+    }
+
     user.device_id = get_device.device_id;
     snprintf(user.display_name, GAME_USER_DISP_NAME_MAX, "player_%zu", i);
 
@@ -117,6 +135,7 @@ static int game_config_init(void) {
       return err;
     }
   }
+
   return 0;
 }
 

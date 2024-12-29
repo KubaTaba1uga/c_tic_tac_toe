@@ -11,6 +11,7 @@
 /*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
+#include "input/input_common.h"
 #include "static_array_lib.h"
 
 #include "game/game_state_machine/game_states.h"
@@ -39,7 +40,10 @@ struct GameStateMachineState {
   enum GameStates current_state;
 };
 
-struct GameStateMachineOps {};
+struct GameStateMachineOps {
+  int (*init)(void);
+  input_callback_func_t step;
+};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE

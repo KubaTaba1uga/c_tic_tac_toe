@@ -20,6 +20,8 @@ test_init_src = [test_init_name,
 		 utils / 'std_lib_utils.c',
 		 utils / 'logging_utils.c',
 		 game / 'game.c',
+		 game / 'game_config.c',
+		 game / 'game_state_machine' / 'game_state_machine.c',		 		 
 		 ]
 
 test_init_exe = executable('test_init',
