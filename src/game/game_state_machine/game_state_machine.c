@@ -10,7 +10,6 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
-#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -34,9 +33,10 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-typedef struct GameStateMachineState GSMState;
+typedef struct GameStateMachineState GameStateMachineState;
 
-SARRS_DECL(GSMState, users_moves, struct UserMove, MAX_USERS_MOVES);
+SARRS_DECL(GameStateMachineState, users_moves, struct UserMove,
+           MAX_USERS_MOVES);
 
 struct GameStateMachinePrivOps {
   int (*validate_device_id)(input_device_id_t device_id);
@@ -64,7 +64,7 @@ int game_sm_init(void) {
   game_config_ops = get_game_config_ops();
   game_ops = get_game_ops();
 
-  GSMState_users_moves_init(&game_sm);
+  GameStateMachineState_users_moves_init(&game_sm);
   game_sm.current_state = GameStatePlay;
   game_sm.current_user = 0;
 
