@@ -45,28 +45,28 @@ test_game_config_exe = executable('test_game_config',
 test('test_game_config', test_game_config_exe)
 
 
-# ############################################################################
-# #                   Game State Machine Subsystem Tests                     #
-# ############################################################################
-# test_gsm_subsystem_name = 'test_game_state_machine_subsystem.c'
+############################################################################
+#                   Game State Machine Subsystem Tests                     #
+############################################################################
+test_gsm_subsystem_name = 'test_game_state_machine_subsystem.c'
 
-# test_gsm_subsystem_src = files([test_gsm_subsystem_name]) + sources
+test_gsm_subsystem_src = files([test_gsm_subsystem_name]) + sources
 
-# test_gsm_subsystem_exe = executable('test_gsm_subsystem',
-#   sources: [
-#     test_gsm_subsystem_src,
-#     unity_gen_runner.process(test_gsm_subsystem_name),
-#   ],
-#   include_directories: [src, test_includes],
-#   dependencies: test_dependencies,
-#   c_args:['-DTEST'],
-#   link_args: [
-#     # allow static functions testing
-#     '-zmuldefs',
-#   ]
-# )
+test_gsm_subsystem_exe = executable('test_gsm_subsystem',
+  sources: [
+    test_gsm_subsystem_src,
+    unity_gen_runner.process(test_gsm_subsystem_name),
+  ],
+  include_directories: [src, test_includes],
+  dependencies: test_dependencies,
+  c_args:['-DTEST'],
+  link_args: [
+    # allow static functions testing
+    '-zmuldefs',
+  ]
+)
 
-# test('test_gsm_subsystem', test_gsm_subsystem_exe)
+test('test_gsm_subsystem', test_gsm_subsystem_exe)
 
 
 # ############################################################################
