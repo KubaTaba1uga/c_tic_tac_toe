@@ -4,7 +4,7 @@
 #include "static_array_lib.h"
 
 #include "game/game_state_machine/game_state_machine.h"
-#include "game/game_state_machine/game_user.h"
+#include "game/game_user.h"
 
 struct GameGetUserInput {
   game_user_id_t user_id;

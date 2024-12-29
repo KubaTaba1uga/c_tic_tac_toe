@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "game/game_state_machine/game_user.h"
+#include "game/game_user.h"
 
 static int init_game_user(struct GameUser *user, const char *display_name,
                           input_device_id_t device_id) {

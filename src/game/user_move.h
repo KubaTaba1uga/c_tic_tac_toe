@@ -1,7 +1,7 @@
 #ifndef GAME_USER_MOVE_H
 #define GAME_USER_MOVE_H
 
-#include "game/game_state_machine/game_user.h"
+#include "game/game_user.h"
 
 struct UserMoveCoordinates {
   int x;

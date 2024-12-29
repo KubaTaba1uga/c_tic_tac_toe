@@ -17,8 +17,8 @@ test_game_config_name = 'test_game_config.c'
 
 test_game_config_src = [test_game_config_name,
                    game / 'game.c',
-                   game_state_machine / 'game_config.c',
-                   game_state_machine / 'game_user.c',
+                   game / 'game_config.c',
+                   game / 'game_user.c',
                    keyboard / 'keyboard.c',
                    keyboard / 'keyboard_keys_mapping.c',
                    keyboard / 'keyboard_keys_mapping_1.c',

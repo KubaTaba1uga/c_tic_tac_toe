@@ -14,8 +14,8 @@
 #include "static_array_lib.h"
 
 #include "game/game_state_machine/game_states.h"
-#include "game/game_state_machine/game_user.h"
-#include "game/game_state_machine/user_move.h"
+#include "game/game_user.h"
+#include "game/user_move.h"
 #include "input/input.h"
 
 /*******************************************************************************

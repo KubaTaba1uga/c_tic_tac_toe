@@ -1,4 +1,4 @@
-#include <asm-generic/errno-base.h>
+#include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,10 +7,10 @@
 #include "static_array_lib.h"
 
 #include "config/config.h"
-#include "game/game_state_machine/game_config.h"
+#include "game/game_config.h"
 #include "game/game_state_machine/game_state_machine.h"
-#include "game/game_state_machine/game_user.h"
-#include "game/game_state_machine/user_move.h"
+#include "game/game_user.h"
+#include "game/user_move.h"
 #include "input/input.h"
 #include "input/keyboard/keyboard_keys_mapping_1.h"
 #include "utils/logging_utils.h"

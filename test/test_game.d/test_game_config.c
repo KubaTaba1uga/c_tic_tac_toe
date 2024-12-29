@@ -5,9 +5,9 @@
 #include <unity.h>
 
 #include "config/config.h"
-#include "game/game_state_machine/game_config.h"
-#include "game/game_state_machine/game_user.h"
-#include "game/game_state_machine/user_move.h"
+#include "game/game_config.h"
+#include "game/game_user.h"
+#include "game/user_move.h"
 #include "input/input.h"
 #include "input/keyboard/keyboard.h"
 #include "input/keyboard/keyboard_keys_mapping_1.h"
