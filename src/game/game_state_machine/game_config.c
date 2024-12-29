@@ -1,20 +1,26 @@
+#include <asm-generic/errno-base.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "game/game_state_machine/game_user.h"
-#include "input/input.h"
-#include "input/keyboard/keyboard_keys_mapping_1.h"
 #include "static_array_lib.h"
 
 #include "config/config.h"
 #include "game/game_state_machine/game_config.h"
 #include "game/game_state_machine/game_state_machine.h"
-#include "game/game_user.h"
+#include "game/game_state_machine/game_user.h"
+#include "game/game_state_machine/user_move.h"
+#include "input/input.h"
+#include "input/keyboard/keyboard_keys_mapping_1.h"
 #include "utils/logging_utils.h"
 
 typedef struct GameConfig GameConfig;
+
+struct GameConfig {
+  SARRS_FIELD(users, struct GameUser, MAX_USERS);
+  int display_id;
+};
 
 SARRS_DECL(GameConfig, users, struct GameUser, MAX_USERS);
 
@@ -68,7 +74,7 @@ static int game_config_init(void) {
 
   for (i = 0; i < users_amount; i++) {
     // Add user input config variable
-    snprintf(config_var.var_name, CONFIG_VARIABLE_MAX, "user%zu_input", i);
+    snprintf(config_var.var_name, CONFIG_VARIABLE_MAX, "user%zu_input", i + 1);
     strcpy(config_var.default_value, KEYBOARD_KEYS_MAPPING_1_DISP_NAME);
 
     err = config_ops->add_var((struct ConfigAddVarInput){.var = &config_var},
@@ -113,3 +119,21 @@ static int game_config_init(void) {
   }
   return 0;
 }
+
+static int game_config_get_user(struct GameGetUserInput *input,
+                                struct GameGetUserOutput *output) {
+  if (!input || !output)
+    return EINVAL;
+
+  return GameConfig_users_get(&game_config, input->user_id, &output->user);
+};
+
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
+static struct GameConfigOps game_config_pub_ops = {
+    .init = game_config_init,
+    .get_user = game_config_get_user,
+};
+
+struct GameConfigOps *get_game_config_ops(void) { return &game_config_pub_ops; }
