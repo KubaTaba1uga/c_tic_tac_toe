@@ -56,7 +56,7 @@ static int add_move(struct GameStateMachineState *state,
   return 0;
 };
 
-static int delete_last_move(struct GameStateMachineState *state, ) {
+static int delete_last_move(struct GameStateMachineState *state) {
 
   if (!state)
     return EINVAL;

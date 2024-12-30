@@ -12,7 +12,19 @@ test_config_src = [test_config_name,
 		   utils / 'std_lib_utils.c',
 		   utils / 'logging_utils.c',
 		   # Next files are required by init
-		   src / 'input' / 'input.c']
+		 input / 'input.c',
+		 input / 'input_device.c',		 
+		 input / 'keyboard' / 'keyboard.c',
+                 input / 'keyboard' / 'keyboard_keys_mapping.c',
+                 input / 'keyboard' / 'keyboard_keys_mapping_1.c',
+		 utils / 'terminal_utils.c',		 
+		 game / 'game.c',
+		 game / 'game_config.c',
+		 game / 'game_state_machine' / 'game_state_machine.c',
+		 game / 'game_state_machine' / 'game_sm_subsystem.c',		 
+  		 game / 'game_state_machine' / 'mini_state_machines' / 'user_move_mini_machine.c',		 		 			          game / 'game_state_machine' / 'mini_state_machines' / 'quit_mini_machine.c',
+  		 game / 'game_state_machine' / 'mini_state_machines' / 'moves_cleanup_mini_machine.c',		 		 			          game / 'game_state_machine' / 'mini_state_machines' / 'common.c',
+		 ]
 
 test_config_exe = executable('test_config',
   sources: [

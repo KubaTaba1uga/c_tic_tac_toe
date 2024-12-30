@@ -20,7 +20,6 @@
 
 // App's internal libs
 #include "config/config.h"
-#include "display/display.h"
 #include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
