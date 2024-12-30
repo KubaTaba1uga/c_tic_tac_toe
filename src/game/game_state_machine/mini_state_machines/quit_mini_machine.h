@@ -24,7 +24,7 @@ extern struct InitRegistrationData init_quit_state_machine_reg;
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 struct GameSmQuitModuleOps {
-  void *private_ops;
+  int (*init)(void);
 };
 
 struct GameSmQuitModuleOps *get_game_sm_quit_module_ops(void);

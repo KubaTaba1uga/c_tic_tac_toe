@@ -122,26 +122,41 @@ test_user_move_exe = executable('test_user_move',
 
 test('test_user_move', test_user_move_exe)
 
-# ############################################################################
-# #                   Quit State Machine Module Tests                        #
-# ############################################################################
-# test_quit_sm_name = 'test_quit_sm.c'
+############################################################################
+#                   Quit State Machine Module Tests                        #
+############################################################################
+test_quit_sm_name = 'test_quit_sm.c'
 
-# test_quit_sm_src = files([test_quit_sm_name]) + sources
+test_quit_sm_src = [test_quit_sm_name,
+                   game / 'game.c',
+                   game / 'game_config.c',
+                   game / 'game_user.c',
+		   game_state_machine / 'game_state_machine.c',
+		   game_state_machine / 'game_sm_subsystem.c',
+		   game_state_machine / 'mini_state_machines' / 'common.c',
+		   game_state_machine / 'mini_state_machines' / 'quit_mini_machine.c',
+		   game_state_machine / 'mini_state_machines' / 'user_move_mini_machine.c',		   		   		  
+                   keyboard / 'keyboard.c',
+                   keyboard / 'keyboard_keys_mapping.c',
+                   keyboard / 'keyboard_keys_mapping_1.c',
+		   config / 'config.c',
+                   init / 'init.c',		   
+                   input / 'input.c',
+                   input / 'input_device.c',		   
+		   utils / 'std_lib_utils.c',
+		   utils / 'logging_utils.c',
+   		   utils / 'terminal_utils.c'		
+		   ]
 
-# test_quit_sm_exe = executable('test_quit_sm',
-#   sources: [
-#     test_quit_sm_src,
-#     unity_gen_runner.process(test_quit_sm_name),
-#   ],
-#   include_directories: [src, test_includes],
-#   dependencies: test_dependencies,
-#   c_args:['-DTEST'],
-#   link_args: [
-#     # allow static functions testing
-#     '-zmuldefs',
-#   ]
-# )
+test_quit_sm_exe = executable('test_quit_sm',
+  sources: [
+    test_quit_sm_src,
+    unity_gen_runner.process(test_quit_sm_name),
+  ],
+  include_directories: [src, test_includes],
+  dependencies: test_dependencies,
+  c_args:['-DTEST'],
+)
 
-# test('test_quit_sm', test_quit_sm_exe)
+test('test_quit_sm', test_quit_sm_exe)
 

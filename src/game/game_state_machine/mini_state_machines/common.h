@@ -23,6 +23,8 @@
  ******************************************************************************/
 struct GameStateMachineCommonOps {
   struct UserMove *(*get_last_move)(struct GameStateMachineState *state);
+  int (*add_move)(struct GameStateMachineState *state,
+                  struct UserMove user_move);
 };
 
 /*******************************************************************************

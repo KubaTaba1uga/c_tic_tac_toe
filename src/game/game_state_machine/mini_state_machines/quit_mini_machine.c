@@ -17,9 +17,9 @@
 #include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/game_states.h"
-#include "game/game_state_machine/sub_state_machines/common.h"
-#include "game/game_state_machine/sub_state_machines/quit_sm_module.h"
-#include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
+#include "game/game_state_machine/mini_state_machines/common.h"
+#include "game/game_state_machine/mini_state_machines/quit_mini_machine.h"
+#include "game/user_move.h"
 #include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
@@ -27,53 +27,39 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-static int quit_state_machine_init(void);
-static int quit_state_machine_next_state(struct GameStateMachineInput input,
-                                         struct GameStateMachineState *state);
-static char gsm_quit_module_id[] = "quit_sm_module";
-static struct GameSmSubsystemRegistrationData gsm_registration_data = {
-    .next_state = quit_state_machine_next_state,
-    .id = gsm_quit_module_id,
-    .priority = 0 // No priority
-};
-
-/*******************************************************************************
- *    MODULARITY BOILERCODE
- ******************************************************************************/
 struct GameSmQuitModulePrivateOps {
-  int (*init)(void);
   int (*next_state)(struct GameStateMachineInput input,
                     struct GameStateMachineState *state);
 };
-
-struct GameSmQuitModulePrivateOps private_ops = {
-    .init = quit_state_machine_init,
-    .next_state = quit_state_machine_next_state,
-
-};
-
-static struct GameSmQuitModuleOps game_sm_quit_ops = {.private_ops =
-                                                          &private_ops};
-
-struct GameSmQuitModuleOps *get_game_sm_quit_module_ops(void) {
-  return &game_sm_quit_ops;
-}
-
-/*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-struct InitRegistrationData init_quit_state_machine_reg = {
-    .id = gsm_quit_module_id,
-    .init = quit_state_machine_init,
-    .destroy = NULL,
-};
+static char gsm_quit_module_id[] = "quit_sm_module";
+static struct GameSmQuitModulePrivateOps *quit_priv_ops;
+struct GameSmQuitModulePrivateOps *get_game_sm_quit_module_priv_ops(void);
+static struct GameStateMachineCommonOps *gsm_common_ops;
+static struct GameOps *game_ops;
 
 /*******************************************************************************
  *    API
  ******************************************************************************/
+int quit_state_machine_init(void) {
+  struct GameSmSubsystemOps *gsm_sub_ops = get_game_sm_subsystem_ops();
+
+  game_ops = get_game_ops();
+  gsm_common_ops = get_sm_mini_machines_common_ops();
+  quit_priv_ops = get_game_sm_quit_module_priv_ops();
+
+  struct MiniGameStateMachine quit_mini_machine = {
+      .next_state = quit_priv_ops->next_state,
+      .display_name = gsm_quit_module_id,
+      .priority = 0};
+
+  gsm_sub_ops->add_mini_state_machine(quit_mini_machine);
+
+  return 0;
+}
+
 int quit_state_machine_next_state(struct GameStateMachineInput input,
                                   struct GameStateMachineState *state) {
-  struct UserMove *current_user_move = gsm_common_ops.get_last_move(state);
+  struct UserMove *current_user_move = gsm_common_ops->get_last_move(state);
 
   switch (state->current_state) {
 
@@ -87,7 +73,7 @@ int quit_state_machine_next_state(struct GameStateMachineInput input,
     // If user confirms quitting, just quit.
     if (current_user_move->type == USER_MOVE_TYPE_QUIT) {
       state->current_state = GameStateQuit;
-      game_sm_ops.quit();
+      game_ops->stop();
     }
     // If user cancels quitting, return to play.
     else if (current_user_move->type == USER_MOVE_TYPE_SELECT_VALID ||
@@ -102,10 +88,21 @@ int quit_state_machine_next_state(struct GameStateMachineInput input,
   return 0;
 };
 
-int quit_state_machine_init(void) {
-  struct GameSmSubsystemOps *gsm_sub_ops = get_game_sm_subsystem_ops();
+/*******************************************************************************
+ *    MODULARITY BOILERCODE
+ ******************************************************************************/
 
-  gsm_sub_ops->register_state_machine(&gsm_registration_data);
+static struct GameSmQuitModulePrivateOps private_ops = {
+    .next_state = quit_state_machine_next_state,
+};
 
-  return 0;
+static struct GameSmQuitModuleOps game_sm_quit_ops = {
+    .init = quit_state_machine_init};
+
+struct GameSmQuitModuleOps *get_game_sm_quit_module_ops(void) {
+  return &game_sm_quit_ops;
 }
+
+struct GameSmQuitModulePrivateOps *get_game_sm_quit_module_priv_ops(void) {
+  return &private_ops;
+};

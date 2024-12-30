@@ -1,111 +1,97 @@
 /*******************************************************************************
  *    IMPORTS
  ******************************************************************************/
-// Tests framework
 #include <unity.h>
 
-// App's internal libs
 #include "game/game.h"
-#include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/game_states.h"
-#include "game/game_state_machine/sub_state_machines/quit_sm_module.h"
-#include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
+#include "game/game_state_machine/mini_state_machines/common.h"
+#include "game/game_state_machine/mini_state_machines/quit_mini_machine.h"
 #include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
 
-// Mocks requirement
 #include "game_sm_quit_wrapper.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-static int destroy_counter;
-static int mock_input_ops_destroy();
+static struct GameSmQuitModuleOps *quit_sm_ops;
 static struct LoggingUtilsOps *logging_ops;
-static struct GameSmQuitModulePrivateOps *quit_sm_ops;
-static struct InputOps *input_ops;
-static struct InitOps *init_ops;
-
+static struct GameOps *game_ops;
+static struct GameStateMachineCommonOps *gsm_common_ops;
+static struct GameSmQuitModulePrivateOps *quit_priv_ops;
 /*******************************************************************************
  *    TESTS FRAMEWORK BOILERCODE
  ******************************************************************************/
-void setUp() {
-  quit_sm_ops = get_game_sm_quit_module_ops()->private_ops;
-  logging_ops = get_logging_utils_ops();
-  input_ops = get_input_ops();
+void setUp(void) {
+  struct InitOps *init_ops;
+
   init_ops = get_init_ops();
+  logging_ops = get_logging_utils_ops();
+  quit_sm_ops = get_game_sm_quit_module_ops();
+  gsm_common_ops = get_sm_mini_machines_common_ops();
+  game_ops = get_game_ops();
+  quit_priv_ops = get_game_sm_quit_module_priv_ops();
 
-  // Disable game init and destroy
-  init_game_reg.init = NULL;
-  init_game_reg.destroy = NULL;
-  init_ops->initialize_system();
-
-  input_ops->stop = mock_input_ops_destroy;
-
-  destroy_counter = 0;
+  // Initialize the system
+  init_ops->initialize();
 }
 
-void tearDown() { init_ops->destroy_system(); }
+void tearDown(void) {
+  struct InitOps *init_ops;
+  init_ops = get_init_ops();
+  init_ops->destroy();
+}
 
 /*******************************************************************************
  *    TESTS
  ******************************************************************************/
-void test_quit_sm_get_quitting_state() {
+void test_quit_sm_transition_to_quitting(void) {
   struct UserMove current_move = {
-      .user = User1, .coordinates = {0, 0}, .type = USER_MOVE_TYPE_QUIT};
-  struct GameStateMachineInput input = {.input_user = User1,
-                                        .input_event = INPUT_EVENT_EXIT};
+      .type = USER_MOVE_TYPE_QUIT, .user_id = 0, .coordinates = {0, 0}};
+  struct GameStateMachineInput input = {.input_event = INPUT_EVENT_EXIT,
+                                        .device_id = 0};
   struct GameStateMachineState state = {.current_state = GameStatePlay,
-                                        .current_user = User1,
-                                        .users_moves_count = 1,
-                                        .users_moves_data = {current_move}};
-  int err;
+                                        .current_user = 0};
 
-  err = quit_sm_ops->next_state(input, &state);
+  gsm_common_ops->add_move(&state, current_move);
+
+  int err = quit_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_EQUAL_INT(GameStateQuitting, state.current_state);
-  TEST_ASSERT_EQUAL_INT(0, destroy_counter);
 }
 
-void test_quit_sm_get_quit_state() {
+void test_quit_sm_transition_to_quit(void) {
   struct UserMove current_move = {
-      .user = User1, .coordinates = {0, 0}, .type = USER_MOVE_TYPE_QUIT};
-  struct GameStateMachineInput input = {.input_user = User1,
-                                        .input_event = INPUT_EVENT_EXIT};
+      .type = USER_MOVE_TYPE_QUIT, .user_id = 0, .coordinates = {0, 0}};
+  struct GameStateMachineInput input = {.input_event = INPUT_EVENT_EXIT,
+                                        .device_id = 0};
   struct GameStateMachineState state = {.current_state = GameStateQuitting,
-                                        .current_user = User1,
-                                        .users_moves_count = 1,
-                                        .users_moves_data = {current_move}};
-  int err;
-  err = quit_sm_ops->next_state(input, &state);
+                                        .current_user = 0};
+
+  gsm_common_ops->add_move(&state, current_move);
+
+  int err = quit_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_EQUAL_INT(GameStateQuit, state.current_state);
-  TEST_ASSERT_EQUAL_INT(1, destroy_counter);
 }
 
-void test_quit_sm_get_play_state() {
-  struct UserMove current_move = {.user = User1,
-                                  .coordinates = {0, 0},
-                                  .type = USER_MOVE_TYPE_SELECT_VALID};
-  struct GameStateMachineInput input = {.input_user = User1,
-                                        .input_event = INPUT_EVENT_SELECT};
+void test_quit_sm_cancel_quit(void) {
+  struct UserMove current_move = {
+      .type = USER_MOVE_TYPE_SELECT_VALID, .user_id = 0, .coordinates = {0, 0}};
+  struct GameStateMachineInput input = {.input_event = INPUT_EVENT_SELECT,
+                                        .device_id = 0};
   struct GameStateMachineState state = {.current_state = GameStateQuitting,
-                                        .current_user = User1,
-                                        .users_moves_count = 1,
-                                        .users_moves_data = {current_move}};
-  int err;
-  err = quit_sm_ops->next_state(input, &state);
+                                        .current_user = 0};
+
+  gsm_common_ops->add_move(&state, current_move);
+
+  int err = quit_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
   TEST_ASSERT_EQUAL_INT(GameStatePlay, state.current_state);
-  TEST_ASSERT_EQUAL_INT(0, destroy_counter);
-}
-
-int mock_input_ops_destroy() {
-  destroy_counter++;
-  return 0;
 }
