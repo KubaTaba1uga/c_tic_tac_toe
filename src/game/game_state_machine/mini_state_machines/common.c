@@ -12,7 +12,7 @@
 // C standard library
 
 // App's internal libs
-#include "game/game_state_machine/sub_state_machines/common.h"
+#include "game/game_state_machine/mini_state_machines/common.h"
 #include "utils/logging_utils.h"
 
 /*******************************************************************************
@@ -42,11 +42,15 @@ struct GameStateMachineCommonOps gsm_common_ops = {.get_last_move =
 struct UserMove *get_last_move(struct GameStateMachineState *state) {
   logging_ops = get_logging_utils_ops();
 
-  if (state->users_moves_count == 0) {
+  if (state->users_moves_offset == 0) {
     logging_ops->log_err(module_id,
                          "No last move to get. This is unexpected behaviour");
     return NULL;
   }
 
-  return &(state->users_moves_data[state->users_moves_count - 1]);
+  return &(state->users_moves[state->users_moves_offset - 1]);
+}
+
+struct GameStateMachineCommonOps *get_sm_mini_machines_common_ops(void) {
+  return &gsm_common_ops;
 }

@@ -12,7 +12,7 @@
  *    IMPORTS
  ******************************************************************************/
 #include "game/game_state_machine/game_state_machine.h"
-#include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
+#include "game/user_move.h"
 
 /*******************************************************************************
  *    PRIVATE API
@@ -28,6 +28,6 @@ struct GameStateMachineCommonOps {
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-extern struct GameStateMachineCommonOps gsm_common_ops;
+struct GameStateMachineCommonOps *get_sm_mini_machines_common_ops(void);
 
-#endif // COMMON_H
+#endif //  GAME_STATE_MACHINE_COMMON_H

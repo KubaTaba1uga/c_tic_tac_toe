@@ -1,11 +1,6 @@
 #include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
-#include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
-
-struct UserMoveCoordinates {
-  int width;
-  int height;
-};
+#include "game/game_state_machine/mini_state_machines/user_move_mini_machine.h"
 
 struct UserMoveStateMachineState {
   struct UserMoveCoordinates coordinates;
@@ -31,3 +26,5 @@ struct GameSmUserMoveModulePrivateOps {
                               struct UserMove *new_user_move,
                               struct GameStateMachineState *data);
 };
+
+struct GameSmUserMoveModulePrivateOps *get_user_move_priv_ops(void);

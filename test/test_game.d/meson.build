@@ -81,28 +81,46 @@ test_gsm_subsystem_exe = executable('test_gsm_subsystem',
 test('test_gsm_subsystem', test_gsm_subsystem_exe)
 
 
-# ############################################################################
-# #                   User Move State Machine Module Tests                   #
-# ############################################################################
-# test_user_move_name = 'test_user_move.c'
+############################################################################
+#                   User Move State Machine Module Tests                   #
+############################################################################
+test_user_move_name = 'test_user_move.c'
 
-# test_user_move_src = files([test_user_move_name]) + sources
+test_user_move_src = [test_user_move_name,
+                   game / 'game.c',
+                   game / 'game_config.c',
+                   game / 'game_user.c',
+		   game_state_machine / 'game_state_machine.c',
+		   game_state_machine / 'game_sm_subsystem.c',
+		   game_state_machine / 'mini_state_machines' / 'common.c',
+		   game_state_machine / 'mini_state_machines' / 'user_move_mini_machine.c',		   		   		   
+                   keyboard / 'keyboard.c',
+                   keyboard / 'keyboard_keys_mapping.c',
+                   keyboard / 'keyboard_keys_mapping_1.c',
+		   config / 'config.c',
+                   init / 'init.c',		   
+                   input / 'input.c',
+                   input / 'input_device.c',		   
+		   utils / 'std_lib_utils.c',
+		   utils / 'logging_utils.c',
+   		   utils / 'terminal_utils.c'		
+		   ]
 
-# test_user_move_exe = executable('test_user_move',
-#   sources: [
-#     test_user_move_src,
-#     unity_gen_runner.process(test_user_move_name),
-#   ],
-#   include_directories: [src, test_includes],
-#   dependencies: test_dependencies,
-#   c_args:['-DTEST'],
-#   link_args: [
-#     # allow static functions testing
-#     '-zmuldefs',
-#   ]
-# )
+test_user_move_exe = executable('test_user_move',
+  sources: [
+    test_user_move_src,
+    unity_gen_runner.process(test_user_move_name),
+  ],
+  include_directories: [src, test_includes],
+  dependencies: test_dependencies,
+  c_args:['-DTEST'],
+  link_args: [
+    # allow static functions testing
+    '-zmuldefs',
+  ]
+)
 
-# test('test_user_move', test_user_move_exe)
+test('test_user_move', test_user_move_exe)
 
 # ############################################################################
 # #                   Quit State Machine Module Tests                        #

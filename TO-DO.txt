@@ -1,5 +1,4 @@
-0. Refactor game so it would allow for multiple users. Users are now part of GameStateMachine. In game state machine should be current user int and users array which hold multiple users. During game state machine init which user has assigned input registration id. Onece input trigger processing game state machine checks current user input registration and can forbid to process input if they do not match.
-
+0. Add irs in src asd shared libraries and link tests against them. `config/init/input/game` each can be represented by shared libraries which linked together creates the game.
 
 Write articles about:
 1. Do not write too defensive software, set one point of validation. If someones forget to init module then it should sigfault.
