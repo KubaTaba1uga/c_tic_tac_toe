@@ -2,29 +2,6 @@
  * @file game_sm_subsystem.c
  * @brief Game State Machine Subsystem Implementation
  *
- * This file implements the core functionality of the Game State Machine (SM)
- * subsystem, which is responsible for managing and transitioning between
- * various states within the game's state machine architecture. The Game SM
- * subsystem maintains an internal list of state machine registrations, each
- * representing a unique state with a specific priority level and handling
- * logic.
- *
- * The primary responsibilities of this module include:
- *  - Registering state machines into a prioritized list.
- *  - Processing game state transitions based on specific inputs.
- *  - Managing priority-based insertion and ordering of state machine
- *    registrations.
- *  - Defining internal operations for modular access to subsystem
- *    functionalities.
- *
- * This module interacts closely with other parts of the game through a public
- * API and modular private operations, allowing controlled access to subsystem
- * components and behaviors. Logging and initialization utilities are also
- * utilized for error handling and subsystem setup.
- *
- * @note This file is part of the game state machine module and should be used
- *       within the context of the larger game application.
- *
  ******************************************************************************/
 /*******************************************************************************
  *    IMPORTS
@@ -58,7 +35,6 @@ SARRS_DECL(GameSmSubsystem, mini_machines, struct MiniGameStateMachine,
            GAME_SM_MINI_MACHINES_MAX);
 
 struct GameSmSubsystemPrivateOps {
-  int (*init)(void);
   void (*priority_handle_new_registration)(void);
   void (*priority_handle_positive_value)(struct MiniGameStateMachine *new_reg);
   void (*priority_handle_negative_value)(struct MiniGameStateMachine *new_reg);
@@ -81,6 +57,9 @@ int game_sm_subsystem_init(void) {
   logging_ops = get_logging_utils_ops();
 
   gsm_sub_priv_ops = get_gsm_sub_private_ops();
+
+  struct GameSmSubsystem *subsystem = gsm_sub_priv_ops->get_subsystem();
+  GameSmSubsystem_mini_machines_init(subsystem);
 
   return 0;
 }
@@ -231,6 +210,7 @@ struct GameSmSubsystem *game_sm_subsystem_get_subsystem(void) {
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 static struct GameSmSubsystemOps game_sm_subsystem_ops = {
+    .init = game_sm_subsystem_init,
     .next_state = game_sm_subsystem_get_next_state,
     .add_mini_state_machine = game_sm_subsystem_add_mini_state_machine,
 };
@@ -240,7 +220,6 @@ struct GameSmSubsystemOps *get_game_sm_subsystem_ops(void) {
 };
 
 static struct GameSmSubsystemPrivateOps gsm_sub_priv_ops_ = {
-    .init = game_sm_subsystem_init,
     .priority_handle_new_registration =
         game_sm_subsystem_priority_handle_new_registration,
     .priority_handle_positive_value =

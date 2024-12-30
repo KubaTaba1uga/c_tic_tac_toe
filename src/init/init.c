@@ -10,6 +10,7 @@
 #include "config/config.h"
 #include "game/game.h"
 #include "game/game_config.h"
+#include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "input/input.h"
 #include "input/keyboard/keyboard.h"
@@ -64,18 +65,13 @@ static int init_init(void) {
 
   /* Initialize all registered modules */
   for (size_t i = 0; i < InitSubsystem_modules_length(&init_subsystem); i++) {
-    log_ops->log_info("INIT", "Initializing module: %i", i);
-    err = InitSubsystem_modules_get(&init_subsystem, i, &module);
-    if (err) {
-      log_ops->log_err("INIT", "Failed to get module '%i': %s", i,
-                       strerror(err));
-
-      return err;
-    }
+    InitSubsystem_modules_get(&init_subsystem, i, &module);
 
     if (!module->init) {
       continue;
     }
+
+    log_ops->log_info("INIT", "Initializing module: %s", module->display_name);
 
     err = module->init();
     if (err) {
@@ -113,6 +109,7 @@ static void init_destroy(void) {
  ******************************************************************************/
 static int init_register_multiple_modules(void) {
   struct KeyboardKeysMapping1Ops *km1_ops = get_keyboard_keys_mapping_1_ops();
+  struct GameSmSubsystemOps *game_sm_sub_ops = get_game_sm_subsystem_ops();
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   struct GameConfigOps *game_config_ops = get_game_config_ops();
   struct KeyboardOps *keyboard_ops = get_keyboard_ops();
@@ -140,6 +137,9 @@ static int init_register_multiple_modules(void) {
       {.init = game_state_machine_ops->init,
        .destroy = NULL,
        .display_name = "game_state_machine"},
+      {.init = game_sm_sub_ops->init,
+       .destroy = NULL,
+       .display_name = "game_state_machine_subsystem"},
 
   };
   int num_modules = sizeof(modules) / sizeof(struct InitRegistration);

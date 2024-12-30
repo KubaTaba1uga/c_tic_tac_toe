@@ -15,7 +15,6 @@ SARRS_DECL(GameSmSubsystem, mini_machines, struct MiniGameStateMachine,
            GAME_SM_MINI_MACHINES_MAX);
 
 struct GameSmSubsystemPrivateOps {
-  int (*init)(void);
   void (*priority_handle_new_registration)(void);
   void (*priority_handle_positive_value)(struct MiniGameStateMachine *new_reg);
   void (*priority_handle_negative_value)(struct MiniGameStateMachine *new_reg);

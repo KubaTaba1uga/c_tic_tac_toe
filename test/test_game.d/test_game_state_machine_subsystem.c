@@ -84,7 +84,7 @@ void test_register_new_state_machine() {
 
   // Try registering beyond the limit
   err = gsm_sub_ops->add_mini_state_machine(mock_registration_data_1);
-  TEST_ASSERT_EQUAL_INT(0, err);
+  TEST_ASSERT_NOT_EQUAL(0, err);
   TEST_ASSERT_EQUAL_INT(GAME_SM_MINI_MACHINES_MAX,
                         GameSmSubsystem_mini_machines_length(&test_data));
 }
@@ -361,8 +361,6 @@ void test_register_new_state_machine() {
 /*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_8,
  * test_data.mini_machines[17]); */
 /* } */
-
-void mock_functions(void) {}
 
 int mock_next_state(struct GameStateMachineInput input,
                     struct GameStateMachineState *state) {

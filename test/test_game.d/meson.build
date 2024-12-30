@@ -50,7 +50,23 @@ test('test_game_config', test_game_config_exe)
 ############################################################################
 test_gsm_subsystem_name = 'test_game_state_machine_subsystem.c'
 
-test_gsm_subsystem_src = files([test_gsm_subsystem_name]) + sources
+test_gsm_subsystem_src = [test_gsm_subsystem_name,
+                   game / 'game.c',
+                   game / 'game_config.c',
+                   game / 'game_user.c',
+		   game_state_machine / 'game_state_machine.c',
+		   game_state_machine / 'game_sm_subsystem.c',		   
+                   keyboard / 'keyboard.c',
+                   keyboard / 'keyboard_keys_mapping.c',
+                   keyboard / 'keyboard_keys_mapping_1.c',
+		   config / 'config.c',
+                   init / 'init.c',		   
+                   input / 'input.c',
+                   input / 'input_device.c',		   
+		   utils / 'std_lib_utils.c',
+		   utils / 'logging_utils.c',
+   		   utils / 'terminal_utils.c'		
+		   ]
 
 test_gsm_subsystem_exe = executable('test_gsm_subsystem',
   sources: [
@@ -60,10 +76,6 @@ test_gsm_subsystem_exe = executable('test_gsm_subsystem',
   include_directories: [src, test_includes],
   dependencies: test_dependencies,
   c_args:['-DTEST'],
-  link_args: [
-    # allow static functions testing
-    '-zmuldefs',
-  ]
 )
 
 test('test_gsm_subsystem', test_gsm_subsystem_exe)
