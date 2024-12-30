@@ -25,7 +25,7 @@ extern struct InitRegistrationData init_clean_last_move_state_machine_reg;
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 struct GameSmCleanLastMoveModuleOps {
-  void *private_ops;
+  int (*init)(void);
 };
 
 struct GameSmCleanLastMoveModuleOps *get_game_sm_movescleanup_module_ops(void);

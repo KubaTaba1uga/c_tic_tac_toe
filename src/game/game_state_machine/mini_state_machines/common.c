@@ -56,12 +56,26 @@ static int add_move(struct GameStateMachineState *state,
   return 0;
 };
 
+static int delete_last_move(struct GameStateMachineState *state, ) {
+
+  if (!state)
+    return EINVAL;
+
+  if (state->users_moves_offset == 0)
+    return 0;
+
+  state->users_moves_offset--;
+
+  return 0;
+};
+
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
 static struct GameStateMachineCommonOps gsm_common_ops = {
     .get_last_move = get_last_move,
     .add_move = add_move,
+    .delete_last_move = delete_last_move,
 };
 
 struct GameStateMachineCommonOps *get_sm_mini_machines_common_ops(void) {
