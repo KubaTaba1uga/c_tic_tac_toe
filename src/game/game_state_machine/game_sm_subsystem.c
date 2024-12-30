@@ -60,6 +60,7 @@ int game_sm_subsystem_init(void) {
 
   struct GameSmSubsystem *subsystem = gsm_sub_priv_ops->get_subsystem();
   GameSmSubsystem_mini_machines_init(subsystem);
+  memset(&game_sm_subsystem, 0, sizeof(struct GameSmSubsystem));
 
   return 0;
 }
@@ -118,17 +119,20 @@ int game_sm_subsystem_get_next_state(struct GameStateMachineInput input,
 void game_sm_subsystem_priority_handle_new_registration(void) {
   struct GameSmSubsystem *subsystem = gsm_sub_priv_ops->get_subsystem();
   struct MiniGameStateMachine *new_mini_sm;
+  struct MiniGameStateMachine new_mini_sm_cp;
 
   GameSmSubsystem_mini_machines_get(
       subsystem, GameSmSubsystem_mini_machines_length(subsystem) - 1,
       &new_mini_sm);
 
+  new_mini_sm_cp = *new_mini_sm;
+
   if (new_mini_sm->priority > 0)
-    gsm_sub_priv_ops->priority_handle_positive_value(new_mini_sm);
+    gsm_sub_priv_ops->priority_handle_positive_value(&new_mini_sm_cp);
   else if (new_mini_sm->priority < 0)
-    gsm_sub_priv_ops->priority_handle_negative_value(new_mini_sm);
+    gsm_sub_priv_ops->priority_handle_negative_value(&new_mini_sm_cp);
   else // if (new_mini_sm->priority == 0)
-    gsm_sub_priv_ops->priority_handle_no_value(new_mini_sm);
+    gsm_sub_priv_ops->priority_handle_no_value(&new_mini_sm_cp);
 }
 
 void game_sm_subsystem_priority_handle_positive_value(
@@ -192,7 +196,7 @@ void game_sm_subsystem_priority_handle_no_value(
 void game_sm_subsystem_insert_registration(
     int start, struct MiniGameStateMachine *new_mini_sm) {
   struct GameSmSubsystem *subsystem = gsm_sub_priv_ops->get_subsystem();
-  size_t counter = GameSmSubsystem_mini_machines_length(subsystem);
+  int counter = GameSmSubsystem_mini_machines_length(subsystem) - 1;
 
   // Move mini_machines by 1 right.
   while (counter-- > start) {

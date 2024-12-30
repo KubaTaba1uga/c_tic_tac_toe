@@ -89,278 +89,329 @@ void test_register_new_state_machine() {
                         GameSmSubsystem_mini_machines_length(&test_data));
 }
 
-/* void test_register_positive_prioritized_state_machine() { */
-/*   struct MiniGameStateMachine mock_registration_data_0 = { */
-/*       .id = "TestSM0", .priority = 0, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_1 = { */
-/*       .id = "TestSM1", .priority = 1, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_2 = { */
-/*       .id = "TestSM2", .priority = 2, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_3 = { */
-/*       .id = "TestSM3", .priority = 3, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_4 = { */
-/*       .id = "TestSM4", .priority = 4, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_5 = { */
-/*       .id = "TestSM5", .priority = 5, .next_state = mock_next_state}; */
+void test_register_positive_prioritized_state_machine() {
+  struct MiniGameStateMachine mock_registration_data_0 = {
+      .display_name = "TestSM0", .priority = 0, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_1 = {
+      .display_name = "TestSM1", .priority = 1, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_2 = {
+      .display_name = "TestSM2", .priority = 2, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_3 = {
+      .display_name = "TestSM3", .priority = 3, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_4 = {
+      .display_name = "TestSM4", .priority = 4, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_5 = {
+      .display_name = "TestSM5", .priority = 5, .next_state = mock_next_state};
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(1, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(1, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_3); */
-/*   TEST_ASSERT_EQUAL_INT(2, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_3);
+  TEST_ASSERT_EQUAL_INT(2, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_1); */
-/*   TEST_ASSERT_EQUAL_INT(3, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_1);
+  TEST_ASSERT_EQUAL_INT(3, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_4); */
-/*   TEST_ASSERT_EQUAL_INT(4, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_4);
+  TEST_ASSERT_EQUAL_INT(4, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(5, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(5, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_2); */
-/*   TEST_ASSERT_EQUAL_INT(6, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_2);
+  TEST_ASSERT_EQUAL_INT(6, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_5); */
-/*   TEST_ASSERT_EQUAL_INT(7, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_5);
+  TEST_ASSERT_EQUAL_INT(7, test_data.mini_machines_offset);
 
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_1,
- * test_data.mini_machines[0]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_2,
- * test_data.mini_machines[1]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_3,
- * test_data.mini_machines[2]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_4,
- * test_data.mini_machines[3]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_5,
- * test_data.mini_machines[4]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[5]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[6]); */
-/* } */
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_1,
+                           &test_data.mini_machines[0],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_2,
+                           &test_data.mini_machines[1],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_3,
+                           &test_data.mini_machines[2],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_4,
+                           &test_data.mini_machines[3],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_5,
+                           &test_data.mini_machines[4],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[5],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[6],
+                           sizeof(struct MiniGameStateMachine));
+}
 
-/* void test_register_negative_prioritized_state_machine() { */
-/*   struct MiniGameStateMachine mock_registration_data_0 = { */
-/*       .id = "TestSM0", .priority = 0, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_1 = { */
-/*       .id = "TestSM1", .priority = -1, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_2 = { */
-/*       .id = "TestSM2", .priority = -2, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_3 = { */
-/*       .id = "TestSM3", .priority = -3, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_4 = { */
-/*       .id = "TestSM4", .priority = -4, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_5 = { */
-/*       .id = "TestSM5", .priority = -5, .next_state = mock_next_state}; */
+void test_register_negative_prioritized_state_machine() {
+  struct MiniGameStateMachine mock_registration_data_0 = {
+      .display_name = "TestSM0", .priority = 0, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_1 = {
+      .display_name = "TestSM1", .priority = -1, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_2 = {
+      .display_name = "TestSM2", .priority = -2, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_3 = {
+      .display_name = "TestSM3", .priority = -3, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_4 = {
+      .display_name = "TestSM4", .priority = -4, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_5 = {
+      .display_name = "TestSM5", .priority = -5, .next_state = mock_next_state};
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(1, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(1, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_3); */
-/*   TEST_ASSERT_EQUAL_INT(2, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_3);
+  TEST_ASSERT_EQUAL_INT(2, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_1); */
-/*   TEST_ASSERT_EQUAL_INT(3, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_1);
+  TEST_ASSERT_EQUAL_INT(3, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_4); */
-/*   TEST_ASSERT_EQUAL_INT(4, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_4);
+  TEST_ASSERT_EQUAL_INT(4, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(5, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(5, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_2); */
-/*   TEST_ASSERT_EQUAL_INT(6, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_2);
+  TEST_ASSERT_EQUAL_INT(6, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_5); */
-/*   TEST_ASSERT_EQUAL_INT(7, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_5);
+  TEST_ASSERT_EQUAL_INT(7, test_data.mini_machines_offset);
 
-/*   for (size_t i = 0; i < test_data.counter; i++) { */
-/*     logging_ops->log_info("test", (char *)test_data.mini_machines[i]->id); */
-/*   } */
+  /* for (size_t i = 0; i < test_data.mini_machines_offset; i++) { */
+  /*   logging_ops->log_info("test", (char *)test_data.mini_machines[i]->id); */
+  /* } */
 
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[0]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[1]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_5,
- * test_data.mini_machines[2]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_4,
- * test_data.mini_machines[3]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_3,
- * test_data.mini_machines[4]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_2,
- * test_data.mini_machines[5]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_1,
- * test_data.mini_machines[6]); */
-/* } */
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[0],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[1],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_5,
+                           &test_data.mini_machines[2],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_4,
+                           &test_data.mini_machines[3],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_3,
+                           &test_data.mini_machines[4],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_2,
+                           &test_data.mini_machines[5],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_1,
+                           &test_data.mini_machines[6],
+                           sizeof(struct MiniGameStateMachine));
+}
 
-/* void test_register_all_prioritized_state_machine_small() { */
-/*   struct MiniGameStateMachine mock_registration_data_0 = { */
-/*       .id = "TestSM0", .priority = 0, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_1 = { */
-/*       .id = "TestSM1", .priority = 1, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_2 = { */
-/*       .id = "TestSM2", .priority = 2, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_3 = { */
-/*       .id = "TestSM-2", .priority = -2, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_4 = { */
-/*       .id = "TestSM-1", .priority = -1, .next_state = mock_next_state}; */
+void test_register_all_prioritized_state_machine_small() {
+  struct MiniGameStateMachine mock_registration_data_0 = {
+      .display_name = "TestSM0", .priority = 0, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_1 = {
+      .display_name = "TestSM1", .priority = 1, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_2 = {
+      .display_name = "TestSM2", .priority = 2, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_3 = {
+      .display_name = "TestSM-2",
+      .priority = -2,
+      .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_4 = {
+      .display_name = "TestSM-1",
+      .priority = -1,
+      .next_state = mock_next_state};
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(1, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(1, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_3); */
-/*   TEST_ASSERT_EQUAL_INT(2, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_3);
+  TEST_ASSERT_EQUAL_INT(2, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_1); */
-/*   TEST_ASSERT_EQUAL_INT(3, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_1);
+  TEST_ASSERT_EQUAL_INT(3, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_4); */
-/*   TEST_ASSERT_EQUAL_INT(4, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_4);
+  TEST_ASSERT_EQUAL_INT(4, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(5, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(5, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_2); */
-/*   TEST_ASSERT_EQUAL_INT(6, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_2);
+  TEST_ASSERT_EQUAL_INT(6, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(7, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(7, test_data.mini_machines_offset);
 
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_1,
- * test_data.mini_machines[0]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_2,
- * test_data.mini_machines[1]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[2]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[3]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[4]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_3,
- * test_data.mini_machines[5]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_4,
- * test_data.mini_machines[6]); */
-/* } */
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_1,
+                           &test_data.mini_machines[0],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_2,
+                           &test_data.mini_machines[1],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[2],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[3],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[4],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_3,
+                           &test_data.mini_machines[5],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_4,
+                           &test_data.mini_machines[6],
+                           sizeof(struct MiniGameStateMachine));
+}
 
-/* void test_register_all_prioritized_state_machine_big() { */
-/*   struct MiniGameStateMachine mock_registration_data_0 = { */
-/*       .id = "TestSM0", .priority = 0, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_1 = { */
-/*       .id = "TestSM1", .priority = 1, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_2 = { */
-/*       .id = "TestSM2", .priority = 2, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_3 = { */
-/*       .id = "TestSM3", .priority = 3, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_4 = { */
-/*       .id = "TestSM4", .priority = 4, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_5 = { */
-/*       .id = "TestSM-4", .priority = -4, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_6 = { */
-/*       .id = "TestSM-3", .priority = -3, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_7 = { */
-/*       .id = "TestSM-2", .priority = -2, .next_state = mock_next_state}; */
-/*   struct MiniGameStateMachine mock_registration_data_8 = { */
-/*       .id = "TestSM-1", .priority = -1, .next_state = mock_next_state}; */
+void test_register_all_prioritized_state_machine_big() {
+  struct MiniGameStateMachine mock_registration_data_0 = {
+      .display_name = "TestSM0", .priority = 0, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_1 = {
+      .display_name = "TestSM1", .priority = 1, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_2 = {
+      .display_name = "TestSM2", .priority = 2, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_3 = {
+      .display_name = "TestSM3", .priority = 3, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_4 = {
+      .display_name = "TestSM4", .priority = 4, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_5 = {
+      .display_name = "TestSM-4",
+      .priority = -4,
+      .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_6 = {
+      .display_name = "TestSM-3",
+      .priority = -3,
+      .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_7 = {
+      .display_name = "TestSM-2",
+      .priority = -2,
+      .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_8 = {
+      .display_name = "TestSM-1",
+      .priority = -1,
+      .next_state = mock_next_state};
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_4); */
-/*   TEST_ASSERT_EQUAL_INT(1, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_4);
+  TEST_ASSERT_EQUAL_INT(1, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(2, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(2, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_8); */
-/*   TEST_ASSERT_EQUAL_INT(3, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_8);
+  TEST_ASSERT_EQUAL_INT(3, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(4, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(4, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_3); */
-/*   TEST_ASSERT_EQUAL_INT(5, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_3);
+  TEST_ASSERT_EQUAL_INT(5, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(6, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(6, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_7); */
-/*   TEST_ASSERT_EQUAL_INT(7, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_7);
+  TEST_ASSERT_EQUAL_INT(7, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(8, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(8, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_2); */
-/*   TEST_ASSERT_EQUAL_INT(9, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_2);
+  TEST_ASSERT_EQUAL_INT(9, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(10, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(10, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_6); */
-/*   TEST_ASSERT_EQUAL_INT(11, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_6);
+  TEST_ASSERT_EQUAL_INT(11, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(12, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(12, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_1); */
-/*   TEST_ASSERT_EQUAL_INT(13, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_1);
+  TEST_ASSERT_EQUAL_INT(13, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(14, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(14, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_5); */
-/*   TEST_ASSERT_EQUAL_INT(15, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_5);
+  TEST_ASSERT_EQUAL_INT(15, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(16, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(16, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(17, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(17, test_data.mini_machines_offset);
 
-/*   gsm_sub_ops->add_mini_state_machine(&mock_registration_data_0); */
-/*   TEST_ASSERT_EQUAL_INT(18, test_data.counter); */
+  gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
+  TEST_ASSERT_EQUAL_INT(18, test_data.mini_machines_offset);
 
-/*   /\* for (size_t i = 0; i < test_data.counter; i++) { *\/ */
-/*   /\*   logging_ops_->log_info("test", *\/ */
-/*   /\*                              (char */
-/*    * *)test_data.mini_machines[i]->id); *\/ */
-/*   /\* } *\/ */
+  /* for (size_t i = 0; i < test_data.mini_machines_offset; i++) { */
+  /*   logging_ops_->log_info("test", */
+  /*                              (char
+   * *)test_data.mini_machines[i]->id); */
+  /* } */
 
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_1,
- * test_data.mini_machines[0]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_2,
- * test_data.mini_machines[1]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_3,
- * test_data.mini_machines[2]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_4,
- * test_data.mini_machines[3]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[4]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[5]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[6]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[7]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[8]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[9]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[10]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[11]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[12]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_0,
- * test_data.mini_machines[13]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_5,
- * test_data.mini_machines[14]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_6,
- * test_data.mini_machines[15]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_7,
- * test_data.mini_machines[16]); */
-/*   TEST_ASSERT_EQUAL_PTR(&mock_registration_data_8,
- * test_data.mini_machines[17]); */
-/* } */
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_1,
+                           &test_data.mini_machines[0],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_2,
+                           &test_data.mini_machines[1],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_3,
+                           &test_data.mini_machines[2],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_4,
+                           &test_data.mini_machines[3],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[4],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[5],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[6],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[7],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[8],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[9],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[10],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[11],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[12],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_0,
+                           &test_data.mini_machines[13],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_5,
+                           &test_data.mini_machines[14],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_6,
+                           &test_data.mini_machines[15],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_7,
+                           &test_data.mini_machines[16],
+                           sizeof(struct MiniGameStateMachine));
+  TEST_ASSERT_EQUAL_MEMORY(&mock_registration_data_8,
+                           &test_data.mini_machines[17],
+                           sizeof(struct MiniGameStateMachine));
+}
 
 int mock_next_state(struct GameStateMachineInput input,
                     struct GameStateMachineState *state) {
