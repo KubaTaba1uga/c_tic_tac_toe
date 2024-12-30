@@ -31,7 +31,7 @@ extern struct InitRegistrationData init_user_move_reg;
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 struct GameSmUserMoveModuleOps {
-  void *private_ops;
+  int (*init)(void);
 };
 
 struct GameSmUserMoveModuleOps *get_game_sm_user_move_module_ops(void);

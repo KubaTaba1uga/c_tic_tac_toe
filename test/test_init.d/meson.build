@@ -21,7 +21,9 @@ test_init_src = [test_init_name,
 		 utils / 'logging_utils.c',
 		 game / 'game.c',
 		 game / 'game_config.c',
-		 game / 'game_state_machine' / 'game_state_machine.c',		 		 
+		 game / 'game_state_machine' / 'game_state_machine.c',
+		 game / 'game_state_machine' / 'game_sm_subsystem.c',		 
+		 game / 'game_state_machine' / 'mini_state_machines' / 'user_move_mini_machine.c',		 		 		 
 		 ]
 
 test_init_exe = executable('test_init',

@@ -60,7 +60,7 @@ int game_sm_subsystem_init(void) {
 
   struct GameSmSubsystem *subsystem = gsm_sub_priv_ops->get_subsystem();
   GameSmSubsystem_mini_machines_init(subsystem);
-  memset(&game_sm_subsystem, 0, sizeof(struct GameSmSubsystem));
+  memset(subsystem, 0, sizeof(struct GameSmSubsystem));
 
   return 0;
 }

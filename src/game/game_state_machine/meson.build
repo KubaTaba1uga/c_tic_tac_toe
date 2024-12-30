@@ -3,4 +3,4 @@ sources += files(
   'game_sm_subsystem.c', 'game_sm_subsystem.h', 
 )
 
-subdir('sub_state_machines')
+subdir('mini_state_machines')
