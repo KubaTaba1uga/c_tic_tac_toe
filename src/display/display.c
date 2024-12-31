@@ -14,6 +14,9 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "static_array_lib.h"
 
 // App's internal libs
 #include "config/config.h"
@@ -25,22 +28,109 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-#define MAX_DISPLAY_REGISTRATIONS 100
+#define MAX_DISPLAY_REGISTRATIONS 10
+
+typedef struct DisplaySubsystem DisplaySubsystem;
 
 struct DisplaySubsystem {
-  struct DisplayRegistrationData *registrations[MAX_DISPLAY_REGISTRATIONS];
-  size_t count;
+  SARRS_FIELD(displays, struct DisplayDisplay, MAX_DISPLAY_REGISTRATIONS);
 };
 
-struct ConfigRegistrationData *display_env;
+SARRS_DECL(DisplaySubsystem, displays, struct DisplayDisplay,
+           MAX_DISPLAY_REGISTRATIONS);
+
 static char module_id[] = "display_subsystem";
 static struct DisplaySubsystem display_subsystem;
-static int display_init(void);
-static void display_destroy(void);
-static int display_display(struct DataToDisplay *data);
-static struct DisplaySubsystem *display_get_subsystem(void);
-static void
-display_register_module(struct DisplayRegistrationData *registration_data);
+static struct LoggingUtilsOps *logging_ops;
+static struct ConfigOps *config_ops;
+static struct StdLibUtilsOps *std_lib_ops;
+
+/*******************************************************************************
+ *    API
+ ******************************************************************************/
+static int display_init(void) {
+  logging_ops = get_logging_utils_ops();
+  config_ops = get_config_ops();
+
+  return 0;
+};
+
+static int display_display(struct DisplayData *data) {
+  struct DisplayDisplay *display;
+  int err;
+
+  if (!data || data->user_id < 0 || !data->moves) {
+    return EINVAL;
+  }
+
+  err = DisplaySubsystem_displays_get(&display_subsystem, data->display_id,
+                                      &display);
+  if (err) {
+    logging_ops->log_err(module_id,
+                         "Failed to get display for display_id %d: %s",
+                         data->display_id, strerror(err));
+    return err;
+  }
+
+  err = display->display(data);
+  if (err) {
+    logging_ops->log_err(module_id, "Display rendering failed for %s: %s",
+                         display->display_name, strerror(err));
+    return err;
+  }
+
+  logging_ops->log_info(module_id,
+                        "Display rendering completed successfully for %s",
+                        display->display_name);
+
+  return 0;
+}
+
+static int display_add_display(struct DisplayDisplay *new_display) {
+  int err;
+
+  if (!new_display || !new_display->display || !new_display->display_name)
+    return EINVAL;
+
+  err = DisplaySubsystem_displays_append(&display_subsystem, *new_display);
+  if (err) {
+    logging_ops->log_err(module_id, "Unable to add display %s: %s",
+                         new_display->display_name, strerror(err));
+    return err;
+  }
+
+  return 0;
+};
+
+static int display_get_display_id(const char *display_name,
+                                  int **id_placeholder) {
+  struct DisplayDisplay *display;
+
+  if (!display_name || !id_placeholder) {
+    return EINVAL;
+  }
+
+  for (size_t i = 0; i < DisplaySubsystem_displays_length(&display_subsystem);
+       i++) {
+    DisplaySubsystem_displays_get(&display_subsystem, i, &display);
+
+    if (std_lib_ops->are_str_eq((char *)display->display_name,
+                                (char *)display_name)) {
+      **id_placeholder = (int)i;
+      return 0;
+    }
+  }
+
+  **id_placeholder = -1;
+
+  logging_ops->log_err(module_id, "Display name '%s' not found.", display_name);
+
+  return ENOENT;
+}
+
+struct DisplaySubsystem *display_get_subsystem(void) {
+  return &display_subsystem;
+};
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
@@ -52,98 +142,15 @@ struct DisplayPrivateOps {
 static struct DisplayPrivateOps display_private_ops = {
     .get_subsystem = display_get_subsystem};
 
-static struct DisplayOps display_ops = {.display = display_display,
-                                        .register_module =
-                                            display_register_module,
-                                        .private_ops = &display_private_ops};
+static struct DisplayOps display_ops = {
+    .init = display_init,
+    .display = display_display,
+    .add_display = display_add_display,
+    .get_display_id = display_get_display_id,
+};
 
 struct DisplayOps *get_display_ops(void) { return &display_ops; };
 
-/*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
-struct InitRegistrationData init_display_reg = {
-    .id = module_id,
-    .init = display_init,
-    .destroy = display_destroy,
-};
-
-/*******************************************************************************
- *    API
- ******************************************************************************/
-static int display_init(void) {
-  struct LoggingUtilsOps *logging_ops;
-  struct ConfigOps *config_ops;
-  int err;
-
-  logging_ops = get_logging_utils_ops();
-  config_ops = get_config_ops();
-
-  display_env = malloc(sizeof(struct ConfigRegistrationData));
-  if (!display_env) {
-    logging_ops->log_err(
-        module_id, "Unable to allocate memory for configuration variable.");
-    return ENOMEM;
-  }
-
-  display_env->var_name = "display";
-  display_env->default_value = DISPLAY_CLI_NAME;
-
-  err = config_ops->register_system_var(display_env);
-  if (err) {
-    logging_ops->log_err(module_id,
-                         "Unable to register display configuration var.");
-    return err;
-  }
-
-  return 0;
-};
-
-static void display_destroy(void) { free(display_env); }
-
-static int display_display(struct DataToDisplay *data) {
-  struct LoggingUtilsOps *logging_ops;
-  struct DisplaySubsystem *subsystem;
-  struct StdLibUtilsOps *std_lib_ops;
-  struct ConfigOps *config_ops;
-  char *display_env;
-
-  subsystem = display_private_ops.get_subsystem();
-  logging_ops = get_logging_utils_ops();
-  std_lib_ops = get_std_lib_utils_ops();
-  config_ops = get_config_ops();
-
-  display_env = config_ops->get_system_var("display");
-
-  for (size_t i = 0; i < subsystem->count; i++) {
-
-    if (std_lib_ops->are_str_eq((char *)subsystem->registrations[i]->id,
-                                display_env)) {
-      return subsystem->registrations[i]->display(data);
-    }
-  }
-
-  logging_ops->log_err(module_id, "Unable to find matching display for %s.",
-                       display_env);
-
-  return EINVAL;
-};
-
-static void
-display_register_module(struct DisplayRegistrationData *registration_data) {
-  struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
-  struct DisplaySubsystem *subsystem = display_private_ops.get_subsystem();
-
-  if (subsystem->count < MAX_DISPLAY_REGISTRATIONS) {
-    subsystem->registrations[subsystem->count++] = registration_data;
-  } else {
-    logging_ops->log_err(module_id,
-                         "Unable to register %s in display, "
-                         "no enough space in `registrations` array.",
-                         registration_data->id);
-  }
-};
-
-struct DisplaySubsystem *display_get_subsystem(void) {
-  return &display_subsystem;
+struct DisplayPrivateOps *get_display_priv_ops(void) {
+  return &display_private_ops;
 };

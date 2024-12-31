@@ -14,7 +14,9 @@
 #include "game/game.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/game_states.h"
-#include "game/game_state_machine/sub_state_machines/user_move_sm_module.h"
+#include "game/game_user.h"
+#include "game/user_move.h"
+#include "static_array_lib.h"
 #include <stddef.h>
 
 /*******************************************************************************
@@ -24,31 +26,34 @@
 /*******************************************************************************
  *    PUBLIC API
  ******************************************************************************/
-
 #define DISPLAY_CLI_NAME "cli"
-#define DISPLAY_MAX_USERS_MOVES 100
 
-struct DataToDisplay {
-  enum Users user;
-  enum GameStates state;
-  struct UserMove moves[DISPLAY_MAX_USERS_MOVES];
-  size_t moves_counter;
+struct DisplayData {
+  enum GameStates game_state;
+  int display_id;
+  int user_id;
+  // User moves are passed as reference from game state machine,
+  //  we are not copying from performence reasons but we still
+  //  want to prevent display from changing users moves.
+  const struct UserMove *moves;
+  size_t moves_length;
 };
 
-typedef int (*display_display_func_t)(struct DataToDisplay *data);
+typedef int (*display_display_func_t)(struct DisplayData *data);
 
-struct DisplayRegistrationData {
+struct DisplayDisplay {
   display_display_func_t display;
-  const char *id;
+  const char *display_name;
 };
 
 struct DisplayOps {
+  int (*init)(void); // We will add display config var in game_config.c
+  //  Each display registers itself to display on init and game_config
+  //  just chooses which one will be used during game session.
   display_display_func_t display;
-  void (*register_module)(struct DisplayRegistrationData *registration_data);
-  void *private_ops;
+  int (*add_display)(struct DisplayDisplay *new_display);
+  int (*get_display_id)(const char *display_name, int **id_placeholder);
 };
-
-extern struct InitRegistrationData init_display_reg;
 
 /*******************************************************************************
  *    MODULARITY BOILERCODE
