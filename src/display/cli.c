@@ -77,8 +77,6 @@ static int display_cli_init(void) {
   return 0;
 };
 
-static int display_cli_display(struct DisplayData *data) { return 0; };
-
 static int display_cli_configure_terminal(void) {
   terminal_ops->disable_echo(STDIN_FILENO);
 
@@ -89,6 +87,8 @@ static int display_cli_configure_terminal(void) {
 static void display_cli_restore_terminal(void) {
   terminal_ops->enable_echo(STDIN_FILENO);
 }
+
+static int display_cli_display(struct DisplayData *data) { return 0; };
 
 /*******************************************************************************
  *    MODULARIZATION BOILERCODE

@@ -1,3 +1,4 @@
+#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -184,12 +185,22 @@ static int game_config_get_user(struct GameGetUserInput *input,
   return GameConfig_users_get(&game_config, input->user_id, &output->user);
 };
 
+static int game_config_get_display_id(int *placeholder) {
+  if (!placeholder) {
+    return EINVAL;
+  }
+
+  *placeholder = game_config.display_id;
+
+  return 0;
+};
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
 static struct GameConfigOps game_config_pub_ops = {
     .init = game_config_init,
     .get_user = game_config_get_user,
+    .get_display_id = game_config_get_display_id,
 };
 
 struct GameConfigOps *get_game_config_ops(void) { return &game_config_pub_ops; }

@@ -18,6 +18,7 @@ struct GameGetUserOutput {
 struct GameConfigOps {
   int (*init)(void);
   int (*get_user)(struct GameGetUserInput *, struct GameGetUserOutput *);
+  int (*get_display_id)(int *);
 };
 
 struct GameConfigOps *get_game_config_ops(void);
