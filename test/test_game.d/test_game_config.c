@@ -5,6 +5,8 @@
 #include <unity.h>
 
 #include "config/config.h"
+#include "display/cli.h"
+#include "display/display.h"
 #include "game/game_config.h"
 #include "game/game_user.h"
 #include "game/user_move.h"
@@ -19,6 +21,8 @@ static struct ConfigOps *config_ops;
 static struct LoggingUtilsOps *log_ops;
 static struct InputOps *input_ops;
 static struct GameConfigOps *game_config_ops;
+static struct DisplayOps *display_ops;
+static struct DisplayCliOps *display_cli_ops;
 
 void setUp(void) {
   struct KeyboardOps *keyboard_ops = get_keyboard_ops();
@@ -27,6 +31,8 @@ void setUp(void) {
   log_ops = get_logging_utils_ops();
   input_ops = get_input_ops();
   game_config_ops = get_game_config_ops();
+  display_ops = get_display_ops();
+  display_cli_ops = get_display_cli_ops();
 
   // Initialize modules
   TEST_ASSERT_EQUAL_INT(0, config_ops->init());
@@ -34,6 +40,8 @@ void setUp(void) {
   TEST_ASSERT_EQUAL_INT(0, input_ops->init());
   TEST_ASSERT_EQUAL_INT(0, keyboard_ops->init());
   TEST_ASSERT_EQUAL_INT(0, km1_ops->init());
+  TEST_ASSERT_EQUAL_INT(0, display_ops->init());
+  TEST_ASSERT_EQUAL_INT(0, display_cli_ops->init());
 }
 
 void tearDown(void) {

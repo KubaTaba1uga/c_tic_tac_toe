@@ -3,6 +3,7 @@ src = join_paths(root, 'src')
 utils = join_paths(src, 'utils')
 init = join_paths(src, 'init')
 config = join_paths(src, 'config')
+display = join_paths(src, 'display')
 
 test_config_name = 'test_config.c'
 
@@ -17,7 +18,9 @@ test_config_src = [test_config_name,
 		 input / 'keyboard' / 'keyboard.c',
                  input / 'keyboard' / 'keyboard_keys_mapping.c',
                  input / 'keyboard' / 'keyboard_keys_mapping_1.c',
-		 utils / 'terminal_utils.c',		 
+		 utils / 'terminal_utils.c',
+		 display / 'display.c',
+		 display / 'cli.c',		 		 		 
 		 game / 'game.c',
 		 game / 'game_config.c',
 		 game / 'game_state_machine' / 'game_state_machine.c',

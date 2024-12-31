@@ -8,6 +8,8 @@
 #include <string.h>
 
 #include "config/config.h"
+#include "display/cli.h"
+#include "display/display.h"
 #include "game/game.h"
 #include "game/game_config.h"
 #include "game/game_state_machine/game_sm_subsystem.h"
@@ -117,6 +119,7 @@ static int init_register_multiple_modules(void) {
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   struct GameConfigOps *game_config_ops = get_game_config_ops();
   struct KeyboardOps *keyboard_ops = get_keyboard_ops();
+  struct DisplayCliOps *display_cli_ops = get_display_cli_ops();
   struct GameSmCleanLastMoveModuleOps *clean_last_move_ops =
       get_game_sm_clean_last_move_module_ops();
   struct GameStateMachineOps *game_state_machine_ops =
@@ -127,6 +130,7 @@ static int init_register_multiple_modules(void) {
   struct ConfigOps *config_ops = get_config_ops();
   struct InputOps *input_ops = get_input_ops();
   struct GameOps *game_ops = get_game_ops();
+  struct DisplayOps *display_ops = get_display_ops();
   struct InitRegistration modules[] = {
       {.init = logging_ops->init,
        .destroy = logging_ops->destroy,
@@ -139,6 +143,10 @@ static int init_register_multiple_modules(void) {
       {.init = km1_ops->init,
        .destroy = NULL,
        .display_name = KEYBOARD_KEYS_MAPPING_1_DISP_NAME},
+      {.init = display_ops->init, .destroy = NULL, .display_name = "display"},
+      {.init = display_cli_ops->init,
+       .destroy = NULL,
+       .display_name = "display_cli"},
       {.init = game_ops->init, .destroy = NULL, .display_name = "game"},
       {.init = game_config_ops->init,
        .destroy = NULL,

@@ -51,7 +51,7 @@ static struct StdLibUtilsOps *std_lib_ops;
 static int display_init(void) {
   logging_ops = get_logging_utils_ops();
   config_ops = get_config_ops();
-
+  std_lib_ops = get_std_lib_utils_ops();
   return 0;
 };
 
@@ -103,7 +103,7 @@ static int display_add_display(struct DisplayDisplay *new_display) {
 };
 
 static int display_get_display_id(const char *display_name,
-                                  int **id_placeholder) {
+                                  int *id_placeholder) {
   struct DisplayDisplay *display;
 
   if (!display_name || !id_placeholder) {
@@ -116,12 +116,12 @@ static int display_get_display_id(const char *display_name,
 
     if (std_lib_ops->are_str_eq((char *)display->display_name,
                                 (char *)display_name)) {
-      **id_placeholder = (int)i;
+      *id_placeholder = (int)i;
       return 0;
     }
   }
 
-  **id_placeholder = -1;
+  *id_placeholder = -1;
 
   logging_ops->log_err(module_id, "Display name '%s' not found.", display_name);
 

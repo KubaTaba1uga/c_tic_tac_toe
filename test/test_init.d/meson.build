@@ -4,6 +4,7 @@ utils = join_paths(src, 'utils')
 init = join_paths(src, 'init')
 config = join_paths(src, 'config')
 input = join_paths(src, 'input')
+display = join_paths(src, 'display')
 game = join_paths(src, 'game')
 
 test_init_name = 'test_init.c'
@@ -19,6 +20,8 @@ test_init_src = [test_init_name,
 		 utils / 'terminal_utils.c',		 
 		 utils / 'std_lib_utils.c',
 		 utils / 'logging_utils.c',
+		 display / 'display.c',
+		 display / 'cli.c',		 		 
 		 game / 'game.c',
 		 game / 'game_config.c',
 		 game / 'game_state_machine' / 'game_state_machine.c',

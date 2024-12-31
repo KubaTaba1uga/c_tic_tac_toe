@@ -52,7 +52,7 @@ struct DisplayOps {
   //  just chooses which one will be used during game session.
   display_display_func_t display;
   int (*add_display)(struct DisplayDisplay *new_display);
-  int (*get_display_id)(const char *display_name, int **id_placeholder);
+  int (*get_display_id)(const char *display_name, int *id_placeholder);
 };
 
 /*******************************************************************************

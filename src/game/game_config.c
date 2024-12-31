@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "display/display.h"
 #include "static_array_lib.h"
 
 #include "config/config.h"
@@ -33,11 +34,13 @@ static int game_config_init(void) {
   struct ConfigVariable config_var = {.var_name = "users_amount",
                                       .default_value = "2"};
   struct GameStateMachineOps *gsm_ops = get_game_state_machine_ops();
+  struct DisplayOps *display_ops = get_display_ops();
   struct InputGetDeviceExtendedOutput get_device;
   struct ConfigAddVarOutput add_var;
   struct ConfigGetVarOutput get_var;
   struct GameUser user;
   int users_amount;
+  int display_id;
   size_t i;
   int err;
 
@@ -135,6 +138,40 @@ static int game_config_init(void) {
       return err;
     }
   }
+
+  err = config_ops->init_var(&config_var, "display", DISPLAY_CLI_NAME);
+  if (err) {
+    log_ops->log_err(__FILE_NAME__, "Unable to init %s config variable: %s",
+                     "display", strerror(err));
+    return err;
+  }
+
+  err = config_ops->add_var((struct ConfigAddVarInput){.var = &config_var},
+                            &add_var);
+  if (err) {
+    log_ops->log_err(__FILE_NAME__, "Unable to add %s config variable: %s",
+                     config_var.var_name, strerror(err));
+    return err;
+  }
+
+  err = config_ops->get_var(
+      (struct ConfigGetVarInput){.var_id = add_var.var_id,
+                                 .mode = CONFIG_GET_VAR_BY_ID},
+      &get_var);
+  if (err) {
+    log_ops->log_err(__FILE_NAME__, "Unable to get %s config variable: %s",
+                     config_var.var_name, strerror(err));
+    return err;
+  }
+
+  err = display_ops->get_display_id(get_var.value, &display_id);
+  if (err) {
+    log_ops->log_err(__FILE_NAME__, "Unable to get %s display: %s",
+                     get_var.value, strerror(err));
+    return err;
+  }
+
+  game_config.display_id = display_id;
 
   return 0;
 }
