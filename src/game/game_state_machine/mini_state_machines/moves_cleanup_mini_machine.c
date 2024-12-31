@@ -49,7 +49,7 @@ int clean_last_move_state_machine_init(void) {
   struct MiniGameStateMachine mini_machine = {
       .next_state = priv_ops->next_state,
       .display_name = gsm_clean_last_move_module_id,
-      .priority = 1};
+      .priority = 1}; // always execute first
 
   gsm_sub_ops->add_mini_state_machine(mini_machine);
 
@@ -62,14 +62,13 @@ int clean_last_move_state_machine_next_state(
   int err;
 
   if (!last_move) {
-    return EINVAL;
+    return 0;
   }
 
   if (last_move->type == USER_MOVE_TYPE_SELECT_VALID) {
     return 0;
   }
 
-  // Logic to clean the last move
   err = gsm_common_ops->delete_last_move(state);
 
   if (err) {

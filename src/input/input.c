@@ -179,7 +179,7 @@ static int input_wait_intrfc(void) {
     return err;
   }
 
-  log_ops->log_info(__FILE_NAME__, "Input subsystem started successfully.");
+  log_ops->log_info(__FILE_NAME__, "Input subsystem waited successfully.");
   return 0;
 }
 

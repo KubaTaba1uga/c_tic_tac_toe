@@ -28,6 +28,7 @@ struct GameSmCleanLastMoveModuleOps {
   int (*init)(void);
 };
 
-struct GameSmCleanLastMoveModuleOps *get_game_sm_movescleanup_module_ops(void);
+struct GameSmCleanLastMoveModuleOps *
+get_game_sm_clean_last_move_module_ops(void);
 
 #endif // MOVESCLEANUP_SM_MODULE_H

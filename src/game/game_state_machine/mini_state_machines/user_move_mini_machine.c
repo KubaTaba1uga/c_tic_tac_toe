@@ -71,7 +71,7 @@ int user_move_state_machine_init(void) {
 
   gsm_mini_machine.next_state = user_move_priv_ops->next_state;
   gsm_mini_machine.display_name = module_id;
-  gsm_mini_machine.priority = 100; // always execute first
+  gsm_mini_machine.priority = 2; // always execute second
 
   err = gsm_sub_ops->add_mini_state_machine(gsm_mini_machine);
   if (err) {

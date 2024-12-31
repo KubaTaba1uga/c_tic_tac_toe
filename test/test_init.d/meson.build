@@ -24,7 +24,7 @@ test_init_src = [test_init_name,
 		 game / 'game_state_machine' / 'game_state_machine.c',
 		 game / 'game_state_machine' / 'game_sm_subsystem.c',		 
   		 game / 'game_state_machine' / 'mini_state_machines' / 'user_move_mini_machine.c',		 		 			          game / 'game_state_machine' / 'mini_state_machines' / 'quit_mini_machine.c',
-  		 game / 'game_state_machine' / 'mini_state_machines' / 'moves_cleanup_mini_machine.c',		 		 			          game / 'game_state_machine' / 'mini_state_machines' / 'common.c',		 		 			
+  		 game / 'game_state_machine' / 'mini_state_machines' / 'moves_cleanup_mini_machine.c',		 		 			          game / 'game_state_machine' / 'mini_state_machines' / 'common.c',
 		 ]
 
 test_init_exe = executable('test_init',

@@ -13,6 +13,7 @@
 #include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/mini_state_machines/common.h"
+#include "game/game_state_machine/mini_state_machines/moves_cleanup_mini_machine.h"
 #include "game/game_state_machine/mini_state_machines/quit_mini_machine.h"
 #include "game/game_state_machine/mini_state_machines/user_move_mini_machine.h"
 #include "input/input.h"
@@ -116,6 +117,8 @@ static int init_register_multiple_modules(void) {
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   struct GameConfigOps *game_config_ops = get_game_config_ops();
   struct KeyboardOps *keyboard_ops = get_keyboard_ops();
+  struct GameSmCleanLastMoveModuleOps *clean_last_move_ops =
+      get_game_sm_clean_last_move_module_ops();
   struct GameStateMachineOps *game_state_machine_ops =
       get_game_state_machine_ops();
   struct GameSmUserMoveModuleOps *gsm_user_move_ops =
@@ -124,7 +127,6 @@ static int init_register_multiple_modules(void) {
   struct ConfigOps *config_ops = get_config_ops();
   struct InputOps *input_ops = get_input_ops();
   struct GameOps *game_ops = get_game_ops();
-
   struct InitRegistration modules[] = {
       {.init = logging_ops->init,
        .destroy = logging_ops->destroy,
@@ -153,6 +155,9 @@ static int init_register_multiple_modules(void) {
       {.init = gsm_quit_ops->init,
        .destroy = NULL,
        .display_name = "quit_mini_machine"},
+      {.init = clean_last_move_ops->init,
+       .destroy = NULL,
+       .display_name = "last_move_cleanup_mini_machine"},
   };
   int num_modules = sizeof(modules) / sizeof(struct InitRegistration);
   int err;

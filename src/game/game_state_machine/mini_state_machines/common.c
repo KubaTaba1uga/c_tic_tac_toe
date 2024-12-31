@@ -20,16 +20,7 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-static const char *module_id = "game_state_machines_common";
 static struct LoggingUtilsOps *logging_ops;
-
-/*******************************************************************************
- *    MODULARITY BOILERCODE
- ******************************************************************************/
-
-/*******************************************************************************
- *    INIT BOILERCODE
- ******************************************************************************/
 
 /*******************************************************************************
  *    PRIVATE API
@@ -38,8 +29,6 @@ static struct UserMove *get_last_move(struct GameStateMachineState *state) {
   logging_ops = get_logging_utils_ops();
 
   if (state->users_moves_offset == 0) {
-    logging_ops->log_err(module_id,
-                         "No last move to get. This is unexpected behaviour");
     return NULL;
   }
 
