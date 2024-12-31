@@ -2,7 +2,7 @@
 
 #include "game/game.h"
 #include "input/input.h"
-#include "main.c"
+#include "main.h"
 
 int input_wait_mock(void) { return 0; };
 

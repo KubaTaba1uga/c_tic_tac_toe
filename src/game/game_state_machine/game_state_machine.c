@@ -18,8 +18,8 @@
 // App's internal libs
 #include "config/config.h"
 #include "game/game.h"
-/* #include "game/game_state_machine/game_sm_subsystem.h" */
 #include "game/game_config.h"
+#include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/game_states.h"
 #include "game/game_user.h"
@@ -47,6 +47,7 @@ static struct GameOps *game_ops;
 static struct InputOps *input_ops;
 static struct LoggingUtilsOps *logging_ops;
 static struct GameConfigOps *game_config_ops;
+static struct GameSmSubsystemOps *gsm_sub_ops;
 static struct GameStateMachineState game_sm;
 static char gsm_module_id[] = "game_state_machine";
 
@@ -58,11 +59,12 @@ struct GameStateMachinePrivOps *get_game_state_machine_priv_ops(void);
  ******************************************************************************/
 
 int game_sm_init(void) {
-
   logging_ops = get_logging_utils_ops();
   input_ops = get_input_ops();
   game_config_ops = get_game_config_ops();
   game_ops = get_game_ops();
+  gsm_priv_ops = get_game_state_machine_priv_ops();
+  gsm_sub_ops = get_game_sm_subsystem_ops();
 
   GameStateMachineState_users_moves_init(&game_sm);
   game_sm.current_state = GameStatePlay;
@@ -72,7 +74,6 @@ int game_sm_init(void) {
 }
 
 int game_sm_step(enum InputEvents input_event, input_device_id_t device_id) {
-  struct GameStateMachineInput data;
   int err;
 
   logging_ops->log_info(gsm_module_id, "Event %d User %d", input_event,
@@ -92,21 +93,19 @@ int game_sm_step(enum InputEvents input_event, input_device_id_t device_id) {
     return err;
   }
 
-  data.input_event = input_event;
-  data.device_id = device_id;
-
   // Make compiler happy
-  (void)data;
-  /* err = gsm_sub_ops->next_state(data, &game_sm); */
-  /* if (err) { */
-  /*   logging_ops->log_err(gsm_module_id, "Unable to get next gsm state: %s",
-   */
-  /*                        strerror(err)); */
+  err = gsm_sub_ops->next_state(
+      (struct GameStateMachineInput){.input_event = input_event,
+                                     .device_id = device_id},
+      &game_sm);
+  if (err) {
+    logging_ops->log_err(gsm_module_id, "Unable to get next gsm state: %s",
+                         strerror(err));
 
-  /*   game_ops->stop(); */
+    game_ops->stop();
 
-  /*   return err; */
-  /* } */
+    return err;
+  }
 
   return 0;
 }
@@ -146,6 +145,7 @@ static struct GameStateMachinePrivOps game_sm_priv_ops = {
 };
 
 struct GameStateMachineOps game_sm_ops = {
+    .init = game_sm_init,
     .step = game_sm_step,
 };
 

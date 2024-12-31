@@ -20,6 +20,7 @@
 
 // App's internal libs
 #include "config/config.h"
+#include "game/game.h"
 #include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
@@ -47,12 +48,13 @@ int main(void)
 #endif
 {
   struct LoggingUtilsOps *logging_ops;
-  struct InputOps *input_ops;
+  struct GameOps *game_ops;
+  ;
   struct InitOps *init_ops;
   int err;
 
   logging_ops = get_logging_utils_ops();
-  input_ops = get_input_ops();
+  game_ops = get_game_ops();
   init_ops = get_init_ops();
 
   err = init_ops->initialize();
@@ -62,10 +64,12 @@ int main(void)
     return 1;
   }
 
-  // Game logic is triggered by new input. That's why main
-  //  game's thread is waiting until all input's are destroyed
-  //  by user's decision to quit.
-  input_ops->wait();
+  err = game_ops->start();
+  if (err) {
+    logging_ops->log_err(main_id, "Unable to play the game: %s.",
+                         strerror(err));
+    return 2;
+  }
 
   logging_ops->log_info(main_id, "Game finished");
 
