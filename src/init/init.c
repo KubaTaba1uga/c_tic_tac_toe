@@ -23,6 +23,7 @@
 #include "input/keyboard/keyboard_keys_mapping_1.h"
 #include "static_array_lib.h"
 #include "utils/logging_utils.h"
+#include "utils/signals_utils.h"
 
 #define INIT_MODULES_MAX 100
 
@@ -115,6 +116,7 @@ static void init_destroy(void) {
  ******************************************************************************/
 static int init_register_multiple_modules(void) {
   struct KeyboardKeysMapping1Ops *km1_ops = get_keyboard_keys_mapping_1_ops();
+  struct SignalUtilsOps *signals_ops = get_signal_utils_ops();
   struct GameSmSubsystemOps *game_sm_sub_ops = get_game_sm_subsystem_ops();
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   struct GameConfigOps *game_config_ops = get_game_config_ops();
@@ -135,6 +137,9 @@ static int init_register_multiple_modules(void) {
       {.init = logging_ops->init,
        .destroy = logging_ops->destroy,
        .display_name = "logging_utils"},
+      {.init = signals_ops->init,
+       .destroy = NULL,
+       .display_name = "signals_utils"},
       {.init = config_ops->init, .destroy = NULL, .display_name = "config"},
       {.init = input_ops->init, .destroy = NULL, .display_name = "input"},
       {.init = keyboard_ops->init,

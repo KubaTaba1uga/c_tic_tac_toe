@@ -29,6 +29,8 @@
 #include "game/user_move.h"
 #include "init/init.h"
 #include "utils/logging_utils.h"
+#include "utils/signals_utils.h"
+#include "utils/terminal_utils.h"
 
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
@@ -40,8 +42,12 @@ struct CliDisplay {
 
 struct DisplayCliPrivateOps {
   display_display_func_t display;
+  int (*configure_terminal)(void);
+  void (*restore_terminal)(void);
 };
 
+static struct SignalUtilsOps *signals_ops;
+static struct TerminalUtilsOps *terminal_ops;
 static struct DisplayCliPrivateOps *display_cli_priv_ops;
 struct DisplayCliPrivateOps *get_display_cli_priv_ops(void);
 
@@ -54,6 +60,8 @@ static int display_cli_init(void) {
 
   display_cli_priv_ops = get_display_cli_priv_ops();
   display_ops = get_display_ops();
+  terminal_ops = get_terminal_ops();
+  signals_ops = get_signal_utils_ops();
 
   err = display_ops->add_display(
       &(struct DisplayDisplay){.display_name = DISPLAY_CLI_NAME,
@@ -62,16 +70,33 @@ static int display_cli_init(void) {
     return err;
   }
 
+  signals_ops->add_handler(display_cli_priv_ops->restore_terminal);
+
+  display_cli_priv_ops->configure_terminal();
+
   return 0;
 };
 
 static int display_cli_display(struct DisplayData *data) { return 0; };
+
+static int display_cli_configure_terminal(void) {
+  terminal_ops->disable_echo(STDIN_FILENO);
+
+  return 0;
+}
+
+// Function to restore the original terminal settings
+static void display_cli_restore_terminal(void) {
+  terminal_ops->enable_echo(STDIN_FILENO);
+}
 
 /*******************************************************************************
  *    MODULARIZATION BOILERCODE
  ******************************************************************************/
 struct DisplayCliPrivateOps priv_ops = {
     .display = display_cli_display,
+    .configure_terminal = display_cli_configure_terminal,
+    .restore_terminal = display_cli_restore_terminal,
 };
 
 struct DisplayCliPrivateOps *get_display_cli_priv_ops(void) {

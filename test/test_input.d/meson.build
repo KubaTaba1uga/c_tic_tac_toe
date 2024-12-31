@@ -18,7 +18,8 @@ test_keyboard_src = [test_keyboard_name,
                    input / 'input_device.c',		   
 		   utils / 'std_lib_utils.c',
 		   utils / 'logging_utils.c',
-   		   utils / 'terminal_utils.c'		
+   		   utils / 'terminal_utils.c',
+   		   utils / 'signals_utils.c',		   
 		   ]
 
 test_keyboard_exe = executable('test_keyboard',
@@ -50,7 +51,8 @@ test_keyboard1_src = [test_keyboard1_name,
                       input / 'input_device.c',		      
 		      utils / 'std_lib_utils.c',
 		      utils / 'logging_utils.c',
-   		      utils / 'terminal_utils.c'		
+   		      utils / 'terminal_utils.c',
+                      utils / 'signals_utils.c',		      
 		   ]
 
 test_keyboard1_exe = executable('test_keyboard1',

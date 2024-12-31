@@ -31,7 +31,8 @@ test_game_config_src = [test_game_config_name,
                    input / 'input_device.c',		   
 		   utils / 'std_lib_utils.c',
 		   utils / 'logging_utils.c',
-   		   utils / 'terminal_utils.c'		
+   		   utils / 'terminal_utils.c',
+   		   utils / 'signals_utils.c',
 		   ]
 
 
@@ -73,6 +74,7 @@ test_gsm_subsystem_src = [test_gsm_subsystem_name,
                    input / 'input_device.c',		   
 		   utils / 'std_lib_utils.c',
 		   utils / 'logging_utils.c',
+		   utils / 'signals_utils.c',		   
    		   utils / 'terminal_utils.c'		
 		   ]
 
@@ -114,7 +116,8 @@ test_user_move_src = [test_user_move_name,
                    input / 'input_device.c',		   
 		   utils / 'std_lib_utils.c',
 		   utils / 'logging_utils.c',
-   		   utils / 'terminal_utils.c'		
+   		   utils / 'terminal_utils.c',
+		   utils / 'signals_utils.c',		   		   		   
 		   ]
 
 test_user_move_exe = executable('test_user_move',
@@ -159,7 +162,8 @@ test_quit_sm_src = [test_quit_sm_name,
                    input / 'input_device.c',		   
 		   utils / 'std_lib_utils.c',
 		   utils / 'logging_utils.c',
-   		   utils / 'terminal_utils.c'		
+   		   utils / 'terminal_utils.c',
+		   utils / 'signals_utils.c',		   		   
 		   ]
 
 test_quit_sm_exe = executable('test_quit_sm',

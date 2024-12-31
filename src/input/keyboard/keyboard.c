@@ -27,6 +27,7 @@
 #include "input/keyboard/keyboard.h"
 #include "input/keyboard/keyboard_keys_mapping.h"
 #include "utils/logging_utils.h"
+#include "utils/signals_utils.h"
 #include "utils/terminal_utils.h"
 
 /*******************************************************************************
@@ -61,6 +62,7 @@ struct KeyboardPrivateOps {
 
 static struct InputOps *input_ops;
 static const char module_id[] = "keyboard";
+static struct SignalUtilsOps *signals_ops;
 static struct LoggingUtilsOps *logging_ops;
 static struct TerminalUtilsOps *terminal_ops;
 static struct KeyboardSubsystem keyboard_subsystem;
@@ -77,6 +79,7 @@ static int keyboard_init_intrfc(void) {
   logging_ops = get_logging_utils_ops();
   keyboard_priv_ops = get_keyboard_priv_ops();
   input_ops = get_input_ops();
+  signals_ops = get_signal_utils_ops();
 
   err = keyboard_priv_ops->init(&keyboard_subsystem);
   if (err) {
@@ -177,12 +180,15 @@ static void keyboard_destroy_intrfc(void) {
  *    PRIVATE API
  ******************************************************************************/
 static int keyboard_init(struct KeyboardSubsystem *keyboard) {
+
   if (!keyboard)
     return EINVAL;
 
   KeyboardSubsystem_keys_mappings_init(keyboard);
 
   keyboard->is_initialized = false;
+
+  signals_ops->add_handler(get_keyboard_ops()->destroy);
 
   terminal_ops->disable_canonical_mode(STDIN_FILENO);
 
