@@ -103,12 +103,14 @@ static void init_destroy(void) {
   for (size_t i = InitSubsystem_modules_length(&init_subsystem); i > 0; i--) {
     InitSubsystem_modules_get(&init_subsystem, i - 1, &module);
     if (module->destroy) {
+      log_ops->log_info("INIT", "Destroying module: %s", module->display_name);
       module->destroy();
-      log_ops->log_info("INIT", "Destroyed module: %s", module->display_name);
+      /* log_ops->log_info("INIT", "Destroyed module: %s",
+       * module->display_name); */
     }
   }
 
-  log_ops->log_info("INIT", "All modules destroyed successfully.");
+  /* log_ops->log_info("INIT", "All modules destroyed successfully."); */
 }
 
 /*******************************************************************************

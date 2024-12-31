@@ -8,13 +8,15 @@ then
     builddir="build"
 fi
 
-meson test --wrap='valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 -s' $test_name -C $builddir
+meson test --wrap='valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all --error-exitcode=1 -s' $test_name -C $builddir 
+#--error-exitcode=1
 
 exit_code=$?
 if [ $exit_code -ne 0 ]
 then
+    cat $builddir/meson-logs/testlog-valgrind.txt
     echo "Failed valgrind test with exit code: $exit_code"
     exit $exit_code
 fi
 
-cat $builddir/meson-logs/testlog-valgrind.txt
+

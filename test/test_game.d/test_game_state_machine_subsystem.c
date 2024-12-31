@@ -25,7 +25,7 @@
 /*******************************************************************************
  *    PRIVATE DECLARATIONS & DEFINITIONS
  ******************************************************************************/
-static struct GameSmSubsystem test_data;
+static struct GameSmSubsystem test_data = {0};
 static int mock_state;
 
 static struct GameSmSubsystemOps *gsm_sub_ops;
@@ -44,7 +44,6 @@ void setUp() {
   struct GameSmUserMoveModuleOps *user_move_ops;
   struct GameSmQuitModuleOps *quit_ops;
   struct GameSmCleanLastMoveModuleOps *clean_last_move_ops;
-  ;
 
   // Mock functions
   gsm_sub_ops = get_game_sm_subsystem_ops();
@@ -59,10 +58,11 @@ void setUp() {
   quit_ops->init = NULL;
   clean_last_move_ops->init = NULL;
 
+  priv_ops->get_subsystem = mock_get_subsystem;
   GameSmSubsystem_mini_machines_init(&test_data);
   mock_state = GameStatePlay;
-  priv_ops->get_subsystem = mock_get_subsystem;
 
+  /* memset(&test_data, 0, sizeof(struct GameSmSubsystem)); */
   TEST_ASSERT_EQUAL_INT(0, init_ops->initialize());
 }
 
@@ -73,10 +73,11 @@ void tearDown() { init_ops->destroy(); }
  ******************************************************************************/
 // Test add_mini_state_machine
 void test_register_new_state_machine() {
-  // Mock registration data
-  struct MiniGameStateMachine mock_registration_data_1 = {
-      .display_name = "TestSM1", .priority = 1, .next_state = mock_next_state};
   int err;
+  struct MiniGameStateMachine mock_registration_data_1 = {0}; //
+  mock_registration_data_1.display_name = "TestSM1";
+  mock_registration_data_1.priority = 1;
+  mock_registration_data_1.next_state = mock_next_state;
 
   err = gsm_sub_ops->add_mini_state_machine(mock_registration_data_1);
   TEST_ASSERT_EQUAL_INT(0, err);
@@ -104,18 +105,35 @@ void test_register_new_state_machine() {
 }
 
 void test_register_positive_prioritized_state_machine() {
-  struct MiniGameStateMachine mock_registration_data_0 = {
-      .display_name = "TestSM0", .priority = 0, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_1 = {
-      .display_name = "TestSM1", .priority = 1, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_2 = {
-      .display_name = "TestSM2", .priority = 2, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_3 = {
-      .display_name = "TestSM3", .priority = 3, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_4 = {
-      .display_name = "TestSM4", .priority = 4, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_5 = {
-      .display_name = "TestSM5", .priority = 5, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_0 = {0};
+  mock_registration_data_0.display_name = "TestSM0";
+  mock_registration_data_0.priority = 0;
+  mock_registration_data_0.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_1 = {0};
+  mock_registration_data_1.display_name = "TestSM1";
+  mock_registration_data_1.priority = 1;
+  mock_registration_data_1.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_2 = {0};
+  mock_registration_data_2.display_name = "TestSM2";
+  mock_registration_data_2.priority = 2;
+  mock_registration_data_2.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_3 = {0};
+  mock_registration_data_3.display_name = "TestSM3";
+  mock_registration_data_3.priority = 3;
+  mock_registration_data_3.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_4 = {0};
+  mock_registration_data_4.display_name = "TestSM4";
+  mock_registration_data_4.priority = 4;
+  mock_registration_data_4.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_5 = {0};
+  mock_registration_data_5.display_name = "TestSM5";
+  mock_registration_data_5.priority = 5;
+  mock_registration_data_5.next_state = mock_next_state;
 
   gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
   TEST_ASSERT_EQUAL_INT(1, test_data.mini_machines_offset);
@@ -162,18 +180,35 @@ void test_register_positive_prioritized_state_machine() {
 }
 
 void test_register_negative_prioritized_state_machine() {
-  struct MiniGameStateMachine mock_registration_data_0 = {
-      .display_name = "TestSM0", .priority = 0, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_1 = {
-      .display_name = "TestSM1", .priority = -1, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_2 = {
-      .display_name = "TestSM2", .priority = -2, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_3 = {
-      .display_name = "TestSM3", .priority = -3, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_4 = {
-      .display_name = "TestSM4", .priority = -4, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_5 = {
-      .display_name = "TestSM5", .priority = -5, .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_0 = {0};
+  mock_registration_data_0.display_name = "TestSM0";
+  mock_registration_data_0.priority = 0;
+  mock_registration_data_0.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_1 = {0};
+  mock_registration_data_1.display_name = "TestSM1";
+  mock_registration_data_1.priority = -1;
+  mock_registration_data_1.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_2 = {0};
+  mock_registration_data_2.display_name = "TestSM2";
+  mock_registration_data_2.priority = -2;
+  mock_registration_data_2.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_3 = {0};
+  mock_registration_data_3.display_name = "TestSM3";
+  mock_registration_data_3.priority = -3;
+  mock_registration_data_3.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_4 = {0};
+  mock_registration_data_4.display_name = "TestSM4";
+  mock_registration_data_4.priority = -4;
+  mock_registration_data_4.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_5 = {0};
+  mock_registration_data_5.display_name = "TestSM5";
+  mock_registration_data_5.priority = -5;
+  mock_registration_data_5.next_state = mock_next_state;
 
   gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
   TEST_ASSERT_EQUAL_INT(1, test_data.mini_machines_offset);
@@ -224,20 +259,30 @@ void test_register_negative_prioritized_state_machine() {
 }
 
 void test_register_all_prioritized_state_machine_small() {
-  struct MiniGameStateMachine mock_registration_data_0 = {
-      .display_name = "TestSM0", .priority = 0, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_1 = {
-      .display_name = "TestSM1", .priority = 1, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_2 = {
-      .display_name = "TestSM2", .priority = 2, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_3 = {
-      .display_name = "TestSM-2",
-      .priority = -2,
-      .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_4 = {
-      .display_name = "TestSM-1",
-      .priority = -1,
-      .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_0 = {0};
+  mock_registration_data_0.display_name = "TestSM0";
+  mock_registration_data_0.priority = 0;
+  mock_registration_data_0.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_1 = {0};
+  mock_registration_data_1.display_name = "TestSM1";
+  mock_registration_data_1.priority = 1;
+  mock_registration_data_1.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_2 = {0};
+  mock_registration_data_2.display_name = "TestSM2";
+  mock_registration_data_2.priority = 2;
+  mock_registration_data_2.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_3 = {0};
+  mock_registration_data_3.display_name = "TestSM-2";
+  mock_registration_data_3.priority = -2;
+  mock_registration_data_3.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_4 = {0};
+  mock_registration_data_4.display_name = "TestSM-1";
+  mock_registration_data_4.priority = -1;
+  mock_registration_data_4.next_state = mock_next_state;
 
   gsm_sub_ops->add_mini_state_machine(mock_registration_data_0);
   TEST_ASSERT_EQUAL_INT(1, test_data.mini_machines_offset);
@@ -284,32 +329,50 @@ void test_register_all_prioritized_state_machine_small() {
 }
 
 void test_register_all_prioritized_state_machine_big() {
-  struct MiniGameStateMachine mock_registration_data_0 = {
-      .display_name = "TestSM0", .priority = 0, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_1 = {
-      .display_name = "TestSM1", .priority = 1, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_2 = {
-      .display_name = "TestSM2", .priority = 2, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_3 = {
-      .display_name = "TestSM3", .priority = 3, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_4 = {
-      .display_name = "TestSM4", .priority = 4, .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_5 = {
-      .display_name = "TestSM-4",
-      .priority = -4,
-      .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_6 = {
-      .display_name = "TestSM-3",
-      .priority = -3,
-      .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_7 = {
-      .display_name = "TestSM-2",
-      .priority = -2,
-      .next_state = mock_next_state};
-  struct MiniGameStateMachine mock_registration_data_8 = {
-      .display_name = "TestSM-1",
-      .priority = -1,
-      .next_state = mock_next_state};
+  struct MiniGameStateMachine mock_registration_data_0 = {0};
+  mock_registration_data_0.display_name = "TestSM0";
+  mock_registration_data_0.priority = 0;
+  mock_registration_data_0.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_1 = {0};
+  mock_registration_data_1.display_name = "TestSM1";
+  mock_registration_data_1.priority = 1;
+  mock_registration_data_1.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_2 = {0};
+  mock_registration_data_2.display_name = "TestSM2";
+  mock_registration_data_2.priority = 2;
+  mock_registration_data_2.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_3 = {0};
+  mock_registration_data_3.display_name = "TestSM3";
+  mock_registration_data_3.priority = 3;
+  mock_registration_data_3.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_4 = {0};
+  mock_registration_data_4.display_name = "TestSM4";
+  mock_registration_data_4.priority = 4;
+  mock_registration_data_4.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_5 = {0};
+  mock_registration_data_5.display_name = "TestSM-4";
+  mock_registration_data_5.priority = -4;
+  mock_registration_data_5.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_6 = {0};
+  mock_registration_data_6.display_name = "TestSM-3";
+  mock_registration_data_6.priority = -3;
+  mock_registration_data_6.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_7 = {0};
+  mock_registration_data_7.display_name = "TestSM-2";
+  mock_registration_data_7.priority = -2;
+  mock_registration_data_7.next_state = mock_next_state;
+
+  struct MiniGameStateMachine mock_registration_data_8 = {0};
+  mock_registration_data_8.display_name = "TestSM-1";
+  mock_registration_data_8.priority = -1;
+  mock_registration_data_8.next_state = mock_next_state;
 
   gsm_sub_ops->add_mini_state_machine(mock_registration_data_4);
   TEST_ASSERT_EQUAL_INT(1, test_data.mini_machines_offset);

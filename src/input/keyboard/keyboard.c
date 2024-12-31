@@ -170,10 +170,6 @@ static void keyboard_destroy_intrfc(void) {
 
   // Perform any additional cleanup using private destroy function
   keyboard_priv_ops->destroy(&keyboard_subsystem);
-
-  // Log the successful destruction
-  logging_ops->log_info(module_id,
-                        "Keyboard subsystem destroyed successfully.");
 }
 
 /*******************************************************************************

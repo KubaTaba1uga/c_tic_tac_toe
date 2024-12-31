@@ -101,6 +101,9 @@ int init_loggers(void) {
   if (loggers[0] == NULL)
     logging_utils_priv_ops.print_error("Unable to open console logger");
 
+  // Register cleanup at program exit
+  atexit(destroy_loggers);
+
   return errno;
 }
 

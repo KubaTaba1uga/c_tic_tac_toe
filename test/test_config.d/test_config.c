@@ -15,10 +15,11 @@
 #define TEST_DEFAULT_VALUE "default_value"
 
 struct ConfigOps *config_ops;
+struct LoggingUtilsOps *log_ops;
 
 // Test Setup
 void setUp() {
-  struct LoggingUtilsOps *log_ops;
+
   int err;
 
   config_ops = get_config_ops();
@@ -33,7 +34,8 @@ void setUp() {
 }
 
 // Test Teardown
-void tearDown() {}
+void tearDown() { log_ops->destroy(); }
+/* void tearDown() {} */
 
 // Test Variable Initialization
 void test_config_var_init_success() {

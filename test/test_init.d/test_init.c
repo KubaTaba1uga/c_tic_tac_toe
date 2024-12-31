@@ -10,6 +10,7 @@
 static void *game_init_mock;
 static struct InitOps *init_ops;
 static struct InitPrivateOps *priv_ops;
+static struct LoggingUtilsOps *log_ops;
 
 static int game_init_mock_success(void) { return 0; }
 static int game_init_mock_err(void) { return ENOMEM; }
@@ -26,11 +27,17 @@ static int init_register_modules_mock(void) {
 void setUp() {
   priv_ops = get_init_priv_ops();
   init_ops = get_init_ops();
+  log_ops = get_logging_utils_ops();
+
+  log_ops->init();
 
   priv_ops->register_modules = init_register_modules_mock;
 }
 
-void tearDown() { init_ops->destroy(); }
+void tearDown() {
+  log_ops->destroy();
+  init_ops->destroy();
+}
 
 void test_init_success(void) {
   int err;
