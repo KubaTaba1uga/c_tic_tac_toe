@@ -67,8 +67,8 @@ void test_user_move_reset_state() {
   TEST_ASSERT_EQUAL_INT(1, user_move_sm.coordinates.y);
 }
 
-void test_user_move_create_up_higlith() {
-  struct GameStateMachineInput input = {.input_event = INPUT_EVENT_UP,
+void test_user_move_create_down_higlith() {
+  struct GameStateMachineInput input = {.input_event = INPUT_EVENT_DOWN,
                                         .device_id = 0};
   struct GameStateMachineState state = {.current_state = GameStatePlay,
                                         .current_user = USER_1_ID,
@@ -112,8 +112,8 @@ void test_user_move_create_up_higlith() {
   TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates.y);
 }
 
-void test_user_move_create_down_higlith() {
-  struct GameStateMachineInput input = {.input_event = INPUT_EVENT_DOWN,
+void test_user_move_create_up_higlith() {
+  struct GameStateMachineInput input = {.input_event = INPUT_EVENT_UP,
                                         .device_id = 0};
   struct GameStateMachineState state = {.current_state = GameStatePlay,
                                         .current_user = USER_1_ID,
@@ -273,7 +273,7 @@ void test_user_move_create_select() {
   TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates.x);
   TEST_ASSERT_EQUAL_INT(1, new_user_move->coordinates.y);
 
-  input.input_event = INPUT_EVENT_DOWN; // Move to 1, 0
+  input.input_event = INPUT_EVENT_UP; // Move to 1, 0
   err = user_move_priv_ops->next_state(input, &state);
 
   TEST_ASSERT_EQUAL_INT(0, err);
