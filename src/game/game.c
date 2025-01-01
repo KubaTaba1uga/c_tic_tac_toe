@@ -49,26 +49,27 @@ int game_start(void) {
   int err;
 
   // Start the input subsystem
-  logging_ops->log_info(__FILE_NAME__, "Starting input subsystem...");
+  logging_ops->log_info(GAME_FILE_NAME, "Starting input subsystem...");
   err = input_ops->start();
   if (err) {
-    logging_ops->log_err(__FILE_NAME__, "Failed to start input subsystem: %s",
+    logging_ops->log_err(GAME_FILE_NAME, "Failed to start input subsystem: %s",
                          strerror(err));
     return err;
   }
 
-  logging_ops->log_info(__FILE_NAME__, "Input subsystem started successfully.");
+  logging_ops->log_info(GAME_FILE_NAME,
+                        "Input subsystem started successfully.");
 
   // Wait for input events
-  logging_ops->log_info(__FILE_NAME__, "Waiting for input events...");
+  logging_ops->log_info(GAME_FILE_NAME, "Waiting for input events...");
   err = input_ops->wait();
   if (err) {
-    logging_ops->log_err(__FILE_NAME__, "Error while waiting for input: %s",
+    logging_ops->log_err(GAME_FILE_NAME, "Error while waiting for input: %s",
                          strerror(err));
     return err;
   }
 
-  logging_ops->log_info(__FILE_NAME__, "Game loop exited successfully.");
+  logging_ops->log_info(GAME_FILE_NAME, "Game loop exited successfully.");
 
   return 0;
 }
@@ -79,11 +80,11 @@ int game_start(void) {
 void game_stop(void) {
   logging_ops = get_logging_utils_ops();
 
-  logging_ops->log_info(__FILE_NAME__, "Stopping game...");
+  logging_ops->log_info(GAME_FILE_NAME, "Stopping game...");
 
   input_ops->stop();
 
-  logging_ops->log_info(__FILE_NAME__, "Game stopped successfully.");
+  logging_ops->log_info(GAME_FILE_NAME, "Game stopped successfully.");
 }
 
 /*******************************************************************************

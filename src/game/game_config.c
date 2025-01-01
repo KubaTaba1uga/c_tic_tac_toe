@@ -56,7 +56,7 @@ static int game_config_init(void) {
   err = config_ops->add_var((struct ConfigAddVarInput){.var = &config_var},
                             &add_var);
   if (err) {
-    log_ops->log_err(__FILE_NAME__,
+    log_ops->log_err(GAME_CONFIG_FILE_NAME,
                      "Unable to add users_amount config variable: %s",
                      strerror(err));
     return err;
@@ -67,17 +67,17 @@ static int game_config_init(void) {
                                  .mode = CONFIG_GET_VAR_BY_ID},
       &get_var);
   if (err) {
-    log_ops->log_err(__FILE_NAME__,
+    log_ops->log_err(GAME_CONFIG_FILE_NAME,
                      "Unable to get users_amount config variable: %s",
                      strerror(err));
     return err;
   }
 
   users_amount = atoi(get_var.value);
-  log_ops->log_info(__FILE_NAME__, "Users amount: %i", users_amount);
+  log_ops->log_info(GAME_CONFIG_FILE_NAME, "Users amount: %i", users_amount);
 
   if (users_amount > MAX_USERS) {
-    log_ops->log_err(__FILE_NAME__,
+    log_ops->log_err(GAME_CONFIG_FILE_NAME,
                      "Invalid users_amount value, maximum users amount is %d",
                      MAX_USERS);
     return err;
@@ -91,7 +91,8 @@ static int game_config_init(void) {
     err = config_ops->add_var((struct ConfigAddVarInput){.var = &config_var},
                               &add_var);
     if (err) {
-      log_ops->log_err(__FILE_NAME__, "Unable to add %s config variable: %s",
+      log_ops->log_err(GAME_CONFIG_FILE_NAME,
+                       "Unable to add %s config variable: %s",
                        config_var.var_name, strerror(err));
       return err;
     }
@@ -101,7 +102,8 @@ static int game_config_init(void) {
                                    .mode = CONFIG_GET_VAR_BY_ID},
         &get_var);
     if (err) {
-      log_ops->log_err(__FILE_NAME__, "Unable to get %s config variable: %s",
+      log_ops->log_err(GAME_CONFIG_FILE_NAME,
+                       "Unable to get %s config variable: %s",
                        config_var.var_name, strerror(err));
       return err;
     }
@@ -112,8 +114,9 @@ static int game_config_init(void) {
                                               .mode = INPUT_GET_DEVICE_BY_NAME},
         &get_device);
     if (err) {
-      log_ops->log_err(__FILE_NAME__, "Unable to get %s input device: %s",
-                       get_var.value, strerror(err));
+      log_ops->log_err(GAME_CONFIG_FILE_NAME,
+                       "Unable to get %s input device: %s", get_var.value,
+                       strerror(err));
       return err;
     }
 
@@ -122,7 +125,7 @@ static int game_config_init(void) {
                                        .device_id = get_device.device_id},
         &(struct InputSetCallbackOutput){});
     if (err) {
-      log_ops->log_err(__FILE_NAME__,
+      log_ops->log_err(GAME_CONFIG_FILE_NAME,
                        "Unable to set callback for %s input device: %s",
                        get_var.value, strerror(err));
       return err;
@@ -134,7 +137,7 @@ static int game_config_init(void) {
     // Add user to game config
     err = GameConfig_users_append(&game_config, user);
     if (err) {
-      log_ops->log_err(__FILE_NAME__, "Unable to add %s user: %s",
+      log_ops->log_err(GAME_CONFIG_FILE_NAME, "Unable to add %s user: %s",
                        user.display_name, strerror(err));
       return err;
     }
@@ -142,15 +145,17 @@ static int game_config_init(void) {
 
   err = config_ops->init_var(&config_var, "display", DISPLAY_CLI_NAME);
   if (err) {
-    log_ops->log_err(__FILE_NAME__, "Unable to init %s config variable: %s",
-                     "display", strerror(err));
+    log_ops->log_err(GAME_CONFIG_FILE_NAME,
+                     "Unable to init %s config variable: %s", "display",
+                     strerror(err));
     return err;
   }
 
   err = config_ops->add_var((struct ConfigAddVarInput){.var = &config_var},
                             &add_var);
   if (err) {
-    log_ops->log_err(__FILE_NAME__, "Unable to add %s config variable: %s",
+    log_ops->log_err(GAME_CONFIG_FILE_NAME,
+                     "Unable to add %s config variable: %s",
                      config_var.var_name, strerror(err));
     return err;
   }
@@ -160,14 +165,15 @@ static int game_config_init(void) {
                                  .mode = CONFIG_GET_VAR_BY_ID},
       &get_var);
   if (err) {
-    log_ops->log_err(__FILE_NAME__, "Unable to get %s config variable: %s",
+    log_ops->log_err(GAME_CONFIG_FILE_NAME,
+                     "Unable to get %s config variable: %s",
                      config_var.var_name, strerror(err));
     return err;
   }
 
   err = display_ops->get_display_id(get_var.value, &display_id);
   if (err) {
-    log_ops->log_err(__FILE_NAME__, "Unable to get %s display: %s",
+    log_ops->log_err(GAME_CONFIG_FILE_NAME, "Unable to get %s display: %s",
                      get_var.value, strerror(err));
     return err;
   }

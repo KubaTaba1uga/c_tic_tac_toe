@@ -64,16 +64,17 @@ static int input_init_intrfc(void) {
   log_ops = get_logging_utils_ops();
   input_private_ops = get_input_private_ops();
 
-  log_ops->log_info(__FILE_NAME__, "Initializing input subsystem.");
+  log_ops->log_info(INPUT_FILE_NAME, "Initializing input subsystem.");
 
   err = input_private_ops->init(&input_subsystem);
   if (err) {
-    log_ops->log_err(__FILE_NAME__, "Failed to initialize registrar: %s",
+    log_ops->log_err(INPUT_FILE_NAME, "Failed to initialize registrar: %s",
                      strerror(err));
     return err;
   }
 
-  log_ops->log_info(__FILE_NAME__, "Input subsystem initialized successfully.");
+  log_ops->log_info(INPUT_FILE_NAME,
+                    "Input subsystem initialized successfully.");
 
   return 0;
 }
@@ -89,12 +90,12 @@ static int input_add_device_intrfc(struct InputAddDeviceInput input,
 
   err = input_private_ops->add_device(&input, output);
   if (err) {
-    log_ops->log_info(__FILE_NAME__, "Module registration failed for: %s.",
+    log_ops->log_info(INPUT_FILE_NAME, "Module registration failed for: %s.",
                       input.device->display_name);
     return err;
   }
 
-  log_ops->log_info(__FILE_NAME__, "Module registered successfully.");
+  log_ops->log_info(INPUT_FILE_NAME, "Module registered successfully.");
 
   return 0;
 }
@@ -110,12 +111,12 @@ static int input_get_device_intrfc(struct InputGetDeviceInput input,
 
   err = input_private_ops->get_device(&input, output);
   if (err) {
-    log_ops->log_info(__FILE_NAME__, "Module retrieving failed for: %d.",
+    log_ops->log_info(INPUT_FILE_NAME, "Module retrieving failed for: %d.",
                       input.device_id);
     return err;
   }
 
-  log_ops->log_info(__FILE_NAME__, "Module retrieved successfully.");
+  log_ops->log_info(INPUT_FILE_NAME, "Module retrieved successfully.");
 
   return 0;
 }
@@ -127,7 +128,7 @@ static int input_set_callback_intrfc(struct InputSetCallbackInput input,
   if (!output || !input.callback)
     return EINVAL;
 
-  log_ops->log_info(__FILE_NAME__, "Setting a registration callback.");
+  log_ops->log_info(INPUT_FILE_NAME, "Setting a registration callback.");
 
   input.private = &input_subsystem;
 
@@ -136,7 +137,7 @@ static int input_set_callback_intrfc(struct InputSetCallbackInput input,
     return err;
   }
 
-  log_ops->log_info(__FILE_NAME__, "Callback set successfully.");
+  log_ops->log_info(INPUT_FILE_NAME, "Callback set successfully.");
 
   return 0;
 }
@@ -144,42 +145,42 @@ static int input_set_callback_intrfc(struct InputSetCallbackInput input,
 static int input_start_intrfc(void) {
   int err;
 
-  log_ops->log_info(__FILE_NAME__, "Starting input subsystem.");
+  log_ops->log_info(INPUT_FILE_NAME, "Starting input subsystem.");
 
   err = input_private_ops->start(&input_subsystem);
   if (err) {
     return err;
   }
 
-  log_ops->log_info(__FILE_NAME__, "Input subsystem started successfully.");
+  log_ops->log_info(INPUT_FILE_NAME, "Input subsystem started successfully.");
   return 0;
 }
 
 static int input_stop_intrfc(void) {
   int err;
 
-  log_ops->log_info(__FILE_NAME__, "Stopping input subsystem.");
+  log_ops->log_info(INPUT_FILE_NAME, "Stopping input subsystem.");
 
   err = input_private_ops->stop(&input_subsystem);
   if (err) {
     return err;
   }
 
-  log_ops->log_info(__FILE_NAME__, "Input subsystem stopped successfully.");
+  log_ops->log_info(INPUT_FILE_NAME, "Input subsystem stopped successfully.");
   return 0;
 }
 
 static int input_wait_intrfc(void) {
   int err;
 
-  log_ops->log_info(__FILE_NAME__, "Waiting for input subsystem.");
+  log_ops->log_info(INPUT_FILE_NAME, "Waiting for input subsystem.");
 
   err = input_private_ops->wait(&input_subsystem);
   if (err) {
     return err;
   }
 
-  log_ops->log_info(__FILE_NAME__, "Input subsystem waited successfully.");
+  log_ops->log_info(INPUT_FILE_NAME, "Input subsystem waited successfully.");
   return 0;
 }
 
@@ -212,7 +213,8 @@ static int input_add_device(struct InputAddDeviceInput *input,
 
   output->device_id = InputSubsystem_devices_length(input_sys) - 1;
 
-  log_ops->log_info(__FILE_NAME__, "Module registered successfully with ID: %d",
+  log_ops->log_info(INPUT_FILE_NAME,
+                    "Module registered successfully with ID: %d",
                     output->device_id);
 
   return 0;
@@ -304,14 +306,14 @@ static int input_set_callback(struct InputSetCallbackInput *input,
 
   err = InputSubsystem_devices_get(input_sys, input->device_id, &device);
   if (err) {
-    log_ops->log_err(__FILE_NAME__, "Failed to retrieve device for ID %d: %s",
+    log_ops->log_err(INPUT_FILE_NAME, "Failed to retrieve device for ID %d: %s",
                      input->device_id, strerror(err));
     return err;
   }
 
   device->callback = input->callback;
 
-  log_ops->log_info(__FILE_NAME__, "Callback set successfully for ID %d",
+  log_ops->log_info(INPUT_FILE_NAME, "Callback set successfully for ID %d",
                     input->device_id);
   return 0;
 }
@@ -328,7 +330,7 @@ static int input_start(struct InputSubsystem *subsystem) {
   for (i = 0; i < InputSubsystem_devices_length(subsystem); i++) {
     err = InputSubsystem_devices_get(subsystem, i, &device);
     if (err) {
-      log_ops->log_err(__FILE_NAME__,
+      log_ops->log_err(INPUT_FILE_NAME,
                        "Failed to get device for module ID %d: %s", i,
                        strerror(err));
       return err;
@@ -340,12 +342,12 @@ static int input_start(struct InputSubsystem *subsystem) {
 
     err = device->start();
     if (err) {
-      log_ops->log_err(__FILE_NAME__, "Failed to start device '%d:%s': %s", i,
+      log_ops->log_err(INPUT_FILE_NAME, "Failed to start device '%d:%s': %s", i,
                        device->display_name, strerror(err));
       return err;
     }
 
-    log_ops->log_err(__FILE_NAME__, "Started device '%d:%s'", i,
+    log_ops->log_err(INPUT_FILE_NAME, "Started device '%d:%s'", i,
                      device->display_name);
   }
 
@@ -364,7 +366,7 @@ static int input_stop(struct InputSubsystem *subsystem) {
   for (i = 0; i < InputSubsystem_devices_length(subsystem); i++) {
     err = InputSubsystem_devices_get(subsystem, i, &device);
     if (err) {
-      log_ops->log_err(__FILE_NAME__,
+      log_ops->log_err(INPUT_FILE_NAME,
                        "Failed to get device for module ID %d: %s", i,
                        strerror(err));
       return err;
@@ -375,7 +377,7 @@ static int input_stop(struct InputSubsystem *subsystem) {
 
     err = device->stop();
     if (err) {
-      log_ops->log_err(__FILE_NAME__, "Failed to stop device '%d:%s': %s", i,
+      log_ops->log_err(INPUT_FILE_NAME, "Failed to stop device '%d:%s': %s", i,
                        device->display_name, strerror(err));
       return err;
     }
@@ -384,7 +386,7 @@ static int input_stop(struct InputSubsystem *subsystem) {
     // This indicates that device stopped running.
     device->callback = NULL;
 
-    log_ops->log_err(__FILE_NAME__, "Stoped device '%d:%s'", i,
+    log_ops->log_err(INPUT_FILE_NAME, "Stoped device '%d:%s'", i,
                      device->display_name);
   }
 
@@ -403,7 +405,7 @@ static int input_wait(struct InputSubsystem *subsystem) {
   for (i = 0; i < InputSubsystem_devices_length(subsystem); i++) {
     err = InputSubsystem_devices_get(subsystem, i, &device);
     if (err) {
-      log_ops->log_err(__FILE_NAME__,
+      log_ops->log_err(INPUT_FILE_NAME,
                        "Failed to get device for module ID %d: %s", i,
                        strerror(err));
       return err;
@@ -414,12 +416,12 @@ static int input_wait(struct InputSubsystem *subsystem) {
 
     err = device->wait();
     if (err) {
-      log_ops->log_err(__FILE_NAME__, "Failed to wait for device '%d:%s': %s",
+      log_ops->log_err(INPUT_FILE_NAME, "Failed to wait for device '%d:%s': %s",
                        i, device->display_name, strerror(err));
       return err;
     }
 
-    log_ops->log_err(__FILE_NAME__, "Waited for device '%d:%s'", i,
+    log_ops->log_err(INPUT_FILE_NAME, "Waited for device '%d:%s'", i,
                      device->display_name);
   }
 

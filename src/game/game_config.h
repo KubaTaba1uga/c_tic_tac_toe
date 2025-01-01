@@ -6,6 +6,8 @@
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_user.h"
 
+#define GAME_CONFIG_FILE_NAME "game_config.c"
+
 struct GameGetUserInput {
   game_user_id_t user_id;
   void *private;

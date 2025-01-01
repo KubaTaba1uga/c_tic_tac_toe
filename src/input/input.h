@@ -21,6 +21,8 @@
  *    PUBLIC API
  ******************************************************************************/
 
+#define INPUT_FILE_NAME "input.c"
+
 struct InputSetCallbackInput {
   input_callback_func_t callback;
   input_device_id_t device_id;
