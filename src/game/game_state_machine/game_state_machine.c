@@ -59,6 +59,9 @@ struct GameStateMachinePrivOps *get_game_state_machine_priv_ops(void);
  ******************************************************************************/
 
 int game_sm_init(void) {
+  struct UserMove default_user_move = {.user_id = 0,
+                                       .type = USER_MOVE_TYPE_HIGHLIGHT,
+                                       .coordinates = {.x = 1, .y = 1}};
   logging_ops = get_logging_utils_ops();
   input_ops = get_input_ops();
   game_config_ops = get_game_config_ops();
@@ -67,6 +70,7 @@ int game_sm_init(void) {
   gsm_sub_ops = get_game_sm_subsystem_ops();
 
   GameStateMachineState_users_moves_init(&game_sm);
+  GameStateMachineState_users_moves_append(&game_sm, default_user_move);
   game_sm.current_state = GameStatePlay;
   game_sm.current_user = 0;
 
@@ -136,6 +140,8 @@ static int validate_device_id(input_device_id_t device_id) {
   return 0;
 }
 
+static struct GameStateMachineState *get_state(void) { return &game_sm; };
+
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
@@ -147,6 +153,7 @@ static struct GameStateMachinePrivOps game_sm_priv_ops = {
 struct GameStateMachineOps game_sm_ops = {
     .init = game_sm_init,
     .step = game_sm_step,
+    .get_state = get_state,
 };
 
 struct GameStateMachinePrivOps *get_game_state_machine_priv_ops(void) {

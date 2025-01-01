@@ -19,6 +19,7 @@
 #include "game/game_state_machine/mini_state_machines/moves_cleanup_mini_machine.h"
 #include "game/game_state_machine/mini_state_machines/quit_mini_machine.h"
 #include "game/game_state_machine/mini_state_machines/user_move_mini_machine.h"
+#include "game/game_state_machine/mini_state_machines/user_turn_mini_machine.h"
 #include "input/input.h"
 #include "input/keyboard/keyboard.h"
 #include "input/keyboard/keyboard_keys_mapping_1.h"
@@ -115,12 +116,12 @@ static void init_destroy(void) {
  ******************************************************************************/
 static int init_register_multiple_modules(void) {
   struct KeyboardKeysMapping1Ops *km1_ops = get_keyboard_keys_mapping_1_ops();
-  struct SignalUtilsOps *signals_ops = get_signal_utils_ops();
   struct GameSmSubsystemOps *game_sm_sub_ops = get_game_sm_subsystem_ops();
+  struct DisplayCliOps *display_cli_ops = get_display_cli_ops();
   struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   struct GameConfigOps *game_config_ops = get_game_config_ops();
+  struct SignalUtilsOps *signals_ops = get_signal_utils_ops();
   struct KeyboardOps *keyboard_ops = get_keyboard_ops();
-  struct DisplayCliOps *display_cli_ops = get_display_cli_ops();
   struct GameSmCleanLastMoveModuleOps *clean_last_move_ops =
       get_game_sm_clean_last_move_module_ops();
   struct GameStateMachineOps *game_state_machine_ops =
@@ -134,6 +135,7 @@ static int init_register_multiple_modules(void) {
   struct InputOps *input_ops = get_input_ops();
   struct GameOps *game_ops = get_game_ops();
   struct DisplayOps *display_ops = get_display_ops();
+  struct GameSmUserTurnModuleOps *turn_ops = get_game_sm_user_turn_module_ops();
   struct InitRegistration modules[] = {
       {.init = logging_ops->init,
        .destroy = logging_ops->destroy,
@@ -175,6 +177,9 @@ static int init_register_multiple_modules(void) {
       {.init = gsm_display_ops->init,
        .destroy = NULL,
        .display_name = "display_mini_machine"},
+      {.init = turn_ops->init,
+       .destroy = NULL,
+       .display_name = "user_turn_mini_machine"},
   };
   int num_modules = sizeof(modules) / sizeof(struct InitRegistration);
   int err;

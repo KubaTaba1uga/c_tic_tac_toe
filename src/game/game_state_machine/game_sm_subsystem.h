@@ -15,6 +15,7 @@ struct GameSmSubsystemOps {
   int (*next_state)(struct GameStateMachineInput input,
                     struct GameStateMachineState *state);
   int (*add_mini_state_machine)(struct MiniGameStateMachine mini_state_machine);
+  int (*display_starting_screen)(void);
 };
 
 struct GameSmSubsystemOps *get_game_sm_subsystem_ops(void);

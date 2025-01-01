@@ -2,11 +2,11 @@
  * @file terminal_utils.c
  * @brief Terminal settings utility functions using the Ops pattern
  ******************************************************************************/
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -115,6 +115,25 @@ static int restore_settings(int fd) {
   return 0; // Success
 }
 
+// Function to get terminal dimensions
+static int get_terminal_dimensions(int fd, int *rows, int *cols) {
+  struct winsize ws;
+
+  if (ioctl(fd, TIOCGWINSZ, &ws) == -1) {
+    perror("ioctl");
+    return errno;
+  }
+
+  if (rows) {
+    *rows = ws.ws_row;
+  }
+  if (cols) {
+    *cols = ws.ws_col;
+  }
+
+  return 0; // Success
+}
+
 // Terminal operations instance
 static struct TerminalUtilsOps terminal_ops = {
     .disable_canonical_mode = disable_canonical_mode,
@@ -122,7 +141,7 @@ static struct TerminalUtilsOps terminal_ops = {
     .disable_echo = disable_echo,
     .enable_echo = enable_echo,
     .restore_settings = restore_settings,
-};
+    .get_terminal_dimensions = get_terminal_dimensions};
 
 // Returns the terminal operations instance
 struct TerminalUtilsOps *get_terminal_ops(void) { return &terminal_ops; }

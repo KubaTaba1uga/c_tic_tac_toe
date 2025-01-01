@@ -19,6 +19,8 @@
 // App's internal libs
 #include "config/config.h"
 #include "game/game.h"
+#include "game/game_state_machine/game_sm_subsystem.h"
+#include "game/game_state_machine/game_state_machine.h"
 #include "init/init.h"
 #include "input/input.h"
 #include "input/input_common.h"
@@ -29,6 +31,7 @@
  ******************************************************************************/
 static struct InputOps *input_ops;
 static struct LoggingUtilsOps *logging_ops;
+static struct GameSmSubsystemOps *gsm_sub_ops;
 
 /*******************************************************************************
  *    API
@@ -36,6 +39,7 @@ static struct LoggingUtilsOps *logging_ops;
 int game_init(void) {
   input_ops = get_input_ops();
   logging_ops = get_logging_utils_ops();
+  gsm_sub_ops = get_game_sm_subsystem_ops();
 
   return 0;
 }
@@ -59,6 +63,13 @@ int game_start(void) {
 
   logging_ops->log_info(GAME_FILE_NAME,
                         "Input subsystem started successfully.");
+
+  err = gsm_sub_ops->display_starting_screen();
+  if (err) {
+    logging_ops->log_err(
+        GAME_FILE_NAME, "Unable to display starting screen: %s", strerror(err));
+    return err;
+  }
 
   // Wait for input events
   logging_ops->log_info(GAME_FILE_NAME, "Waiting for input events...");

@@ -65,6 +65,7 @@ int display_state_machine_init(void) {
 int display_state_machine_next_state(struct GameStateMachineInput input,
                                      struct GameStateMachineState *state) {
   int display_id;
+  int users_amount;
   int err;
 
   err = game_config_ops->get_display_id(&display_id);
@@ -72,11 +73,19 @@ int display_state_machine_next_state(struct GameStateMachineInput input,
     return err;
   }
 
-  struct DisplayData display_data = {.game_state = state->current_state,
-                                     .moves = state->users_moves,
-                                     .moves_length = state->users_moves_offset,
-                                     .user_id = state->current_user,
-                                     .display_id = display_id};
+  err = game_config_ops->get_users_amount(&users_amount);
+  if (err) {
+    return err;
+  }
+
+  struct DisplayData display_data = {
+      .game_state = state->current_state,
+      .moves = state->users_moves,
+      .moves_length = state->users_moves_offset,
+      .user_id = state->current_user,
+      .display_id = display_id,
+      .board_xy = users_amount + 1,
+  };
 
   err = display_ops->display(&display_data);
   if (err) {

@@ -200,6 +200,17 @@ static int game_config_get_display_id(int *placeholder) {
 
   return 0;
 };
+
+static int game_config_get_users_amount(int *placeholder) {
+  if (!placeholder) {
+    return EINVAL;
+  }
+
+  *placeholder = GameConfig_users_length(&game_config);
+
+  return 0;
+};
+
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
@@ -207,6 +218,7 @@ static struct GameConfigOps game_config_pub_ops = {
     .init = game_config_init,
     .get_user = game_config_get_user,
     .get_display_id = game_config_get_display_id,
+    .get_users_amount = game_config_get_users_amount,
 };
 
 struct GameConfigOps *get_game_config_ops(void) { return &game_config_pub_ops; }

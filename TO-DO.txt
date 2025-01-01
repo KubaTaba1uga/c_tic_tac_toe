@@ -1,7 +1,4 @@
 0. Add irs in src asd shared libraries and link tests against them. `config/init/input/game` each can be represented by shared libraries which linked together creates the game.
+1. Add QT display and mouse input.
+2. Add http server feature and add html+JS http client.
 
-Write articles about:
-1. Do not write too defensive software, set one point of validation. If someones forget to init module then it should sigfault.
-2. Getter setter init destruct in c pattern.
-3. Put logging and validation into public interface and encapsualte logic in private one c pattern.
-4. Using define undef to mock malloc

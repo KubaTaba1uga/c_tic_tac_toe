@@ -15,6 +15,7 @@ struct TerminalUtilsOps {
   int (*restore_settings)(int fd);
   int (*enable_canonical_mode)(int fd);
   int (*disable_canonical_mode)(int fd);
+  int (*get_terminal_dimensions)(int fd, int *rows, int *cols);
 };
 
 // Returns the terminal operations instance

@@ -7,10 +7,13 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
+#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stddef.h>
 #include <string.h>
 
+#include "game/game_state_machine/mini_state_machines/quit_mini_machine.h"
+#include "input/input_common.h"
 #include "static_array_lib.h"
 
 // App's internal libs
@@ -44,6 +47,7 @@ struct GameSmSubsystemPrivateOps {
 };
 
 static struct LoggingUtilsOps *logging_ops;
+static struct GameStateMachineOps *gsm_ops;
 static struct GameSmSubsystem game_sm_subsystem;
 static char game_sm_subsystem_module_id[] = "game_sm_subsystem";
 
@@ -56,6 +60,7 @@ struct GameSmSubsystemPrivateOps *get_gsm_sub_private_ops(void);
 int game_sm_subsystem_init(void) {
   logging_ops = get_logging_utils_ops();
 
+  gsm_ops = get_game_state_machine_ops();
   gsm_sub_priv_ops = get_gsm_sub_private_ops();
 
   struct GameSmSubsystem *subsystem = gsm_sub_priv_ops->get_subsystem();
@@ -116,6 +121,23 @@ int game_sm_subsystem_get_next_state(struct GameStateMachineInput input,
                         "Processed all game mini state machines");
 
   return 0;
+}
+
+static int gsm_display_starting_screen(void) {
+  struct MiniGameStateMachine *mini_machine;
+  for (size_t i = 0;
+       i < GameSmSubsystem_mini_machines_length(&game_sm_subsystem); i++) {
+    GameSmSubsystem_mini_machines_get(&game_sm_subsystem, i, &mini_machine);
+
+    if (strcmp(mini_machine->display_name, "display_sm_module") == 0) {
+      return mini_machine->next_state(
+          (struct GameStateMachineInput){.input_event = INPUT_EVENT_UP,
+                                         .device_id = 0},
+          gsm_ops->get_state());
+    }
+  }
+
+  return ENOENT;
 }
 
 /*******************************************************************************
@@ -223,6 +245,7 @@ static struct GameSmSubsystemOps game_sm_subsystem_ops = {
     .init = game_sm_subsystem_init,
     .next_state = game_sm_subsystem_get_next_state,
     .add_mini_state_machine = game_sm_subsystem_add_mini_state_machine,
+    .display_starting_screen = gsm_display_starting_screen,
 };
 
 struct GameSmSubsystemOps *get_game_sm_subsystem_ops(void) {

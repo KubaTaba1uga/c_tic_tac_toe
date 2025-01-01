@@ -71,7 +71,7 @@ int user_move_state_machine_init(void) {
 
   gsm_mini_machine.next_state = user_move_priv_ops->next_state;
   gsm_mini_machine.display_name = module_id;
-  gsm_mini_machine.priority = 2; // always execute second
+  gsm_mini_machine.priority = 3; // always execute third
 
   err = gsm_sub_ops->add_mini_state_machine(gsm_mini_machine);
   if (err) {
@@ -136,13 +136,13 @@ int user_move_state_machine_next_state(struct GameStateMachineInput input,
 
 void user_move_state_machine_handle_up_event(
     struct UserMoveCoordinates *coordinates, struct UserMove *new_user_move) {
-  coordinates->y = (coordinates->y + 1) % 3;
+  coordinates->y = (coordinates->y + 2) % 3;
   new_user_move->type = USER_MOVE_TYPE_HIGHLIGHT;
 }
 
 void user_move_state_machine_handle_down_event(
     struct UserMoveCoordinates *coordinates, struct UserMove *new_user_move) {
-  coordinates->y = (coordinates->y + 2) % 3;
+  coordinates->y = (coordinates->y + 1) % 3;
   new_user_move->type = USER_MOVE_TYPE_HIGHLIGHT;
 }
 

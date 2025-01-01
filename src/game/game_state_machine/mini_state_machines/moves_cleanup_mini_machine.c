@@ -49,7 +49,7 @@ int clean_last_move_state_machine_init(void) {
   struct MiniGameStateMachine mini_machine = {
       .next_state = priv_ops->next_state,
       .display_name = gsm_clean_last_move_module_id,
-      .priority = 1}; // always execute first
+      .priority = 2}; // always execute second
 
   gsm_sub_ops->add_mini_state_machine(mini_machine);
 

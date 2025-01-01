@@ -1,6 +1,8 @@
 #ifndef DISPLAY_SM_MODULE_H
 #define DISPLAY_SM_MODULE_H
 
+#include "game/game_state_machine/game_sm_subsystem.h"
+
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/

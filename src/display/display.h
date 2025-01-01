@@ -37,6 +37,7 @@ struct DisplayData {
   //  want to prevent display from changing users moves.
   const struct UserMove *moves;
   size_t moves_length;
+  size_t board_xy;
 };
 
 typedef int (*display_display_func_t)(struct DisplayData *data);

@@ -43,6 +43,7 @@ struct GameStateMachineState {
 struct GameStateMachineOps {
   int (*init)(void);
   input_callback_func_t step;
+  struct GameStateMachineState *(*get_state)(void);
 };
 
 /*******************************************************************************
