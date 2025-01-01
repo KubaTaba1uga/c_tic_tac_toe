@@ -15,6 +15,7 @@
 #include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/mini_state_machines/common.h"
+#include "game/game_state_machine/mini_state_machines/display_mini_machine.h"
 #include "game/game_state_machine/mini_state_machines/moves_cleanup_mini_machine.h"
 #include "game/game_state_machine/mini_state_machines/quit_mini_machine.h"
 #include "game/game_state_machine/mini_state_machines/user_move_mini_machine.h"
@@ -105,12 +106,8 @@ static void init_destroy(void) {
     if (module->destroy) {
       log_ops->log_info("INIT", "Destroying module: %s", module->display_name);
       module->destroy();
-      /* log_ops->log_info("INIT", "Destroyed module: %s",
-       * module->display_name); */
     }
   }
-
-  /* log_ops->log_info("INIT", "All modules destroyed successfully."); */
 }
 
 /*******************************************************************************
@@ -130,6 +127,8 @@ static int init_register_multiple_modules(void) {
       get_game_state_machine_ops();
   struct GameSmUserMoveModuleOps *gsm_user_move_ops =
       get_game_sm_user_move_module_ops();
+  struct GameSmDisplayModuleOps *gsm_display_ops =
+      get_game_sm_display_module_ops();
   struct GameSmQuitModuleOps *gsm_quit_ops = get_game_sm_quit_module_ops();
   struct ConfigOps *config_ops = get_config_ops();
   struct InputOps *input_ops = get_input_ops();
@@ -173,6 +172,10 @@ static int init_register_multiple_modules(void) {
       {.init = clean_last_move_ops->init,
        .destroy = NULL,
        .display_name = "last_move_cleanup_mini_machine"},
+      {.init = gsm_display_ops->init,
+       .destroy = NULL,
+       .display_name = "display_mini_machine"},
+
   };
   int num_modules = sizeof(modules) / sizeof(struct InitRegistration);
   int err;

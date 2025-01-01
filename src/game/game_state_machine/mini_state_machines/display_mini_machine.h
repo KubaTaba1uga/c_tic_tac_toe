@@ -1,12 +1,13 @@
-#ifndef QUIT_SM_MODULE_H
-#define QUIT_SM_MODULE_H
+#ifndef DISPLAY_SM_MODULE_H
+#define DISPLAY_SM_MODULE_H
+
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
-struct GameSmQuitModuleOps {
+struct GameSmDisplayModuleOps {
   int (*init)(void);
 };
 
-struct GameSmQuitModuleOps *get_game_sm_quit_module_ops(void);
+struct GameSmDisplayModuleOps *get_game_sm_display_module_ops(void);
 
-#endif // QUIT_SM_MODULE_H
+#endif // DISPLAY_SM_MODULE_H
