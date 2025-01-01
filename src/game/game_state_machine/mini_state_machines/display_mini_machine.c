@@ -47,6 +47,7 @@ struct GameSmDisplayModulePrivateOps *get_game_sm_display_module_priv_ops(void);
 int display_state_machine_init(void) {
   struct GameSmSubsystemOps *gsm_sub_ops = get_game_sm_subsystem_ops();
 
+  display_ops = get_display_ops();
   game_config_ops = get_game_config_ops();
   gsm_common_ops = get_sm_mini_machines_common_ops();
   display_priv_ops = get_game_sm_display_module_priv_ops();

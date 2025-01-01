@@ -175,7 +175,6 @@ static int init_register_multiple_modules(void) {
       {.init = gsm_display_ops->init,
        .destroy = NULL,
        .display_name = "display_mini_machine"},
-
   };
   int num_modules = sizeof(modules) / sizeof(struct InitRegistration);
   int err;
