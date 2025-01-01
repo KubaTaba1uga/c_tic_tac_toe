@@ -11,6 +11,7 @@
 
 static enum InputEvents mock_input_event;
 static int mock_callback_counter;
+static struct LoggingUtilsOps *log_ops;
 static struct InputOps *input_ops;
 static struct KeyboardOps *keyboard_ops;
 static struct KeyboardKeysMappingOps *keys_mapping_ops;
@@ -20,13 +21,16 @@ static struct KeyboardKeysMapping1PrivOps *keyboard1_priv_ops;
 void setUp(void) {
   int err;
 
+  log_ops = get_logging_utils_ops();
   input_ops = get_input_ops();
   keyboard_ops = get_keyboard_ops();
   keys_mapping_ops = get_keyboard_keys_mapping_ops();
   keyboard1_ops = get_keyboard_keys_mapping_1_ops();
   keyboard1_priv_ops = get_keyboard_keys_mapping_1_priv_ops();
 
-  // Initialize input and keyboard subsystems
+  err = log_ops->init();
+  TEST_ASSERT_EQUAL_INT(0, err);
+
   err = input_ops->init();
   TEST_ASSERT_EQUAL_INT(0, err);
 
@@ -41,21 +45,12 @@ void setUp(void) {
 }
 
 void tearDown(void) {
-  if (keyboard_ops->stop) {
-    keyboard_ops->stop();
-  }
 
-  if (input_ops->stop) {
-    input_ops->stop();
-  }
+  keyboard_ops->stop();
 
-  if (keyboard_ops->destroy) {
-    keyboard_ops->destroy();
-  }
+  input_ops->stop();
 
-  if (input_ops->destroy) {
-    input_ops->destroy();
-  }
+  log_ops->destroy();
 }
 
 void test_keyboard1_event_up(void) {

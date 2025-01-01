@@ -9,7 +9,7 @@ then
 fi
 
 meson test --wrap='valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all --error-exitcode=1 -s' $test_name -C $builddir 
-#--error-exitcode=1
+
 
 exit_code=$?
 if [ $exit_code -ne 0 ]

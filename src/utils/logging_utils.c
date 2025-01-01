@@ -147,6 +147,7 @@ void log_err(const char *msg_id, char *fmt, ...) {
 void log_msg(char *msg, const char *msg_id, enum stumpless_severity severity) {
   struct stumpless_entry *entry = NULL;
   int err;
+  /* logging_utils_priv_ops.print_error("Test error printing"); */
 
   err = logging_utils_priv_ops.create_log_entry(msg, msg_id, &entry, severity);
 
