@@ -175,6 +175,10 @@ static void keyboard_destroy_intrfc(void) {
 /*******************************************************************************
  *    PRIVATE API
  ******************************************************************************/
+static void keyboard_destroy_signal_handler(void) {
+  keyboard_priv_ops->destroy(&keyboard_subsystem);
+}
+
 static int keyboard_init(struct KeyboardSubsystem *keyboard) {
 
   if (!keyboard)
@@ -184,7 +188,7 @@ static int keyboard_init(struct KeyboardSubsystem *keyboard) {
 
   keyboard->is_initialized = false;
 
-  signals_ops->add_handler(get_keyboard_ops()->destroy);
+  signals_ops->add_handler(keyboard_destroy_signal_handler);
 
   terminal_ops->disable_canonical_mode(STDIN_FILENO);
 

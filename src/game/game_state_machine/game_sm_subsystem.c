@@ -107,7 +107,13 @@ int game_sm_subsystem_get_next_state(struct GameStateMachineInput input,
                            mini_state_machine->display_name, strerror(err));
       return err;
     }
+
+    logging_ops->log_info(game_sm_subsystem_module_id, "Processed %s",
+                          mini_state_machine->display_name);
   }
+
+  logging_ops->log_info(game_sm_subsystem_module_id,
+                        "Processed all game mini state machines");
 
   return 0;
 }

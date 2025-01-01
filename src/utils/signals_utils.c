@@ -2,12 +2,13 @@
  * @file signal_utils.c
  * @brief Signal handling utilities to manage multiple callbacks for signals.
  ******************************************************************************/
-
+#define _POSIX_C_SOURCE 200809L
 #include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "static_array_lib.h"
 
@@ -38,9 +39,20 @@ static void signals_utils_execute_callbacks(void) {
 }
 
 static void signals_utils_signal_handler(int sig) {
+  printf("Received signal: %d (%s)\n", sig, strsignal(sig));
+
   signals_utils_execute_callbacks();
   signal(sig, SIG_DFL); // Reset the signal to its default behavior
-  raise(sig);           // Re-raise the signal to terminate the program
+  // Immediately flush logs and terminate the process for SIGSEGV
+  if (sig == SIGSEGV) {
+    fflush(NULL); // Flush all open output streams
+    raise(sig);   // Re-raise the signal
+    _exit(1);     // Fallback: Ensure process terminates (shouldn't reach here)
+  }
+
+  // For other signals, just re-raise them
+  raise(sig);
+  _exit(1); // Fallback: Ensure process terminates (shouldn't reach here)
 }
 
 int signal_utils_add_handler(signal_callback_t callback) {
@@ -58,7 +70,8 @@ static int signal_utils_register_signals(void) {
   struct sigaction sa;
 
   sa.sa_handler = signals_utils_signal_handler;
-  sa.sa_flags = 0;
+  sa.sa_flags =
+      SA_RESETHAND | SA_NODEFER; // Reset the handler and allow nested signals
   sigemptyset(&sa.sa_mask);
 
   atexit(signals_utils_execute_callbacks);
