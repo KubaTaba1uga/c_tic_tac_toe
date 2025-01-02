@@ -53,6 +53,7 @@ struct DisplayCliPrivateOps {
   int (*find_move)(size_t y, size_t x, struct DisplayData *data,
                    struct UserMove **user_move);
   void (*display_player_info)(struct DisplayData *data);
+  void (*display_empty_before_lines)(struct DisplayData *data);
 };
 
 static struct SignalUtilsOps *signals_ops;
@@ -149,6 +150,7 @@ static int display_cli_display(struct DisplayData *data) {
     return 0;
   }
 
+  display_cli_priv_ops->display_empty_before_lines(data);
   display_cli_priv_ops->display_player_info(data);
 
   for (size_t index_y = 0; index_y < data->board_xy; index_y++) {
@@ -169,6 +171,8 @@ static int display_cli_display(struct DisplayData *data) {
       }
     }
   }
+
+  display_cli_priv_ops->display_empty_before_lines(data);
 
   if (data->game_state == GameStateWinning) {
     printf("User %i won. To quit press q.\n", data->user_id + 1);
@@ -198,6 +202,21 @@ static void display_cli_display_player_info(struct DisplayData *data) {
   printf("Current user: %d\n\n", data->user_id + 1);
 }
 
+static void display_cli_display_empty_before_lines(struct DisplayData *data) {
+  int err;
+  int rows, cols;
+
+  err = terminal_ops->get_terminal_dimensions(STDIN_FILENO, &rows, &cols);
+  if (err) {
+    return;
+  }
+
+  /* printf("x=%d y=%d\n", cols, rows); */
+  for (size_t i = 0; i < (rows - data->board_xy + 1) / 2; i++) {
+    printf("\n");
+  }
+}
+
 /*******************************************************************************
  *    MODULARIZATION BOILERCODE
  ******************************************************************************/
@@ -207,6 +226,7 @@ struct DisplayCliPrivateOps priv_ops = {
     .restore_terminal = display_cli_restore_terminal,
     .find_move = display_cli_get_move_matching_y_x,
     .display_player_info = display_cli_display_player_info,
+    .display_empty_before_lines = display_cli_display_empty_before_lines,
 };
 
 struct DisplayCliPrivateOps *get_display_cli_priv_ops(void) {
