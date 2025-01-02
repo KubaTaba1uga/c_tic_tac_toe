@@ -17,6 +17,7 @@ enum GameStates {
   GameStatePlay,
   GameStateQuitting,
   GameStateQuit,
+  GameStateWinning,
   GameStateWin,
 };
 

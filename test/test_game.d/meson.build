@@ -189,3 +189,49 @@ test_quit_sm_exe = executable('test_quit_sm',
 
 test('test_quit_sm', test_quit_sm_exe)
 
+
+############################################################################
+#                   Win State Machine Module Tests                        #
+############################################################################
+test_win_sm_name = 'test_win_sm.c'
+
+test_win_sm_src = [test_win_sm_name,
+                   game / 'game.c',
+                   game / 'game_config.c',
+                   game / 'game_user.c',
+		   game_state_machine / 'game_state_machine.c',
+		   game_state_machine / 'game_sm_subsystem.c',
+		   game_state_machine / 'mini_state_machines' / 'common.c',
+		   game_state_machine / 'mini_state_machines' / 'win_mini_machine.c',
+		   game_state_machine / 'mini_state_machines' / 'quit_mini_machine.c',		   
+		   game_state_machine / 'mini_state_machines' / 'user_move_mini_machine.c',
+  	           game / 'game_state_machine' / 'mini_state_machines' / 'moves_cleanup_mini_machine.c',
+                   game / 'game_state_machine' / 'mini_state_machines' / 'display_mini_machine.c',
+                   game / 'game_state_machine' / 'mini_state_machines' / 'user_turn_mini_machine.c',		   
+		   display / 'display.c',
+		   display / 'cli.c',		 		 
+		   keyboard / 'keyboard.c',
+                   keyboard / 'keyboard_keys_mapping.c',
+                   keyboard / 'keyboard_keys_mapping_1.c',
+		   config / 'config.c',
+                   init / 'init.c',		   
+                   input / 'input.c',
+                   input / 'input_device.c',		   
+		   utils / 'std_lib_utils.c',
+		   utils / 'logging_utils.c',
+   		   utils / 'terminal_utils.c',
+		   utils / 'signals_utils.c',		   		   
+		   ]
+
+test_win_sm_exe = executable('test_win_sm',
+  sources: [
+    test_win_sm_src,
+    unity_gen_runner.process(test_win_sm_name),
+  ],
+  include_directories: [src, test_includes],
+  dependencies: test_dependencies,
+  c_args:['-DTEST'],
+)
+
+test('test_win_sm', test_win_sm_exe)
+

@@ -20,6 +20,7 @@
 #include "game/game_state_machine/mini_state_machines/quit_mini_machine.h"
 #include "game/game_state_machine/mini_state_machines/user_move_mini_machine.h"
 #include "game/game_state_machine/mini_state_machines/user_turn_mini_machine.h"
+#include "game/game_state_machine/mini_state_machines/win_mini_machine.h"
 #include "input/input.h"
 #include "input/keyboard/keyboard.h"
 #include "input/keyboard/keyboard_keys_mapping_1.h"
@@ -137,6 +138,7 @@ static int init_register_multiple_modules(void) {
       get_game_sm_user_move_module_ops();
   struct GameSmDisplayModuleOps *gsm_display_ops =
       get_game_sm_display_module_ops();
+  struct GameSmWinModuleOps *gsm_win_ops = get_game_sm_win_module_ops();
   struct GameSmQuitModuleOps *gsm_quit_ops = get_game_sm_quit_module_ops();
   struct ConfigOps *config_ops = get_config_ops();
   struct InputOps *input_ops = get_input_ops();
@@ -184,6 +186,10 @@ static int init_register_multiple_modules(void) {
       {.init = turn_ops->init,
        .destroy = NULL,
        .display_name = "user_turn_mini_machine"},
+      {.init = gsm_win_ops->init,
+       .destroy = NULL,
+       .display_name = "win_mini_machine"},
+
   };
   int num_modules = sizeof(modules) / sizeof(struct InitRegistration);
   int err;

@@ -74,12 +74,10 @@ int quit_state_machine_next_state(struct GameStateMachineInput input,
     if (current_user_move->type == USER_MOVE_TYPE_QUIT) {
       state->current_state = GameStateQuit;
       game_ops->stop();
+      return 0;
     }
     // If user cancels quitting, return to play.
-    else if (current_user_move->type == USER_MOVE_TYPE_SELECT_VALID ||
-             current_user_move->type == USER_MOVE_TYPE_SELECT_INVALID) {
-      state->current_state = GameStatePlay;
-    }
+    state->current_state = GameStatePlay;
     break;
 
   default:;
