@@ -31,7 +31,9 @@ test_config_src = [test_config_name,
   		 game / 'game_state_machine' / 'mini_state_machines' / 'moves_cleanup_mini_machine.c',
 		 game / 'game_state_machine' / 'mini_state_machines' / 'common.c',
                  game / 'game_state_machine' / 'mini_state_machines' / 'display_mini_machine.c',
-                 game / 'game_state_machine' / 'mini_state_machines' / 'user_turn_mini_machine.c',		   		   		 		 
+                 game / 'game_state_machine' / 'mini_state_machines' / 'user_turn_mini_machine.c',
+	   	 game / 'game_state_machine' / 'mini_state_machines' / 'win_mini_machine.c',
+	   	 
 		 ]
 
 test_config_exe = executable('test_config',

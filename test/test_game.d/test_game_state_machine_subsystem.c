@@ -18,6 +18,7 @@
 #include "game/game_state_machine/mini_state_machines/quit_mini_machine.h"
 #include "game/game_state_machine/mini_state_machines/user_move_mini_machine.h"
 #include "game/game_state_machine/mini_state_machines/user_turn_mini_machine.h"
+#include "game/game_state_machine/mini_state_machines/win_mini_machine.h"
 #include "init/init.h"
 #include "utils/logging_utils.h"
 
@@ -48,6 +49,7 @@ void setUp() {
   struct GameSmQuitModuleOps *quit_ops;
   struct GameSmCleanLastMoveModuleOps *clean_last_move_ops;
   struct GameSmDisplayModuleOps *display_ops;
+  struct GameSmWinModuleOps *win_ops;
   // Mock functions
   gsm_sub_ops = get_game_sm_subsystem_ops();
   logging_ops = get_logging_utils_ops();
@@ -58,12 +60,13 @@ void setUp() {
   quit_ops = get_game_sm_quit_module_ops();
   clean_last_move_ops = get_game_sm_clean_last_move_module_ops();
   display_ops = get_game_sm_display_module_ops();
-
+  win_ops = get_game_sm_win_module_ops();
   user_move_ops->init = NULL;
   user_turn_ops->init = NULL;
   quit_ops->init = NULL;
   clean_last_move_ops->init = NULL;
   display_ops->init = NULL;
+  win_ops->init = NULL;
 
   priv_ops->get_subsystem = mock_get_subsystem;
   GameSmSubsystem_mini_machines_init(&test_data);

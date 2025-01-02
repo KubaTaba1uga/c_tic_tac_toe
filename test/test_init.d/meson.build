@@ -32,7 +32,8 @@ test_init_src = [test_init_name,
   		 game / 'game_state_machine' / 'mini_state_machines' / 'moves_cleanup_mini_machine.c',
   		 game / 'game_state_machine' / 'mini_state_machines' / 'display_mini_machine.c',	 
 		 game / 'game_state_machine' / 'mini_state_machines' / 'common.c',
-                 game / 'game_state_machine' / 'mini_state_machines' / 'user_turn_mini_machine.c',		   		   		 				 
+                 game / 'game_state_machine' / 'mini_state_machines' / 'user_turn_mini_machine.c',
+	   	 game / 'game_state_machine' / 'mini_state_machines' / 'win_mini_machine.c',	 
 		 ]
 
 test_init_exe = executable('test_init',

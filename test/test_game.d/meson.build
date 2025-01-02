@@ -36,7 +36,7 @@ test_game_config_src = [test_game_config_name,
 		   utils / 'logging_utils.c',
    		   utils / 'terminal_utils.c',
    		   utils / 'signals_utils.c',
-		   ]
+   		   game / 'game_state_machine' / 'mini_state_machines' / 'win_mini_machine.c']
 
 
 test_game_config_exe = executable('test_game_config',
@@ -81,8 +81,8 @@ test_gsm_subsystem_src = [test_gsm_subsystem_name,
 		   utils / 'std_lib_utils.c',
 		   utils / 'logging_utils.c',
 		   utils / 'signals_utils.c',		   
-   		   utils / 'terminal_utils.c'		
-		   ]
+   		   utils / 'terminal_utils.c',		
+   		   game / 'game_state_machine' / 'mini_state_machines' / 'win_mini_machine.c']
 
 test_gsm_subsystem_exe = executable('test_gsm_subsystem',
   sources: [
@@ -127,7 +127,7 @@ test_user_move_src = [test_user_move_name,
 		   utils / 'logging_utils.c',
    		   utils / 'terminal_utils.c',
 		   utils / 'signals_utils.c',		   		   		   
-		   ]
+   		   game / 'game_state_machine' / 'mini_state_machines' / 'win_mini_machine.c']
 
 test_user_move_exe = executable('test_user_move',
   sources: [
@@ -175,7 +175,7 @@ test_quit_sm_src = [test_quit_sm_name,
 		   utils / 'logging_utils.c',
    		   utils / 'terminal_utils.c',
 		   utils / 'signals_utils.c',		   		   
-		   ]
+   		   game / 'game_state_machine' / 'mini_state_machines' / 'win_mini_machine.c']
 
 test_quit_sm_exe = executable('test_quit_sm',
   sources: [
@@ -221,7 +221,7 @@ test_win_sm_src = [test_win_sm_name,
 		   utils / 'logging_utils.c',
    		   utils / 'terminal_utils.c',
 		   utils / 'signals_utils.c',		   		   
-		   ]
+   		   game / 'game_state_machine' / 'mini_state_machines' / 'win_mini_machine.c']
 
 test_win_sm_exe = executable('test_win_sm',
   sources: [
