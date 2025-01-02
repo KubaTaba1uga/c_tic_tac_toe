@@ -40,6 +40,7 @@
 #define ANSI_BG_RED "\033[41m"
 #define ANSI_RESET_COLOR "\033[0m"
 #define ANSI_BG_GRAY "\033[48;5;240m"
+#define ANSI_BG_YELLOW "\033[43m"
 
 struct CliDisplay {
   size_t width;
@@ -53,7 +54,8 @@ struct DisplayCliPrivateOps {
   int (*find_move)(size_t y, size_t x, struct DisplayData *data,
                    struct UserMove **user_move);
   void (*display_player_info)(struct DisplayData *data);
-  void (*display_empty_before_lines)(struct DisplayData *data);
+  void (*display_empty_lines)(struct DisplayData *data);
+  void (*display_empty_prefix)(struct DisplayData *data);
 };
 
 static struct SignalUtilsOps *signals_ops;
@@ -98,6 +100,33 @@ static void display_cli_restore_terminal(void) {
   terminal_ops->enable_echo(STDIN_FILENO);
 }
 
+static char *get_user_char(int user_id) {
+  switch (user_id) {
+  case 0:
+    return "x";
+  case 1:
+    return "o";
+  case 2:
+    return "#";
+  case 3:
+    return "$";
+  case 4:
+    return "%";
+  case 5:
+    return "+";
+  case 6:
+    return "?";
+  case 7:
+    return "V";
+  case 8:
+    return "H";
+  case 9:
+    return "f";
+  default:
+    return "8";
+  }
+}
+
 static char *display_get_move_string(struct UserMove *move) {
   // Print the move details
   /* printf("Move: Type=%d, User=%d, Coordinates=[%d, %d]\n", move->type, */
@@ -109,30 +138,7 @@ static char *display_get_move_string(struct UserMove *move) {
   case USER_MOVE_TYPE_HIGHLIGHT:
     return ANSI_BG_GRAY " " ANSI_RESET_COLOR;
   case USER_MOVE_TYPE_SELECT_VALID:
-    switch (move->user_id) {
-    case 0:
-      return "x";
-    case 1:
-      return "o";
-    case 2:
-      return "#";
-    case 3:
-      return "$";
-    case 4:
-      return "%";
-    case 5:
-      return "+";
-    case 6:
-      return "?";
-    case 7:
-      return "V";
-    case 8:
-      return "H";
-    case 9:
-      return "f";
-    default:
-      return "8";
-    }
+    return get_user_char(move->user_id);
   case USER_MOVE_TYPE_QUIT:
     return "";
   }
@@ -140,9 +146,31 @@ static char *display_get_move_string(struct UserMove *move) {
   return NULL;
 }
 
+static char *
+display_cli_get_move_string_with_invalid_move(struct DisplayData *data,
+                                              struct UserMove *user_move,
+                                              size_t n, char buffer[n]) {
+  const struct UserMove *current_move = &data->moves[data->moves_length - 1];
+  char *str_to_disp = display_get_move_string(user_move);
+  char *color = "";
+  if (current_move->coordinates.y == user_move->coordinates.y &&
+      current_move->coordinates.x == user_move->coordinates.x) {
+    if (current_move->type == USER_MOVE_TYPE_SELECT_INVALID)
+      color = ANSI_BG_RED;
+    else if (current_move->type == USER_MOVE_TYPE_HIGHLIGHT)
+      color = ANSI_BG_YELLOW;
+  }
+
+  snprintf(buffer, n - 1, "%s%s%s", color, str_to_disp, ANSI_RESET_COLOR);
+
+  return buffer;
+}
+
 static int display_cli_display(struct DisplayData *data) {
   struct UserMove *tmp_user_move;
   char *str_to_display;
+  const size_t buffer_size = 255;
+  char buffer[buffer_size];
   int err;
 
   if (data->game_state == GameStateQuitting) {
@@ -150,16 +178,19 @@ static int display_cli_display(struct DisplayData *data) {
     return 0;
   }
 
-  display_cli_priv_ops->display_empty_before_lines(data);
+  display_cli_priv_ops->display_empty_lines(data);
+
   display_cli_priv_ops->display_player_info(data);
 
   for (size_t index_y = 0; index_y < data->board_xy; index_y++) {
+    display_cli_priv_ops->display_empty_prefix(data);
     for (size_t index_x = 0; index_x < data->board_xy; index_x++) {
       str_to_display = " ";
       err = display_cli_priv_ops->find_move(index_y, index_x, data,
                                             &tmp_user_move);
       if (err != ENOENT) {
-        str_to_display = display_get_move_string(tmp_user_move);
+        str_to_display = display_cli_get_move_string_with_invalid_move(
+            data, tmp_user_move, buffer_size, buffer);
         if (!str_to_display)
           return ENODATA;
       }
@@ -172,7 +203,7 @@ static int display_cli_display(struct DisplayData *data) {
     }
   }
 
-  display_cli_priv_ops->display_empty_before_lines(data);
+  display_cli_priv_ops->display_empty_lines(data);
 
   if (data->game_state == GameStateWinning) {
     printf("User %i won. To quit press q.\n", data->user_id + 1);
@@ -199,14 +230,15 @@ static int display_cli_get_move_matching_y_x(size_t y, size_t x,
 };
 
 static void display_cli_display_player_info(struct DisplayData *data) {
-  printf("Current user: %d\n\n", data->user_id + 1);
+  printf("Current user: %d=%s\n\n", data->user_id + 1,
+         get_user_char(data->user_id));
 }
 
-static void display_cli_display_empty_before_lines(struct DisplayData *data) {
+static void display_cli_display_empty_lines(struct DisplayData *data) {
   int err;
-  int rows, cols;
+  int rows, _;
 
-  err = terminal_ops->get_terminal_dimensions(STDIN_FILENO, &rows, &cols);
+  err = terminal_ops->get_terminal_dimensions(STDIN_FILENO, &rows, &_);
   if (err) {
     return;
   }
@@ -214,6 +246,21 @@ static void display_cli_display_empty_before_lines(struct DisplayData *data) {
   /* printf("x=%d y=%d\n", cols, rows); */
   for (size_t i = 0; i < (rows - data->board_xy + 1) / 2; i++) {
     printf("\n");
+  }
+}
+
+static void display_cli_display_empty_prefix(struct DisplayData *data) {
+  int err;
+  int _, cols;
+
+  err = terminal_ops->get_terminal_dimensions(STDIN_FILENO, &_, &cols);
+  if (err) {
+    return;
+  }
+
+  /* printf("x=%d y=%d\n", cols, rows); */
+  for (size_t i = 0; i < (cols - data->board_xy + 2) / 2; i++) {
+    printf(" ");
   }
 }
 
@@ -226,7 +273,8 @@ struct DisplayCliPrivateOps priv_ops = {
     .restore_terminal = display_cli_restore_terminal,
     .find_move = display_cli_get_move_matching_y_x,
     .display_player_info = display_cli_display_player_info,
-    .display_empty_before_lines = display_cli_display_empty_before_lines,
+    .display_empty_lines = display_cli_display_empty_lines,
+    .display_empty_prefix = display_cli_display_empty_prefix,
 };
 
 struct DisplayCliPrivateOps *get_display_cli_priv_ops(void) {
