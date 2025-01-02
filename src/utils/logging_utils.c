@@ -120,17 +120,17 @@ static int init_file_logger(void) {
 }
 
 void destroy_loggers(void) {
-  struct stumpless_target *loggers[] = {logging_subsystem.console_logger,
-                                        logging_subsystem.file_logger};
+  struct stumpless_target **loggers[] = {&logging_subsystem.console_logger,
+                                         &logging_subsystem.file_logger};
   size_t i;
 
   for (i = 0; i < sizeof(loggers) / sizeof(struct stumpless_target *); i++) {
-    if (loggers[i] == NULL)
+    if (*loggers[i] == NULL)
       continue;
 
-    stumpless_close_target(loggers[i]);
+    stumpless_close_target(*loggers[i]);
 
-    loggers[i] = NULL;
+    *loggers[i] = NULL;
   }
 
   stumpless_free_all();

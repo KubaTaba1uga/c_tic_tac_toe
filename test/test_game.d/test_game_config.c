@@ -23,10 +23,12 @@ static struct InputOps *input_ops;
 static struct GameConfigOps *game_config_ops;
 static struct DisplayOps *display_ops;
 static struct DisplayCliOps *display_cli_ops;
+static struct KeyboardOps *keyboard_ops;
+static struct KeyboardKeysMapping1Ops *km1_ops;
 
 void setUp(void) {
-  struct KeyboardOps *keyboard_ops = get_keyboard_ops();
-  struct KeyboardKeysMapping1Ops *km1_ops = get_keyboard_keys_mapping_1_ops();
+  keyboard_ops = get_keyboard_ops();
+  km1_ops = get_keyboard_keys_mapping_1_ops();
   config_ops = get_config_ops();
   log_ops = get_logging_utils_ops();
   input_ops = get_input_ops();
@@ -45,7 +47,8 @@ void setUp(void) {
 }
 
 void tearDown(void) {
-  // Clean up resources if necessary
+  log_ops->destroy();
+  keyboard_ops->destroy();
 }
 
 void test_game_config_initialization(void) {

@@ -11,6 +11,8 @@
 #include "input/input_common.h"
 #include "utils/logging_utils.h"
 
+struct LoggingUtilsOps *log_ops;
+
 // Mock counters for callback and operation tracking
 static int mock_callback_counter = 0;
 static int mock_start_counter = 0;
@@ -40,7 +42,6 @@ static int mock_wait(void) {
 
 // Test setup and teardown
 void setUp() {
-  struct LoggingUtilsOps *log_ops;
   struct InputOps *input_ops;
   int err;
 
@@ -59,7 +60,7 @@ void setUp() {
   TEST_ASSERT_EQUAL_INT(0, err);
 }
 
-void tearDown() {}
+void tearDown() { log_ops->destroy(); }
 
 // Test successful module registration
 void test_input_add_device_success() {

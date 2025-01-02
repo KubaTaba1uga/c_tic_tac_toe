@@ -1,6 +1,8 @@
 #include <stumpless.h>
 
 struct LoggingUtilsPrivateOps {
+  int (*init_console_log)(void);
+  int (*init_file_log)(void);
   void (*log_msg)(char *msg, const char *msg_id,
                   enum stumpless_severity severity);
   int (*create_log_entry)(char *msg, const char *msg_id,

@@ -29,15 +29,10 @@ void setUp() {
   init_ops = get_init_ops();
   log_ops = get_logging_utils_ops();
 
-  log_ops->init();
-
   priv_ops->register_modules = init_register_modules_mock;
 }
 
-void tearDown() {
-  log_ops->destroy();
-  init_ops->destroy();
-}
+void tearDown() { init_ops->destroy(); }
 
 void test_init_success(void) {
   int err;
