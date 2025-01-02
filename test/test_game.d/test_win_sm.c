@@ -59,7 +59,7 @@ void test_process_horizontal_win(void) {
   TEST_ASSERT_TRUE(is_win);
 }
 
-void test_process_diagonal_win(void) {
+void test_process_diagonal_a_win(void) {
   current_user_move.coordinates.x = 0;
   current_user_move.coordinates.y = 2;
   current_user_move.user_id = 1;
@@ -73,6 +73,25 @@ void test_process_diagonal_win(void) {
   user_moves[1].user_id = 1;
 
   bool is_win = win_priv_ops->process_diagonal_win_a(&current_user_move, 2,
+                                                     user_moves, 2);
+
+  TEST_ASSERT_TRUE(is_win);
+}
+
+void test_process_diagonal_b_win(void) {
+  current_user_move.coordinates.x = 2;
+  current_user_move.coordinates.y = 2;
+  current_user_move.user_id = 1;
+
+  user_moves[0].coordinates.x = 1;
+  user_moves[0].coordinates.y = 1;
+  user_moves[0].user_id = 1;
+
+  user_moves[1].coordinates.x = 0;
+  user_moves[1].coordinates.y = 0;
+  user_moves[1].user_id = 1;
+
+  bool is_win = win_priv_ops->process_diagonal_win_b(&current_user_move, 2,
                                                      user_moves, 2);
 
   TEST_ASSERT_TRUE(is_win);

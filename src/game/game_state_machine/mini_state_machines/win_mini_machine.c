@@ -172,6 +172,10 @@ win_state_machine_process_diagonal_win(struct UserMove *current_user_move,
 
   is_win = win_priv_ops->process_diagonal_win_a(current_user_move, n,
                                                 users_moves, users_amount);
+  if (!is_win) {
+    is_win = win_priv_ops->process_diagonal_win_b(current_user_move, n,
+                                                  users_moves, users_amount);
+  }
 
   return is_win;
 }
@@ -183,8 +187,7 @@ win_state_machine_process_diagonal_win_a(struct UserMove *current_user_move,
   struct UserMove *tmp_user_move;
   size_t win_moves_counter = 0;
 
-  for (size_t xy_i = current_user_move->coordinates.x + 1; xy_i <= users_amount;
-       xy_i++) {
+  for (size_t xy_i = 0; xy_i <= users_amount; xy_i++) {
     for (size_t i = 0; i < n; i++) {
       tmp_user_move = &users_moves[i];
       if (tmp_user_move->user_id == current_user_move->user_id) {
@@ -205,6 +208,34 @@ win_state_machine_process_diagonal_win_a(struct UserMove *current_user_move,
   return win_moves_counter >= users_amount;
 }
 
+static bool
+win_state_machine_process_diagonal_win_b(struct UserMove *current_user_move,
+                                         size_t n, struct UserMove *users_moves,
+                                         size_t users_amount) {
+  struct UserMove *tmp_user_move;
+  size_t win_moves_counter = 0;
+
+  for (size_t xy_i = 0; xy_i <= users_amount; xy_i++) {
+    for (size_t i = 0; i < n; i++) {
+      tmp_user_move = &users_moves[i];
+      if (tmp_user_move->user_id == current_user_move->user_id) {
+        if ((tmp_user_move->coordinates.y ==
+                 current_user_move->coordinates.y - xy_i &&
+             tmp_user_move->coordinates.x ==
+                 current_user_move->coordinates.x - xy_i) ||
+            (tmp_user_move->coordinates.y ==
+                 current_user_move->coordinates.y + xy_i &&
+             tmp_user_move->coordinates.x ==
+                 current_user_move->coordinates.x + xy_i)) {
+          win_moves_counter++;
+        }
+      }
+    }
+  }
+
+  return win_moves_counter >= users_amount;
+}
+
 /*******************************************************************************
  *    MODULARITY BOILERCODE
  ******************************************************************************/
@@ -215,6 +246,7 @@ static struct GameSmWinModulePrivateOps private_ops = {
     .process_vertical_win = win_state_machine_process_vertical_win,
     .process_diagonal_win = win_state_machine_process_diagonal_win,
     .process_diagonal_win_a = win_state_machine_process_diagonal_win_a,
+    .process_diagonal_win_b = win_state_machine_process_diagonal_win_b,
 };
 
 static struct GameSmWinModuleOps game_sm_win_ops = {.init =
