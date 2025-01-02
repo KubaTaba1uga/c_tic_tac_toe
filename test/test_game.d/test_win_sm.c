@@ -50,10 +50,29 @@ void test_process_horizontal_win(void) {
   for (int i = 0; i < 3; i++) {
     user_moves[i].coordinates.x = i;
     user_moves[i].coordinates.y = 0;
-    current_user_move.user_id = 1;
+    user_moves[i].user_id = 1;
   }
 
   bool is_win = win_priv_ops->process_horizontal_win(&current_user_move, 3,
+                                                     user_moves, 2);
+
+  TEST_ASSERT_TRUE(is_win);
+}
+
+void test_process_diagonal_win(void) {
+  current_user_move.coordinates.x = 0;
+  current_user_move.coordinates.y = 2;
+  current_user_move.user_id = 1;
+
+  user_moves[0].coordinates.x = 1;
+  user_moves[0].coordinates.y = 1;
+  user_moves[0].user_id = 1;
+
+  user_moves[1].coordinates.x = 2;
+  user_moves[1].coordinates.y = 0;
+  user_moves[1].user_id = 1;
+
+  bool is_win = win_priv_ops->process_diagonal_win_a(&current_user_move, 2,
                                                      user_moves, 2);
 
   TEST_ASSERT_TRUE(is_win);

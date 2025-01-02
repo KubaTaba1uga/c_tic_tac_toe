@@ -183,18 +183,18 @@ win_state_machine_process_diagonal_win_a(struct UserMove *current_user_move,
   struct UserMove *tmp_user_move;
   size_t win_moves_counter = 0;
 
-  for (size_t xy_i = current_user_move->coordinates.x; xy_i < users_amount;
+  for (size_t xy_i = current_user_move->coordinates.x + 1; xy_i <= users_amount;
        xy_i++) {
     for (size_t i = 0; i < n; i++) {
       tmp_user_move = &users_moves[i];
       if (tmp_user_move->user_id == current_user_move->user_id) {
         if ((tmp_user_move->coordinates.y ==
-                 current_user_move->coordinates.y + xy_i &&
-             tmp_user_move->coordinates.y ==
+                 current_user_move->coordinates.y - xy_i &&
+             tmp_user_move->coordinates.x ==
                  current_user_move->coordinates.x + xy_i) ||
             (tmp_user_move->coordinates.y ==
-                 current_user_move->coordinates.y - xy_i &&
-             tmp_user_move->coordinates.y ==
+                 current_user_move->coordinates.y + xy_i &&
+             tmp_user_move->coordinates.x ==
                  current_user_move->coordinates.x - xy_i)) {
           win_moves_counter++;
         }
