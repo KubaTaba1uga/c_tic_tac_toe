@@ -64,6 +64,8 @@ int game_start(void) {
   logging_ops->log_info(GAME_FILE_NAME,
                         "Input subsystem started successfully.");
 
+  logging_ops->disable_console_logger();
+
   err = gsm_sub_ops->display_starting_screen();
   if (err) {
     logging_ops->log_err(

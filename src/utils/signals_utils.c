@@ -46,8 +46,6 @@ static void signals_utils_signal_handler(int sig) {
   // Immediately flush logs and terminate the process for SIGSEGV
   if (sig == SIGSEGV) {
     fflush(NULL); // Flush all open output streams
-    raise(sig);   // Re-raise the signal
-    _exit(1);     // Fallback: Ensure process terminates (shouldn't reach here)
   }
 
   // For other signals, just re-raise them

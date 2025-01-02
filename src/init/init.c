@@ -62,6 +62,10 @@ static int init_init(void) {
   InitSubsystem_modules_init(&init_subsystem);
 
   log_ops = get_logging_utils_ops();
+
+  log_ops->init();
+  log_ops->log_info("INIT", "Logging ops initialized succesfully");
+
   init_priv_ops = get_init_priv_ops();
 
   err = init_priv_ops->register_modules();
@@ -107,8 +111,12 @@ static void init_destroy(void) {
     if (module->destroy) {
       log_ops->log_info("INIT", "Destroying module: %s", module->display_name);
       module->destroy();
+      log_ops->log_info("INIT", "Module destryed: %s", module->display_name);
     }
   }
+
+  log_ops->log_info("INIT", "Destroying logging ops");
+  log_ops->destroy();
 }
 
 /*******************************************************************************
@@ -118,7 +126,6 @@ static int init_register_multiple_modules(void) {
   struct KeyboardKeysMapping1Ops *km1_ops = get_keyboard_keys_mapping_1_ops();
   struct GameSmSubsystemOps *game_sm_sub_ops = get_game_sm_subsystem_ops();
   struct DisplayCliOps *display_cli_ops = get_display_cli_ops();
-  struct LoggingUtilsOps *logging_ops = get_logging_utils_ops();
   struct GameConfigOps *game_config_ops = get_game_config_ops();
   struct SignalUtilsOps *signals_ops = get_signal_utils_ops();
   struct KeyboardOps *keyboard_ops = get_keyboard_ops();
@@ -137,9 +144,6 @@ static int init_register_multiple_modules(void) {
   struct DisplayOps *display_ops = get_display_ops();
   struct GameSmUserTurnModuleOps *turn_ops = get_game_sm_user_turn_module_ops();
   struct InitRegistration modules[] = {
-      {.init = logging_ops->init,
-       .destroy = logging_ops->destroy,
-       .display_name = "logging_utils"},
       {.init = signals_ops->init,
        .destroy = NULL,
        .display_name = "signals_utils"},

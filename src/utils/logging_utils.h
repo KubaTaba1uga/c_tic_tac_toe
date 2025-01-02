@@ -20,6 +20,7 @@ struct LoggingUtilsOps {
   void (*destroy)(void);
   void (*log_info)(const char *msg_id, char *fmt, ...);
   void (*log_err)(const char *msg_id, char *fmt, ...);
+  void (*disable_console_logger)(void);
 };
 
 /*******************************************************************************
