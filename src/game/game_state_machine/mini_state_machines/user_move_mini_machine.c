@@ -17,7 +17,9 @@
 #include "game/game.h"
 #include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
+#include "game/game_state_machine/game_states.h"
 #include "game/game_state_machine/mini_state_machines/user_move_mini_machine.h"
+#include "game/user_move.h"
 #include "init/init.h"
 #include "input/input.h"
 #include "utils/logging_utils.h"
@@ -178,6 +180,12 @@ void user_move_state_machine_handle_select_event(
       new_user_move->type = USER_MOVE_TYPE_SELECT_INVALID;
       break;
     }
+  }
+
+  // If user produced select event to cancel quitting we do not want to consider
+  // this a valid move and display it.
+  if (data->current_state == GameStateQuitting) {
+    new_user_move->type = USER_MOVE_TYPE_HIGHLIGHT;
   }
 }
 

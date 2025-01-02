@@ -13,8 +13,7 @@
  *    IMPORTS
  ******************************************************************************/
 // C standard library
-#include <asm-generic/errno-base.h>
-#include <asm-generic/errno.h>
+#include <errno.h>
 #include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -28,6 +27,7 @@
 #include "display/cli.h"
 #include "display/display.h"
 #include "game/game.h"
+#include "game/game_state_machine/game_states.h"
 #include "game/user_move.h"
 #include "init/init.h"
 #include "utils/logging_utils.h"
@@ -52,6 +52,7 @@ struct DisplayCliPrivateOps {
   void (*restore_terminal)(void);
   int (*find_move)(size_t y, size_t x, struct DisplayData *data,
                    struct UserMove **user_move);
+  void (*display_player_info)(struct DisplayData *data);
 };
 
 static struct SignalUtilsOps *signals_ops;
@@ -143,6 +144,13 @@ static int display_cli_display(struct DisplayData *data) {
   char *str_to_display;
   int err;
 
+  if (data->game_state == GameStateQuitting) {
+    printf("User %i quitting. To quit press q.\n", data->user_id + 1);
+    return 0;
+  }
+
+  display_cli_priv_ops->display_player_info(data);
+
   for (size_t index_y = 0; index_y < data->board_xy; index_y++) {
     for (size_t index_x = 0; index_x < data->board_xy; index_x++) {
       str_to_display = " ";
@@ -160,6 +168,10 @@ static int display_cli_display(struct DisplayData *data) {
         printf("%s\n", str_to_display);
       }
     }
+  }
+
+  if (data->game_state == GameStateWinning) {
+    printf("User %i won. To quit press q.\n", data->user_id + 1);
   }
 
   return 0;
@@ -182,6 +194,10 @@ static int display_cli_get_move_matching_y_x(size_t y, size_t x,
   return ENOENT;
 };
 
+static void display_cli_display_player_info(struct DisplayData *data) {
+  printf("Current user: %d\n\n", data->user_id + 1);
+}
+
 /*******************************************************************************
  *    MODULARIZATION BOILERCODE
  ******************************************************************************/
@@ -190,6 +206,7 @@ struct DisplayCliPrivateOps priv_ops = {
     .configure_terminal = display_cli_configure_terminal,
     .restore_terminal = display_cli_restore_terminal,
     .find_move = display_cli_get_move_matching_y_x,
+    .display_player_info = display_cli_display_player_info,
 };
 
 struct DisplayCliPrivateOps *get_display_cli_priv_ops(void) {

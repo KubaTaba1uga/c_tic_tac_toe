@@ -11,6 +11,7 @@
  ******************************************************************************/
 // C standard library
 #include <errno.h>
+#include <stdio.h>
 
 // App's internal libs
 #include "game/game.h"
@@ -65,7 +66,8 @@ int clean_last_move_state_machine_next_state(
     return 0;
   }
 
-  if (last_move->type == USER_MOVE_TYPE_SELECT_VALID) {
+  if (state->current_state != GameStateQuitting &&
+      last_move->type == USER_MOVE_TYPE_SELECT_VALID) {
     return 0;
   }
 
