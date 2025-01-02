@@ -15,6 +15,7 @@
 
 // App's internal libs
 #include "game/game.h"
+#include "game/game_config.h"
 #include "game/game_state_machine/game_sm_subsystem.h"
 #include "game/game_state_machine/game_state_machine.h"
 #include "game/game_state_machine/game_states.h"
@@ -38,13 +39,13 @@ struct GameSmUserMoveModulePrivateOps {
                     struct GameStateMachineState *state);
   void (*set_default_state)(void);
   void (*handle_up_event)(struct UserMoveCoordinates *coordinates,
-                          struct UserMove *new_user_move);
+                          struct UserMove *new_user_move, int users_amount);
   void (*handle_down_event)(struct UserMoveCoordinates *coordinates,
-                            struct UserMove *new_user_move);
+                            struct UserMove *new_user_move, int users_amount);
   void (*handle_left_event)(struct UserMoveCoordinates *coordinates,
-                            struct UserMove *new_user_move);
+                            struct UserMove *new_user_move, int users_amount);
   void (*handle_right_event)(struct UserMoveCoordinates *coordinates,
-                             struct UserMove *new_user_move);
+                             struct UserMove *new_user_move, int users_amount);
   void (*handle_exit_event)(struct UserMoveCoordinates *coordinates,
                             struct UserMove *new_user_move);
   void (*handle_select_event)(struct UserMoveCoordinates *coordinates,
@@ -53,6 +54,7 @@ struct GameSmUserMoveModulePrivateOps {
 };
 
 static struct LoggingUtilsOps *logging_ops;
+static struct GameConfigOps *game_config_ops;
 static struct GameSmSubsystemOps *gsm_sub_ops;
 static char module_id[] = "user_move_sm_module";
 static struct UserMoveStateMachineState user_move_state_machine;
@@ -65,6 +67,7 @@ struct GameSmUserMoveModulePrivateOps *get_user_move_priv_ops(void);
 int user_move_state_machine_init(void) {
   struct MiniGameStateMachine gsm_mini_machine;
   int err;
+  game_config_ops = get_game_config_ops();
   logging_ops = get_logging_utils_ops();
   gsm_sub_ops = get_game_sm_subsystem_ops();
   user_move_priv_ops = get_user_move_priv_ops();
@@ -93,25 +96,36 @@ int user_move_state_machine_next_state(struct GameStateMachineInput input,
                                        struct GameStateMachineState *state) {
   struct UserMoveCoordinates *coordinates;
   struct UserMove new_user_move;
+  int users_amount;
+  int err;
+
+  err = game_config_ops->get_users_amount(&users_amount);
+  if (err) {
+    return err;
+  }
 
   coordinates = &user_move_priv_ops->get_state()->coordinates;
   new_user_move.user_id = state->current_user;
 
   switch (input.input_event) {
   case INPUT_EVENT_UP:
-    user_move_priv_ops->handle_up_event(coordinates, &new_user_move);
+    user_move_priv_ops->handle_up_event(coordinates, &new_user_move,
+                                        users_amount);
     break;
 
   case INPUT_EVENT_DOWN:
-    user_move_priv_ops->handle_down_event(coordinates, &new_user_move);
+    user_move_priv_ops->handle_down_event(coordinates, &new_user_move,
+                                          users_amount);
     break;
 
   case INPUT_EVENT_RIGHT:
-    user_move_priv_ops->handle_right_event(coordinates, &new_user_move);
+    user_move_priv_ops->handle_right_event(coordinates, &new_user_move,
+                                           users_amount);
     break;
 
   case INPUT_EVENT_LEFT:
-    user_move_priv_ops->handle_left_event(coordinates, &new_user_move);
+    user_move_priv_ops->handle_left_event(coordinates, &new_user_move,
+                                          users_amount);
     break;
 
   case INPUT_EVENT_EXIT:
@@ -136,27 +150,51 @@ int user_move_state_machine_next_state(struct GameStateMachineInput input,
   return 0;
 }
 
+int abs(int value) { return (value < 0) ? -value : value; }
+
 void user_move_state_machine_handle_up_event(
-    struct UserMoveCoordinates *coordinates, struct UserMove *new_user_move) {
-  coordinates->y = (coordinates->y + 2) % 3;
+    struct UserMoveCoordinates *coordinates, struct UserMove *new_user_move,
+    int users_amount) {
+
+  if (coordinates->y == 0)
+    coordinates->y = users_amount;
+  else
+    coordinates->y = coordinates->y - 1;
+
   new_user_move->type = USER_MOVE_TYPE_HIGHLIGHT;
 }
 
 void user_move_state_machine_handle_down_event(
-    struct UserMoveCoordinates *coordinates, struct UserMove *new_user_move) {
-  coordinates->y = (coordinates->y + 1) % 3;
+    struct UserMoveCoordinates *coordinates, struct UserMove *new_user_move,
+    int users_amount) {
+  if (coordinates->y == users_amount)
+    coordinates->y = 0;
+  else
+    coordinates->y = coordinates->y + 1;
+
   new_user_move->type = USER_MOVE_TYPE_HIGHLIGHT;
 }
 
 void user_move_state_machine_handle_right_event(
-    struct UserMoveCoordinates *coordinates, struct UserMove *new_user_move) {
-  coordinates->x = (coordinates->x + 1) % 3;
+    struct UserMoveCoordinates *coordinates, struct UserMove *new_user_move,
+    int users_amount) {
+  if (coordinates->x == users_amount)
+    coordinates->x = 0;
+  else
+    coordinates->x = coordinates->x + 1;
+
+  /* coordinates->x = (coordinates->x + 1) % users_amount; */
   new_user_move->type = USER_MOVE_TYPE_HIGHLIGHT;
 }
 
 void user_move_state_machine_handle_left_event(
-    struct UserMoveCoordinates *coordinates, struct UserMove *new_user_move) {
-  coordinates->x = (coordinates->x + 2) % 3;
+    struct UserMoveCoordinates *coordinates, struct UserMove *new_user_move,
+    int users_amount) {
+  if (coordinates->x == 0)
+    coordinates->x = users_amount;
+  else
+    coordinates->x = coordinates->x - 1;
+
   new_user_move->type = USER_MOVE_TYPE_HIGHLIGHT;
 }
 
