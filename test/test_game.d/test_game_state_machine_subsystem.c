@@ -505,4 +505,6 @@ int mock_next_state(struct GameStateMachineInput input,
   return mock_state;
 }
 
-struct GameSmSubsystem *mock_get_subsystem(void) { return &test_data; };
+struct GameSmSubsystem *mock_get_subsystem(void) {
+  return &test_data;
+};

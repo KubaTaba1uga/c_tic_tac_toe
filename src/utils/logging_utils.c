@@ -254,7 +254,9 @@ static struct LoggingUtilsOps pub_ops = {
     .disable_console_logger = disable_console_logger,
 };
 
-struct LoggingUtilsOps *get_logging_utils_ops(void) { return &pub_ops; }
+struct LoggingUtilsOps *get_logging_utils_ops(void) {
+  return &pub_ops;
+}
 
 struct LoggingUtilsPrivateOps *get_logging_utils_private_ops(void) {
   return &priv_ops;

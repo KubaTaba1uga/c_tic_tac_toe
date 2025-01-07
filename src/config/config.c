@@ -227,6 +227,10 @@ static struct ConfigOps config_pub_ops = {
     .add_var = config_add_variable_intrfc,
 };
 
-struct ConfigOps *get_config_ops(void) { return &config_pub_ops; }
+struct ConfigOps *get_config_ops(void) {
+  return &config_pub_ops;
+}
 
-struct ConfigPrivateOps *get_config_priv_ops(void) { return &config_priv_ops_; }
+struct ConfigPrivateOps *get_config_priv_ops(void) {
+  return &config_priv_ops_;
+}

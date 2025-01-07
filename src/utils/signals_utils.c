@@ -92,4 +92,6 @@ static struct SignalUtilsOps signal_utils_ops = {
     .add_handler = signal_utils_add_handler,
 };
 
-struct SignalUtilsOps *get_signal_utils_ops(void) { return &signal_utils_ops; }
+struct SignalUtilsOps *get_signal_utils_ops(void) {
+  return &signal_utils_ops;
+}

@@ -40,4 +40,6 @@ static struct InputDeviceOps input_device_ops = {
     .init_device = init_input_device,
 };
 
-struct InputDeviceOps *get_input_device_ops(void) { return &input_device_ops; }
+struct InputDeviceOps *get_input_device_ops(void) {
+  return &input_device_ops;
+}

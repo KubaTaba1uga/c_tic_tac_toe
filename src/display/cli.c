@@ -285,4 +285,6 @@ static struct DisplayCliOps cli_display_ops = {
     .init = display_cli_init,
 };
 
-struct DisplayCliOps *get_display_cli_ops(void) { return &cli_display_ops; }
+struct DisplayCliOps *get_display_cli_ops(void) {
+  return &cli_display_ops;
+}

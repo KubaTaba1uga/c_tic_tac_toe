@@ -451,7 +451,9 @@ static struct InputPrivateOps input_private_ops_ = {
     .set_device_callback = input_set_callback,
 };
 
-struct InputOps *get_input_ops(void) { return &input_ops; }
+struct InputOps *get_input_ops(void) {
+  return &input_ops;
+}
 
 struct InputPrivateOps *get_input_private_ops(void) {
   return &input_private_ops_;

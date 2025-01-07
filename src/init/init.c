@@ -237,6 +237,10 @@ static struct InitOps init_ops = {
     .destroy = init_destroy,
 };
 
-struct InitOps *get_init_ops(void) { return &init_ops; }
+struct InitOps *get_init_ops(void) {
+  return &init_ops;
+}
 
-struct InitPrivateOps *get_init_priv_ops(void) { return &_init_priv_ops; }
+struct InitPrivateOps *get_init_priv_ops(void) {
+  return &_init_priv_ops;
+}

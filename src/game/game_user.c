@@ -20,4 +20,6 @@ static struct GameUserOps game_user_ops = {
     .init_user = init_game_user,
 };
 
-struct GameUserOps *get_game_user_ops(void) { return &game_user_ops; }
+struct GameUserOps *get_game_user_ops(void) {
+  return &game_user_ops;
+}

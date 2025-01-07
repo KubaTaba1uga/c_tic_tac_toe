@@ -144,4 +144,6 @@ static struct TerminalUtilsOps terminal_ops = {
     .get_terminal_dimensions = get_terminal_dimensions};
 
 // Returns the terminal operations instance
-struct TerminalUtilsOps *get_terminal_ops(void) { return &terminal_ops; }
+struct TerminalUtilsOps *get_terminal_ops(void) {
+  return &terminal_ops;
+}

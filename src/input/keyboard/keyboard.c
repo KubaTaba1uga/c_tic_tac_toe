@@ -425,4 +425,6 @@ struct KeyboardPrivateOps *get_keyboard_priv_ops(void) {
   return &keyboard_priv_ops_;
 }
 
-struct KeyboardOps *get_keyboard_ops(void) { return &keyboard_ops; }
+struct KeyboardOps *get_keyboard_ops(void) {
+  return &keyboard_ops;
+}

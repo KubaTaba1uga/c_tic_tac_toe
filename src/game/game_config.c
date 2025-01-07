@@ -221,4 +221,6 @@ static struct GameConfigOps game_config_pub_ops = {
     .get_users_amount = game_config_get_users_amount,
 };
 
-struct GameConfigOps *get_game_config_ops(void) { return &game_config_pub_ops; }
+struct GameConfigOps *get_game_config_ops(void) {
+  return &game_config_pub_ops;
+}

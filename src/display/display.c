@@ -149,7 +149,9 @@ static struct DisplayOps display_ops = {
     .get_display_id = display_get_display_id,
 };
 
-struct DisplayOps *get_display_ops(void) { return &display_ops; };
+struct DisplayOps *get_display_ops(void) {
+  return &display_ops;
+};
 
 struct DisplayPrivateOps *get_display_priv_ops(void) {
   return &display_private_ops;

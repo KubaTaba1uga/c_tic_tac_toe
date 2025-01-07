@@ -109,4 +109,6 @@ struct GameOps game_ops = {
     .stop = game_stop,
 };
 
-struct GameOps *get_game_ops(void) { return &game_ops; }
+struct GameOps *get_game_ops(void) {
+  return &game_ops;
+}
